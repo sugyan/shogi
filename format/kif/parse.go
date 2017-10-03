@@ -15,22 +15,57 @@ import (
 
 const separator = "+---------------------------+"
 
+var pieceMap = map[rune]shogi.Piece{
+	'歩': shogi.NewPiece(shogi.MoveFirst, shogi.FU),
+	'香': shogi.NewPiece(shogi.MoveFirst, shogi.KY),
+	'桂': shogi.NewPiece(shogi.MoveFirst, shogi.KE),
+	'銀': shogi.NewPiece(shogi.MoveFirst, shogi.GI),
+	'金': shogi.NewPiece(shogi.MoveFirst, shogi.KI),
+	'角': shogi.NewPiece(shogi.MoveFirst, shogi.KA),
+	'馬': shogi.NewPiece(shogi.MoveFirst, shogi.UM),
+	'飛': shogi.NewPiece(shogi.MoveFirst, shogi.HI),
+	'龍': shogi.NewPiece(shogi.MoveFirst, shogi.RY),
+	'王': shogi.NewPiece(shogi.MoveFirst, shogi.OU),
+	'玉': shogi.NewPiece(shogi.MoveFirst, shogi.OU),
+}
+var numberMap = map[string]int{
+	"一":  1,
+	"二":  2,
+	"三":  3,
+	"四":  4,
+	"五":  5,
+	"六":  6,
+	"七":  7,
+	"八":  8,
+	"九":  9,
+	"十":  10,
+	"十一": 11,
+	"十二": 12,
+	"十三": 13,
+	"十四": 14,
+	"十五": 15,
+	"十六": 16,
+	"十七": 17,
+	"十八": 18,
+}
+
 // Parse function
-func Parse(r io.Reader) error {
+func Parse(r io.Reader) (*shogi.State, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	reader, err := reader(b)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	board := shogi.NewBoard()
+	state := shogi.NewState()
 	var (
 		boardFlag = false
 		row       = 0
 	)
+	handsRE := regexp.MustCompile(`(先|後)手の持駒：(.*)`)
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -38,8 +73,8 @@ func Parse(r io.Reader) error {
 			boardFlag = !boardFlag
 			continue
 		}
-		runes := []rune(line)
 		if boardFlag {
+			runes := []rune(line)
 			col := 0
 			for i := 0; i < len(runes); i++ {
 				c := runes[i]
@@ -47,38 +82,16 @@ func Parse(r io.Reader) error {
 					continue
 				}
 				if c == '・' {
-					board[row][col] = nil
+					state.Board[row][col] = nil
 				} else {
-					p := shogi.Piece{First: true}
+					move := shogi.MoveFirst
 					if c == 'v' {
-						p.First = false
+						move = shogi.MoveSecond
 						i++
 					}
-					switch runes[i] {
-					case '歩':
-						p.Type = shogi.FU
-					case '香':
-						p.Type = shogi.KY
-					case '桂':
-						p.Type = shogi.KE
-					case '銀':
-						p.Type = shogi.GI
-					case '金':
-						p.Type = shogi.KI
-					case '角':
-						p.Type = shogi.KA
-					case '馬':
-						p.Type = shogi.UM
-					case '飛':
-						p.Type = shogi.HI
-					case '龍':
-						p.Type = shogi.RY
-					case '王':
-						fallthrough
-					case '玉':
-						p.Type = shogi.OU
-					}
-					board[row][col] = &p
+					p := pieceMap[runes[i]]
+					p.SetMove(move)
+					state.Board[row][col] = p
 				}
 				col++
 				if col >= 9 {
@@ -87,10 +100,32 @@ func Parse(r io.Reader) error {
 			}
 			row++
 		}
+		if handsRE.MatchString(line) {
+			spacesRE := regexp.MustCompile(`[ 　]+`)
+			submatch := handsRE.FindStringSubmatch(line)
+			for _, s := range spacesRE.Split(submatch[2], -1) {
+				if len(s) == 0 {
+					continue
+				}
+				runes := []rune(s)
+				p := pieceMap[runes[0]]
+				switch submatch[1] {
+				case "先":
+					p.SetMove(shogi.MoveFirst)
+				case "後":
+					p.SetMove(shogi.MoveSecond)
+				}
+				n := 1
+				if len(runes[1:]) > 0 {
+					n = numberMap[string(runes[1:])]
+				}
+				for i := 0; i < n; i++ {
+					state.AddHandPieces(p)
+				}
+			}
+		}
 	}
-	print(board.String())
-
-	return nil
+	return state, nil
 }
 
 func reader(b []byte) (io.Reader, error) {

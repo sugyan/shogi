@@ -1,27 +1,52 @@
 package shogi
 
-// PieceType definition
-type PieceType string
+type pieceCode string
 
-// PieceTypes
+// PieceCodes
 const (
-	FU PieceType = "FU"
-	KY PieceType = "KY"
-	KE PieceType = "KE"
-	GI PieceType = "GI"
-	KI PieceType = "KI"
-	KA PieceType = "KA"
-	HI PieceType = "HI"
-	OU PieceType = "OU"
-	TO PieceType = "TO"
-	NY PieceType = "NY"
-	NK PieceType = "NK"
-	UM PieceType = "UM"
-	RY PieceType = "RY"
+	FU pieceCode = "FU"
+	KY pieceCode = "KY"
+	KE pieceCode = "KE"
+	GI pieceCode = "GI"
+	KI pieceCode = "KI"
+	KA pieceCode = "KA"
+	HI pieceCode = "HI"
+	OU pieceCode = "OU"
+	TO pieceCode = "TO"
+	NY pieceCode = "NY"
+	NK pieceCode = "NK"
+	UM pieceCode = "UM"
+	RY pieceCode = "RY"
 )
 
-// Piece type
-type Piece struct {
-	First bool
-	Type  PieceType
+// Piece interface
+type Piece interface {
+	IsFirst() bool
+	SetMove(Move)
+	Code() string
+}
+
+type piece struct {
+	first bool
+	code  pieceCode
+}
+
+// NewPiece function
+func NewPiece(move Move, code pieceCode) Piece {
+	return &piece{
+		first: bool(move),
+		code:  code,
+	}
+}
+
+func (p *piece) IsFirst() bool {
+	return p.first
+}
+
+func (p *piece) SetMove(move Move) {
+	p.first = bool(move)
+}
+
+func (p *piece) Code() string {
+	return string(p.code)
 }
