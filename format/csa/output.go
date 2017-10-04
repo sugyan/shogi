@@ -15,9 +15,10 @@ func InitialState1(state *shogi.State) string {
 		for j := 0; j < 9; j++ {
 			p := state.Board[i][j]
 			if p != nil {
-				if p.IsFirst() {
+				switch p.Turn() {
+				case shogi.TurnFirst:
 					result = append(result, '+')
-				} else {
+				case shogi.TurnSecond:
 					result = append(result, '-')
 				}
 				result = append(result, []byte(p.Code())...)
@@ -38,7 +39,7 @@ func InitialState2(state *shogi.State) string {
 		File  int
 		Piece shogi.Piece
 	}
-	pieces := make(map[shogi.Move][]*position)
+	pieces := make(map[shogi.Turn][]*position)
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
 			p := state.Board[i][j]
@@ -48,20 +49,16 @@ func InitialState2(state *shogi.State) string {
 					File:  9 - j,
 					Piece: p,
 				}
-				if p.IsFirst() {
-					pieces[shogi.MoveFirst] = append(pieces[shogi.MoveFirst], pos)
-				} else {
-					pieces[shogi.MoveSecond] = append(pieces[shogi.MoveSecond], pos)
-				}
+				pieces[p.Turn()] = append(pieces[p.Turn()], pos)
 			}
 		}
 	}
 	for move, positions := range pieces {
 		result = append(result, 'P')
 		switch move {
-		case shogi.MoveFirst:
+		case shogi.TurnFirst:
 			result = append(result, '+')
-		case shogi.MoveSecond:
+		case shogi.TurnSecond:
 			result = append(result, '-')
 		}
 		for _, pos := range positions {
@@ -75,37 +72,55 @@ func InitialState2(state *shogi.State) string {
 
 func handPieces(state *shogi.State) string {
 	result := make([]byte, 0)
-	var useAll shogi.Move
-	if len(state.Hands[shogi.MoveFirst]) > len(state.Hands[shogi.MoveSecond]) {
-		useAll = shogi.MoveFirst
+	var useAll shogi.Turn
+	if state.Captured[shogi.TurnFirst].Num() > state.Captured[shogi.TurnSecond].Num() {
+		useAll = shogi.TurnFirst
 	} else {
-		useAll = shogi.MoveSecond
+		useAll = shogi.TurnSecond
 	}
-	for move, pieces := range state.Hands {
+	for move, pieces := range state.Captured {
 		if move == useAll {
 			continue
 		}
-		if len(pieces) == 0 {
+		if pieces.Num() == 0 {
 			continue
 		}
 		result = append(result, 'P')
 		switch move {
-		case shogi.MoveFirst:
+		case shogi.TurnFirst:
 			result = append(result, '+')
-		case shogi.MoveSecond:
+		case shogi.TurnSecond:
 			result = append(result, '-')
 		}
-		for _, p := range pieces {
-			result = append(result, []byte(`00`+p.Code())...)
+		for i := 0; i < pieces.Hi; i++ {
+			result = append(result, []byte(`00HI`)...)
+		}
+		for i := 0; i < pieces.Ka; i++ {
+			result = append(result, []byte(`00KA`)...)
+		}
+		for i := 0; i < pieces.Ki; i++ {
+			result = append(result, []byte(`00KI`)...)
+		}
+		for i := 0; i < pieces.Gi; i++ {
+			result = append(result, []byte(`00GI`)...)
+		}
+		for i := 0; i < pieces.Ke; i++ {
+			result = append(result, []byte(`00KE`)...)
+		}
+		for i := 0; i < pieces.Ky; i++ {
+			result = append(result, []byte(`00KY`)...)
+		}
+		for i := 0; i < pieces.Fu; i++ {
+			result = append(result, []byte(`00FU`)...)
 		}
 		result = append(result, '\n')
 	}
-	if len(state.Hands[useAll]) > 0 {
+	if state.Captured[useAll].Num() > 0 {
 		result = append(result, 'P')
 		switch useAll {
-		case shogi.MoveFirst:
+		case shogi.TurnFirst:
 			result = append(result, '+')
-		case shogi.MoveSecond:
+		case shogi.TurnSecond:
 			result = append(result, '-')
 		}
 		result = append(result, []byte(`00AL`)...)

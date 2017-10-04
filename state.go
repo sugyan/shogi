@@ -1,32 +1,75 @@
 package shogi
 
-// Move type
-type Move bool
+// Turn type
+type Turn bool
 
 // MoveOrder constants
 const (
-	MoveFirst  Move = true
-	MoveSecond Move = false
+	TurnFirst  Turn = true
+	TurnSecond Turn = false
 )
 
 // State definition
 type State struct {
-	Board [9][9]Piece
-	Hands map[Move][]Piece
+	Board    [9][9]Piece
+	Captured map[Turn]*CapturedPieces
+}
+
+// CapturedPieces type
+type CapturedPieces struct {
+	Fu int
+	Ky int
+	Ke int
+	Gi int
+	Ki int
+	Ka int
+	Hi int
+}
+
+// Num method
+func (cp *CapturedPieces) Num() int {
+	return cp.Fu + cp.Ky + cp.Ke + cp.Gi + cp.Ki + cp.Ka + cp.Hi
 }
 
 // NewState function
 func NewState() *State {
 	return &State{
-		Hands: make(map[Move][]Piece),
+		Captured: map[Turn]*CapturedPieces{
+			TurnFirst:  &CapturedPieces{},
+			TurnSecond: &CapturedPieces{},
+		},
 	}
 }
 
-// AddHandPieces method
-func (s *State) AddHandPieces(p Piece) {
-	if p.IsFirst() {
-		s.Hands[MoveFirst] = append(s.Hands[MoveFirst], p)
-	} else {
-		s.Hands[MoveSecond] = append(s.Hands[MoveSecond], p)
+// AddCapturedPieces method
+func (s *State) AddCapturedPieces(p Piece) {
+	cp := s.Captured[p.Turn()]
+	switch pieceCode(p.Code()) {
+	case FU:
+		fallthrough
+	case TO:
+		cp.Fu++
+	case KY:
+		fallthrough
+	case NY:
+		cp.Ky++
+	case KE:
+		fallthrough
+	case NK:
+		cp.Ke++
+	case GI:
+		fallthrough
+	case NG:
+		cp.Gi++
+	case KI:
+		cp.Ki++
+	case KA:
+		fallthrough
+	case UM:
+		cp.Ka++
+	case HI:
+		fallthrough
+	case RY:
+		cp.Hi++
 	}
 }

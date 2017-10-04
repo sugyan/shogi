@@ -16,17 +16,17 @@ import (
 const separator = "+---------------------------+"
 
 var pieceMap = map[rune]shogi.Piece{
-	'歩': shogi.NewPiece(shogi.MoveFirst, shogi.FU),
-	'香': shogi.NewPiece(shogi.MoveFirst, shogi.KY),
-	'桂': shogi.NewPiece(shogi.MoveFirst, shogi.KE),
-	'銀': shogi.NewPiece(shogi.MoveFirst, shogi.GI),
-	'金': shogi.NewPiece(shogi.MoveFirst, shogi.KI),
-	'角': shogi.NewPiece(shogi.MoveFirst, shogi.KA),
-	'馬': shogi.NewPiece(shogi.MoveFirst, shogi.UM),
-	'飛': shogi.NewPiece(shogi.MoveFirst, shogi.HI),
-	'龍': shogi.NewPiece(shogi.MoveFirst, shogi.RY),
-	'王': shogi.NewPiece(shogi.MoveFirst, shogi.OU),
-	'玉': shogi.NewPiece(shogi.MoveFirst, shogi.OU),
+	'歩': shogi.NewPiece(shogi.TurnFirst, shogi.FU),
+	'香': shogi.NewPiece(shogi.TurnFirst, shogi.KY),
+	'桂': shogi.NewPiece(shogi.TurnFirst, shogi.KE),
+	'銀': shogi.NewPiece(shogi.TurnFirst, shogi.GI),
+	'金': shogi.NewPiece(shogi.TurnFirst, shogi.KI),
+	'角': shogi.NewPiece(shogi.TurnFirst, shogi.KA),
+	'馬': shogi.NewPiece(shogi.TurnFirst, shogi.UM),
+	'飛': shogi.NewPiece(shogi.TurnFirst, shogi.HI),
+	'龍': shogi.NewPiece(shogi.TurnFirst, shogi.RY),
+	'王': shogi.NewPiece(shogi.TurnFirst, shogi.OU),
+	'玉': shogi.NewPiece(shogi.TurnFirst, shogi.OU),
 }
 var numberMap = map[string]int{
 	"一":  1,
@@ -84,13 +84,13 @@ func Parse(r io.Reader) (*shogi.State, error) {
 				if c == '・' {
 					state.Board[row][col] = nil
 				} else {
-					move := shogi.MoveFirst
+					turn := shogi.TurnFirst
 					if c == 'v' {
-						move = shogi.MoveSecond
+						turn = shogi.TurnSecond
 						i++
 					}
 					p := pieceMap[runes[i]]
-					p.SetMove(move)
+					p.SetTurn(turn)
 					state.Board[row][col] = p
 				}
 				col++
@@ -111,16 +111,16 @@ func Parse(r io.Reader) (*shogi.State, error) {
 				p := pieceMap[runes[0]]
 				switch submatch[1] {
 				case "先":
-					p.SetMove(shogi.MoveFirst)
+					p.SetTurn(shogi.TurnFirst)
 				case "後":
-					p.SetMove(shogi.MoveSecond)
+					p.SetTurn(shogi.TurnSecond)
 				}
 				n := 1
 				if len(runes[1:]) > 0 {
 					n = numberMap[string(runes[1:])]
 				}
 				for i := 0; i < n; i++ {
-					state.AddHandPieces(p)
+					state.AddCapturedPieces(p)
 				}
 			}
 		}
