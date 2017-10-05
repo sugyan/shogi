@@ -15,19 +15,6 @@ import (
 
 const separator = "+---------------------------+"
 
-var pieceMap = map[rune]shogi.Piece{
-	'歩': shogi.NewPiece(shogi.TurnFirst, shogi.FU),
-	'香': shogi.NewPiece(shogi.TurnFirst, shogi.KY),
-	'桂': shogi.NewPiece(shogi.TurnFirst, shogi.KE),
-	'銀': shogi.NewPiece(shogi.TurnFirst, shogi.GI),
-	'金': shogi.NewPiece(shogi.TurnFirst, shogi.KI),
-	'角': shogi.NewPiece(shogi.TurnFirst, shogi.KA),
-	'馬': shogi.NewPiece(shogi.TurnFirst, shogi.UM),
-	'飛': shogi.NewPiece(shogi.TurnFirst, shogi.HI),
-	'龍': shogi.NewPiece(shogi.TurnFirst, shogi.RY),
-	'王': shogi.NewPiece(shogi.TurnFirst, shogi.OU),
-	'玉': shogi.NewPiece(shogi.TurnFirst, shogi.OU),
-}
 var numberMap = map[string]int{
 	"一":  1,
 	"二":  2,
@@ -89,9 +76,7 @@ func Parse(r io.Reader) (*shogi.State, error) {
 						turn = shogi.TurnSecond
 						i++
 					}
-					p := pieceMap[runes[i]]
-					p.SetTurn(turn)
-					state.Board[row][col] = p
+					state.Board[row][col] = newPiece(runes[i], turn)
 				}
 				col++
 				if col >= 9 {
@@ -108,19 +93,19 @@ func Parse(r io.Reader) (*shogi.State, error) {
 					continue
 				}
 				runes := []rune(s)
-				p := pieceMap[runes[0]]
+				var turn shogi.Turn
 				switch submatch[1] {
 				case "先":
-					p.SetTurn(shogi.TurnFirst)
+					turn = shogi.TurnFirst
 				case "後":
-					p.SetTurn(shogi.TurnSecond)
+					turn = shogi.TurnSecond
 				}
 				n := 1
 				if len(runes[1:]) > 0 {
 					n = numberMap[string(runes[1:])]
 				}
 				for i := 0; i < n; i++ {
-					state.AddCapturedPieces(p)
+					state.AddCapturedPieces(newPiece(runes[0], turn))
 				}
 			}
 		}
@@ -147,4 +132,34 @@ func reader(b []byte) (io.Reader, error) {
 	default:
 		return bytes.NewBuffer(b), nil
 	}
+}
+
+func newPiece(c rune, turn shogi.Turn) shogi.Piece {
+	switch c {
+	case '歩':
+		return shogi.NewPiece(turn, shogi.FU)
+	case 'と':
+		return shogi.NewPiece(turn, shogi.TO)
+	case '香':
+		return shogi.NewPiece(turn, shogi.KY)
+	case '桂':
+		return shogi.NewPiece(turn, shogi.KE)
+	case '銀':
+		return shogi.NewPiece(turn, shogi.GI)
+	case '金':
+		return shogi.NewPiece(turn, shogi.KI)
+	case '角':
+		return shogi.NewPiece(turn, shogi.KA)
+	case '馬':
+		return shogi.NewPiece(turn, shogi.UM)
+	case '飛':
+		return shogi.NewPiece(turn, shogi.HI)
+	case '龍':
+		return shogi.NewPiece(turn, shogi.RY)
+	case '王':
+		return shogi.NewPiece(turn, shogi.OU)
+	case '玉':
+		return shogi.NewPiece(turn, shogi.OU)
+	}
+	return nil
 }

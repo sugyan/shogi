@@ -4,22 +4,26 @@ import (
 	"bytes"
 	"fmt"
 	"image"
-	"image/png"
+	_ "image/jpeg" // for decoding jpeg
+	_ "image/png"  // for decoding png
 
 	"github.com/sugyan/shogi"
 	"golang.org/x/image/draw"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/inconsolata"
 	"golang.org/x/image/math/f64"
+	"golang.org/x/image/math/fixed"
 )
 
-// Convert function
-func Convert(state *shogi.State) (image.Image, error) {
-	boardImg, err := loadImage("data/board.png")
+// Generate function
+func Generate(state *shogi.State) (image.Image, error) {
+	boardImg, err := loadImage("data/board.jpg")
 	if err != nil {
 		return nil, err
 	}
 
-	xStep := 684.0 / 9.0
-	yStep := 751.0 / 9.0
+	xStep := 540.0 / 9.0
+	yStep := 576.0 / 9.0
 	xOffset := xStep * 3.0
 	dst := image.NewRGBA(image.Rectangle{Min: image.ZP, Max: boardImg.Bounds().Size().Add(image.Pt(int(xStep*6), 0))})
 	// board
@@ -28,15 +32,12 @@ func Convert(state *shogi.State) (image.Image, error) {
 		for j := 0; j < 9; j++ {
 			p := state.Board[i][j]
 			if p != nil {
-				pieceImg, err := loadImage(fmt.Sprintf("data/%s.png", p.Code()))
+				pieceImg, err := loadPieceImage(p)
 				if err != nil {
 					return nil, err
 				}
-				if p.Turn() == shogi.TurnSecond {
-					pieceImg = rotate180(pieceImg)
-				}
 				r := dst.Bounds().
-					Add(image.Pt(int(xOffset)+33, 28)).
+					Add(image.Pt(int(xOffset)+30, 30)).
 					Add(image.Pt(int(xStep*float64(j)), int(yStep*float64(i))))
 				draw.Draw(dst, r, pieceImg, pieceImg.Bounds().Min, draw.Over)
 			}
@@ -66,12 +67,9 @@ func Convert(state *shogi.State) (image.Image, error) {
 					case shogi.TurnSecond:
 						data = pieces[len(pieces)-k-1]
 					}
-					pieceImg, err := loadImage(fmt.Sprintf("data/%s.png", data.piece.Code()))
+					pieceImg, err := loadPieceImage(data.piece)
 					if err != nil {
 						return nil, err
-					}
-					if turn == shogi.TurnSecond {
-						pieceImg = rotate180(pieceImg)
 					}
 					r := dst.Bounds().
 						Add(offset).
@@ -80,7 +78,17 @@ func Convert(state *shogi.State) (image.Image, error) {
 							int(yStep*float64(i))))
 					draw.Draw(dst, r, pieceImg, pieceImg.Bounds().Min, draw.Over)
 					if data.num > 1 {
-						// draw "x2" etc.
+						o := r.Bounds().Min.Add(pieceImg.Bounds().Max).Add(image.Pt(0, -5))
+						drawer := &font.Drawer{
+							Dst:  dst,
+							Src:  image.Black,
+							Face: inconsolata.Bold8x16,
+							Dot: fixed.Point26_6{
+								X: fixed.Int26_6(o.X << 6),
+								Y: fixed.Int26_6(o.Y << 6),
+							},
+						}
+						drawer.DrawString(fmt.Sprintf("x%d", data.num))
 					}
 				}
 			}
@@ -90,12 +98,31 @@ func Convert(state *shogi.State) (image.Image, error) {
 	return dst, nil
 }
 
+func loadPieceImage(piece shogi.Piece) (image.Image, error) {
+	code := piece.Code()
+	if code == string(shogi.OU) && piece.Turn() == shogi.TurnSecond {
+		code += "_"
+	}
+	img, err := loadImage(fmt.Sprintf("data/%s.png", code))
+	if err != nil {
+		return nil, err
+	}
+	if piece.Turn() == shogi.TurnSecond {
+		img = rotate180(img)
+	}
+	return img, nil
+}
+
 func loadImage(assetName string) (image.Image, error) {
 	data, err := Asset(assetName)
 	if err != nil {
 		return nil, err
 	}
-	return png.Decode(bytes.NewBuffer(data))
+	img, _, err := image.Decode(bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	return img, nil
 }
 
 func rotate180(img image.Image) image.Image {
