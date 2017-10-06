@@ -1,5 +1,7 @@
 package shogi
 
+import "errors"
+
 // Turn type
 type Turn bool
 
@@ -44,7 +46,7 @@ func NewState() *State {
 // AddCapturedPieces method
 func (s *State) AddCapturedPieces(p Piece) {
 	cp := s.Captured[p.Turn()]
-	switch pieceCode(p.Code()) {
+	switch PieceCode(p.Code()) {
 	case FU:
 		fallthrough
 	case TO:
@@ -72,4 +74,16 @@ func (s *State) AddCapturedPieces(p Piece) {
 	case RY:
 		cp.Hi++
 	}
+}
+
+// SetPiece method
+func (s *State) SetPiece(file, rank int, piece Piece) error {
+	if file < 1 || file > 9 {
+		return errors.New("invalid file")
+	}
+	if rank < 1 || rank > 9 {
+		return errors.New("invalid rank")
+	}
+	s.Board[rank-1][9-file] = piece
+	return nil
 }

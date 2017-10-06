@@ -1,23 +1,24 @@
 package shogi
 
-type pieceCode string
+// PieceCode type
+type PieceCode string
 
 // PieceCodes
 const (
-	FU = pieceCode("FU") // 歩
-	KY = pieceCode("KY") // 香
-	KE = pieceCode("KE") // 桂
-	GI = pieceCode("GI") // 銀
-	KI = pieceCode("KI") // 金
-	KA = pieceCode("KA") // 角
-	HI = pieceCode("HI") // 飛
-	OU = pieceCode("OU") // 王, 玉
-	TO = pieceCode("TO") // と
-	NY = pieceCode("NY") // 成香
-	NK = pieceCode("NK") // 成桂
-	NG = pieceCode("NG") // 成銀
-	UM = pieceCode("UM") // 馬
-	RY = pieceCode("RY") // 龍
+	FU = PieceCode("FU") // 歩
+	KY = PieceCode("KY") // 香
+	KE = PieceCode("KE") // 桂
+	GI = PieceCode("GI") // 銀
+	KI = PieceCode("KI") // 金
+	KA = PieceCode("KA") // 角
+	HI = PieceCode("HI") // 飛
+	OU = PieceCode("OU") // 王, 玉
+	TO = PieceCode("TO") // と
+	NY = PieceCode("NY") // 成香
+	NK = PieceCode("NK") // 成桂
+	NG = PieceCode("NG") // 成銀
+	UM = PieceCode("UM") // 馬
+	RY = PieceCode("RY") // 龍
 )
 
 // Piece interface
@@ -29,11 +30,11 @@ type Piece interface {
 
 type piece struct {
 	turn Turn
-	code pieceCode
+	code PieceCode
 }
 
 // NewPiece function
-func NewPiece(turn Turn, code pieceCode) Piece {
+func NewPiece(turn Turn, code PieceCode) Piece {
 	return &piece{
 		turn: turn,
 		code: code,

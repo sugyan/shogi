@@ -72,14 +72,65 @@ func InitialState2(state *shogi.State) string {
 
 func handPieces(state *shogi.State) string {
 	result := make([]byte, 0)
-	var useAll shogi.Turn
-	if state.Captured[shogi.TurnFirst].Num() > state.Captured[shogi.TurnSecond].Num() {
-		useAll = shogi.TurnFirst
-	} else {
-		useAll = shogi.TurnSecond
+	useAll := false
+	var useAllTarget shogi.Turn
+	{
+		less := shogi.TurnFirst
+		if state.Captured[shogi.TurnFirst].Num() > state.Captured[shogi.TurnSecond].Num() {
+			less = shogi.TurnSecond
+		}
+		lessCap := state.Captured[less]
+		remains := &shogi.CapturedPieces{
+			Fu: 18 - lessCap.Fu,
+			Ky: 4 - lessCap.Ky,
+			Ke: 4 - lessCap.Ke,
+			Gi: 4 - lessCap.Gi,
+			Ki: 4 - lessCap.Ki,
+			Ka: 2 - lessCap.Ka,
+			Hi: 2 - lessCap.Hi,
+		}
+		for i := 0; i < 9; i++ {
+			for j := 0; j < 9; j++ {
+				p := state.Board[i][j]
+				if p != nil {
+					switch shogi.PieceCode(p.Code()) {
+					case shogi.FU:
+						fallthrough
+					case shogi.TO:
+						remains.Fu--
+					case shogi.KY:
+						fallthrough
+					case shogi.NY:
+						remains.Ky--
+					case shogi.KE:
+						fallthrough
+					case shogi.NK:
+						remains.Ke--
+					case shogi.GI:
+						fallthrough
+					case shogi.NG:
+						remains.Gi--
+					case shogi.KI:
+						remains.Ki--
+					case shogi.KA:
+						fallthrough
+					case shogi.UM:
+						remains.Ka--
+					case shogi.HI:
+						fallthrough
+					case shogi.RY:
+						remains.Hi--
+					}
+				}
+			}
+		}
+		if remains.Num() == state.Captured[!less].Num() {
+			useAll = true
+			useAllTarget = !less
+		}
 	}
 	for move, pieces := range state.Captured {
-		if move == useAll {
+		if useAll && move == useAllTarget {
 			continue
 		}
 		if pieces.Num() == 0 {
@@ -115,9 +166,9 @@ func handPieces(state *shogi.State) string {
 		}
 		result = append(result, '\n')
 	}
-	if state.Captured[useAll].Num() > 0 {
+	if useAll {
 		result = append(result, 'P')
-		switch useAll {
+		switch useAllTarget {
 		case shogi.TurnFirst:
 			result = append(result, '+')
 		case shogi.TurnSecond:
