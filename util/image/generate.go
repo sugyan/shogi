@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"image/color"
 	_ "image/jpeg" // for decoding jpeg
 	_ "image/png"  // for decoding png
 
@@ -26,6 +27,11 @@ func Generate(state *shogi.State) (image.Image, error) {
 	yStep := 576.0 / 9.0
 	xOffset := xStep * 3.0
 	dst := image.NewRGBA(image.Rectangle{Min: image.ZP, Max: boardImg.Bounds().Size().Add(image.Pt(int(xStep*6), 0))})
+	for i := 0; i < dst.Bounds().Dx(); i++ {
+		for j := 0; j < dst.Bounds().Dy(); j++ {
+			dst.Set(i, j, color.White)
+		}
+	}
 	// board
 	draw.Draw(dst, dst.Bounds().Add(image.Pt(int(xOffset), 0)), boardImg, boardImg.Bounds().Min, draw.Over)
 	for i := 0; i < 9; i++ {
