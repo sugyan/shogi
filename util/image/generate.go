@@ -106,7 +106,7 @@ func Generate(state *shogi.State) (image.Image, error) {
 
 func loadPieceImage(piece shogi.Piece) (image.Image, error) {
 	code := piece.Code()
-	if code == string(shogi.OU) && piece.Turn() == shogi.TurnSecond {
+	if code == shogi.OU && piece.Turn() == shogi.TurnSecond {
 		code += "_"
 	}
 	img, err := loadImage(fmt.Sprintf("data/%s.png", code))

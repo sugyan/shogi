@@ -15,6 +15,21 @@ import (
 
 const separator = "+---------------------------+"
 
+var codeMap = map[rune]shogi.PieceCode{
+	'歩': shogi.FU,
+	'と': shogi.TO,
+	'香': shogi.KY,
+	'桂': shogi.KE,
+	'銀': shogi.GI,
+	'金': shogi.KI,
+	'角': shogi.KA,
+	'馬': shogi.UM,
+	'飛': shogi.HI,
+	'龍': shogi.RY,
+	'王': shogi.OU,
+	'玉': shogi.OU,
+}
+
 var numberMap = map[string]int{
 	"一":  1,
 	"二":  2,
@@ -76,7 +91,10 @@ func Parse(r io.Reader) (*shogi.State, error) {
 						turn = shogi.TurnSecond
 						i++
 					}
-					state.Board[row][col] = newPiece(runes[i], turn)
+					state.Board[row][col] = &shogi.BoardPiece{
+						Turn:  turn,
+						Piece: shogi.NewPiece(codeMap[runes[i]]),
+					}
 				}
 				col++
 				if col >= 9 {
@@ -105,7 +123,7 @@ func Parse(r io.Reader) (*shogi.State, error) {
 					n = numberMap[string(runes[1:])]
 				}
 				for i := 0; i < n; i++ {
-					state.AddCapturedPieces(newPiece(runes[0], turn))
+					state.Captured[turn].AddPieces(shogi.NewPiece(codeMap[runes[0]]))
 				}
 			}
 		}
@@ -132,34 +150,4 @@ func reader(b []byte) (io.Reader, error) {
 	default:
 		return bytes.NewBuffer(b), nil
 	}
-}
-
-func newPiece(c rune, turn shogi.Turn) shogi.Piece {
-	switch c {
-	case '歩':
-		return shogi.NewPiece(turn, shogi.FU)
-	case 'と':
-		return shogi.NewPiece(turn, shogi.TO)
-	case '香':
-		return shogi.NewPiece(turn, shogi.KY)
-	case '桂':
-		return shogi.NewPiece(turn, shogi.KE)
-	case '銀':
-		return shogi.NewPiece(turn, shogi.GI)
-	case '金':
-		return shogi.NewPiece(turn, shogi.KI)
-	case '角':
-		return shogi.NewPiece(turn, shogi.KA)
-	case '馬':
-		return shogi.NewPiece(turn, shogi.UM)
-	case '飛':
-		return shogi.NewPiece(turn, shogi.HI)
-	case '龍':
-		return shogi.NewPiece(turn, shogi.RY)
-	case '王':
-		return shogi.NewPiece(turn, shogi.OU)
-	case '玉':
-		return shogi.NewPiece(turn, shogi.OU)
-	}
-	return nil
 }
