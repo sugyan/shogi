@@ -36,9 +36,9 @@ func Generate(state *shogi.State) (image.Image, error) {
 	draw.Draw(dst, dst.Bounds().Add(image.Pt(int(xOffset), 0)), boardImg, boardImg.Bounds().Min, draw.Over)
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
-			p := state.Board[i][j]
-			if p != nil {
-				pieceImg, err := loadPieceImage(p)
+			bp := state.Board[i][j]
+			if bp != nil {
+				pieceImg, err := loadPieceImage(bp.Turn, bp.Piece)
 				if err != nil {
 					return nil, err
 				}
@@ -51,7 +51,7 @@ func Generate(state *shogi.State) (image.Image, error) {
 	}
 	// captured
 	for turn, captured := range state.Captured {
-		pieces := arrangeCapturedPieces(turn, captured)
+		pieces := arrangeCapturedPieces(captured)
 		var offset image.Point
 		switch turn {
 		case shogi.TurnFirst:
@@ -73,7 +73,7 @@ func Generate(state *shogi.State) (image.Image, error) {
 					case shogi.TurnSecond:
 						data = pieces[len(pieces)-k-1]
 					}
-					pieceImg, err := loadPieceImage(data.piece)
+					pieceImg, err := loadPieceImage(turn, data.piece)
 					if err != nil {
 						return nil, err
 					}
@@ -104,16 +104,16 @@ func Generate(state *shogi.State) (image.Image, error) {
 	return dst, nil
 }
 
-func loadPieceImage(piece shogi.Piece) (image.Image, error) {
-	code := piece.Code()
-	if code == shogi.OU && piece.Turn() == shogi.TurnSecond {
+func loadPieceImage(turn shogi.Turn, piece *shogi.Piece) (image.Image, error) {
+	code := piece.Code().String()
+	if piece.Code() == shogi.OU && turn == shogi.TurnSecond {
 		code += "_"
 	}
 	img, err := loadImage(fmt.Sprintf("data/%s.png", code))
 	if err != nil {
 		return nil, err
 	}
-	if piece.Turn() == shogi.TurnSecond {
+	if turn == shogi.TurnSecond {
 		img = rotate180(img)
 	}
 	return img, nil
@@ -142,52 +142,52 @@ func rotate180(img image.Image) image.Image {
 }
 
 type capturedPiecesData struct {
-	piece shogi.Piece
+	piece *shogi.Piece
 	num   int
 }
 
-func arrangeCapturedPieces(turn shogi.Turn, cp *shogi.CapturedPieces) []*capturedPiecesData {
+func arrangeCapturedPieces(cp *shogi.CapturedPieces) []*capturedPiecesData {
 	results := []*capturedPiecesData{}
-	if cp.Hi > 0 {
+	if cp.HI > 0 {
 		results = append(results, &capturedPiecesData{
-			piece: shogi.NewPiece(turn, shogi.HI),
-			num:   cp.Hi,
+			piece: shogi.NewPiece(shogi.HI),
+			num:   cp.HI,
 		})
 	}
-	if cp.Ka > 0 {
+	if cp.KA > 0 {
 		results = append(results, &capturedPiecesData{
-			piece: shogi.NewPiece(turn, shogi.KA),
-			num:   cp.Ka,
+			piece: shogi.NewPiece(shogi.KA),
+			num:   cp.KA,
 		})
 	}
-	if cp.Ki > 0 {
+	if cp.KI > 0 {
 		results = append(results, &capturedPiecesData{
-			piece: shogi.NewPiece(turn, shogi.KI),
-			num:   cp.Ki,
+			piece: shogi.NewPiece(shogi.KI),
+			num:   cp.KI,
 		})
 	}
-	if cp.Gi > 0 {
+	if cp.GI > 0 {
 		results = append(results, &capturedPiecesData{
-			piece: shogi.NewPiece(turn, shogi.GI),
-			num:   cp.Gi,
+			piece: shogi.NewPiece(shogi.GI),
+			num:   cp.GI,
 		})
 	}
-	if cp.Ke > 0 {
+	if cp.KE > 0 {
 		results = append(results, &capturedPiecesData{
-			piece: shogi.NewPiece(turn, shogi.KE),
-			num:   cp.Ke,
+			piece: shogi.NewPiece(shogi.KE),
+			num:   cp.KE,
 		})
 	}
-	if cp.Ky > 0 {
+	if cp.KY > 0 {
 		results = append(results, &capturedPiecesData{
-			piece: shogi.NewPiece(turn, shogi.KY),
-			num:   cp.Ky,
+			piece: shogi.NewPiece(shogi.KY),
+			num:   cp.KY,
 		})
 	}
-	if cp.Fu > 0 {
+	if cp.FU > 0 {
 		results = append(results, &capturedPiecesData{
-			piece: shogi.NewPiece(turn, shogi.FU),
-			num:   cp.Fu,
+			piece: shogi.NewPiece(shogi.FU),
+			num:   cp.FU,
 		})
 	}
 	return results
