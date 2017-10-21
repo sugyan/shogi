@@ -1,6 +1,8 @@
 package shogi
 
-import "errors"
+import (
+	"errors"
+)
 
 // Turn type
 type Turn bool
@@ -17,10 +19,22 @@ type BoardPiece struct {
 	Piece *Piece
 }
 
+// Position type
+type Position struct {
+	File, Rank int
+}
+
 // State definition
 type State struct {
 	Board    [9][9]*BoardPiece
 	Captured map[Turn]*CapturedPieces
+}
+
+// Move type
+type Move struct {
+	Src   *Position
+	Dst   *Position
+	Piece *Piece
 }
 
 // NewState function
@@ -33,17 +47,26 @@ func NewState() *State {
 	}
 }
 
+// GetBoardPiece method
+func (s *State) GetBoardPiece(file, rank int) *BoardPiece {
+	return s.Board[rank-1][9-file]
+}
+
 // SetBoardPiece method
-func (s *State) SetBoardPiece(file, rank int, turn Turn, piece *Piece) error {
+func (s *State) SetBoardPiece(file, rank int, bp *BoardPiece) error {
 	if file < 1 || file > 9 {
 		return errors.New("invalid file")
 	}
 	if rank < 1 || rank > 9 {
 		return errors.New("invalid rank")
 	}
-	s.Board[rank-1][9-file] = &BoardPiece{
-		Turn:  turn,
-		Piece: piece,
+	if bp != nil {
+		s.Board[rank-1][9-file] = &BoardPiece{
+			Turn:  bp.Turn,
+			Piece: bp.Piece,
+		}
+	} else {
+		s.Board[rank-1][9-file] = nil
 	}
 	return nil
 }
