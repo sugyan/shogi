@@ -24,6 +24,11 @@ type Position struct {
 	File, Rank int
 }
 
+// Pos function
+func Pos(file, rank int) *Position {
+	return &Position{file, rank}
+}
+
 // State definition
 type State struct {
 	Board    [9][9]*BoardPiece
