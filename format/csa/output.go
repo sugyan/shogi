@@ -21,7 +21,7 @@ func InitialState1(state *shogi.State) string {
 				case shogi.TurnSecond:
 					result = append(result, '-')
 				}
-				result = append(result, []byte(bp.Piece.Code().String())...)
+				result = append(result, []byte(bp.Piece.String())...)
 			} else {
 				result = append(result, []byte(` * `)...)
 			}
@@ -37,7 +37,7 @@ func InitialState2(state *shogi.State) string {
 	type position struct {
 		Rank  int
 		File  int
-		Piece *shogi.Piece
+		Piece shogi.Piece
 	}
 	pieces := make(map[shogi.Turn][]*position)
 	for i := 0; i < 9; i++ {
@@ -62,7 +62,7 @@ func InitialState2(state *shogi.State) string {
 			result = append(result, '-')
 		}
 		for _, pos := range positions {
-			s := fmt.Sprintf("%d%d%s", pos.File, pos.Rank, pos.Piece.Code())
+			s := fmt.Sprintf("%d%d%s", pos.File, pos.Rank, pos.Piece.String())
 			result = append(result, []byte(s)...)
 		}
 		result = append(result, '\n')
@@ -93,7 +93,7 @@ func handPieces(state *shogi.State) string {
 			for j := 0; j < 9; j++ {
 				bp := state.Board[i][j]
 				if bp != nil {
-					switch shogi.PieceCode(bp.Piece.Code()) {
+					switch bp.Piece {
 					case shogi.FU:
 						fallthrough
 					case shogi.TO:

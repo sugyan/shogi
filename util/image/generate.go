@@ -255,7 +255,7 @@ func gridImage(style GridStyle) (image.Image, error) {
 	return loadImage(assetName)
 }
 
-func pieceImage(turn shogi.Turn, piece *shogi.Piece, style PieceStyle) (image.Image, error) {
+func pieceImage(turn shogi.Turn, piece shogi.Piece, style PieceStyle) (image.Image, error) {
 	var piecesDirName string
 	switch style {
 	case PieceKinki:
@@ -276,7 +276,7 @@ func pieceImage(turn shogi.Turn, piece *shogi.Piece, style PieceStyle) (image.Im
 	if turn == shogi.TurnSecond {
 		prefix = "-"
 	}
-	code := piece.Code().String()
+	code := piece.String()
 	img, err := loadImage(fmt.Sprintf("%s/%s%s.png", piecesDirName, prefix, code))
 	if err != nil {
 		return nil, err
@@ -293,7 +293,7 @@ func loadImage(assetName string) (image.Image, error) {
 }
 
 type capturedPiecesData struct {
-	piece *shogi.Piece
+	piece shogi.Piece
 	num   int
 }
 
@@ -301,43 +301,43 @@ func arrangeCapturedPieces(cp *shogi.CapturedPieces) []*capturedPiecesData {
 	results := []*capturedPiecesData{}
 	if cp.HI > 0 {
 		results = append(results, &capturedPiecesData{
-			piece: shogi.NewPiece(shogi.HI),
+			piece: shogi.HI,
 			num:   cp.HI,
 		})
 	}
 	if cp.KA > 0 {
 		results = append(results, &capturedPiecesData{
-			piece: shogi.NewPiece(shogi.KA),
+			piece: shogi.KA,
 			num:   cp.KA,
 		})
 	}
 	if cp.KI > 0 {
 		results = append(results, &capturedPiecesData{
-			piece: shogi.NewPiece(shogi.KI),
+			piece: shogi.KI,
 			num:   cp.KI,
 		})
 	}
 	if cp.GI > 0 {
 		results = append(results, &capturedPiecesData{
-			piece: shogi.NewPiece(shogi.GI),
+			piece: shogi.GI,
 			num:   cp.GI,
 		})
 	}
 	if cp.KE > 0 {
 		results = append(results, &capturedPiecesData{
-			piece: shogi.NewPiece(shogi.KE),
+			piece: shogi.KE,
 			num:   cp.KE,
 		})
 	}
 	if cp.KY > 0 {
 		results = append(results, &capturedPiecesData{
-			piece: shogi.NewPiece(shogi.KY),
+			piece: shogi.KY,
 			num:   cp.KY,
 		})
 	}
 	if cp.FU > 0 {
 		results = append(results, &capturedPiecesData{
-			piece: shogi.NewPiece(shogi.FU),
+			piece: shogi.FU,
 			num:   cp.FU,
 		})
 	}

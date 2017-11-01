@@ -1,50 +1,42 @@
 package shogi
 
-// PieceCode type
-type PieceCode interface {
+// Piece type
+type Piece interface {
 	String() string
 }
 
-type pieceCode struct {
+type piece struct {
 	code string
 }
 
 // variables
 var (
-	FU = &pieceCode{"FU"} // 歩
-	KY = &pieceCode{"KY"} // 香
-	KE = &pieceCode{"KE"} // 桂
-	GI = &pieceCode{"GI"} // 銀
-	KI = &pieceCode{"KI"} // 金
-	KA = &pieceCode{"KA"} // 角
-	HI = &pieceCode{"HI"} // 飛
-	OU = &pieceCode{"OU"} // 王, 玉
-	TO = &pieceCode{"TO"} // と
-	NY = &pieceCode{"NY"} // 成香
-	NK = &pieceCode{"NK"} // 成桂
-	NG = &pieceCode{"NG"} // 成銀
-	UM = &pieceCode{"UM"} // 馬
-	RY = &pieceCode{"RY"} // 龍
+	FU = &piece{"FU"} // 歩
+	KY = &piece{"KY"} // 香
+	KE = &piece{"KE"} // 桂
+	GI = &piece{"GI"} // 銀
+	KI = &piece{"KI"} // 金
+	KA = &piece{"KA"} // 角
+	HI = &piece{"HI"} // 飛
+	OU = &piece{"OU"} // 王, 玉
+	TO = &piece{"TO"} // と
+	NY = &piece{"NY"} // 成香
+	NK = &piece{"NK"} // 成桂
+	NG = &piece{"NG"} // 成銀
+	UM = &piece{"UM"} // 馬
+	RY = &piece{"RY"} // 龍
 )
 
-func (p *pieceCode) String() string {
-	return p.code
+var promoteMap = map[Piece]Piece{
+	FU: TO,
+	KY: NY,
+	KE: NK,
+	GI: NG,
+	KA: UM,
+	HI: RY,
 }
 
-// Piece type
-type Piece struct {
-	code PieceCode
-}
-
-// NewPiece function
-func NewPiece(code PieceCode) *Piece {
-	return &Piece{
-		code: code,
-	}
-}
-
-// Code methoda
-func (p *Piece) Code() PieceCode {
+func (p *piece) String() string {
 	return p.code
 }
 
@@ -65,8 +57,8 @@ func (cp *CapturedPieces) Num() int {
 }
 
 // AddPieces method
-func (cp *CapturedPieces) AddPieces(p *Piece) {
-	switch PieceCode(p.Code()) {
+func (cp *CapturedPieces) AddPieces(p Piece) {
+	switch p {
 	case FU:
 		fallthrough
 	case TO:
@@ -93,5 +85,25 @@ func (cp *CapturedPieces) AddPieces(p *Piece) {
 		fallthrough
 	case RY:
 		cp.HI++
+	}
+}
+
+// SubPieces method
+func (cp *CapturedPieces) SubPieces(p Piece) {
+	switch p {
+	case FU:
+		cp.FU--
+	case KY:
+		cp.KY--
+	case KE:
+		cp.KE--
+	case GI:
+		cp.GI--
+	case KI:
+		cp.KI--
+	case KA:
+		cp.KA--
+	case HI:
+		cp.HI--
 	}
 }

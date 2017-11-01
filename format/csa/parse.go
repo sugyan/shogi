@@ -9,7 +9,7 @@ import (
 	"github.com/sugyan/shogi"
 )
 
-var codeMap = map[string]shogi.PieceCode{
+var codeMap = map[string]shogi.Piece{
 	"FU": shogi.FU,
 	"KY": shogi.KY,
 	"KE": shogi.KE,
@@ -50,12 +50,12 @@ func Parse(r io.Reader) (*shogi.State, error) {
 				}
 				for _, e := range rePos.FindAllStringSubmatch(line, -1) {
 					file, rank := int(e[0][0]-'0'), int(e[0][1]-'0')
-					code := codeMap[e[0][2:]]
+					piece := codeMap[e[0][2:]]
 					if !(file == 0 && rank == 0) {
-						state.SetBoardPiece(file, rank, &shogi.BoardPiece{Turn: turn, Piece: shogi.NewPiece(code)})
+						state.SetBoardPiece(file, rank, &shogi.BoardPiece{Turn: turn, Piece: piece})
 					} else {
 						if e[0][2:] != "AL" {
-							state.Captured[turn].AddPieces(shogi.NewPiece(code))
+							state.Captured[turn].AddPieces(piece)
 						} else {
 							state.Captured[turn] = &shogi.CapturedPieces{
 								FU: 18 - state.Captured[!turn].FU,
@@ -70,7 +70,7 @@ func Parse(r io.Reader) (*shogi.State, error) {
 								for j := 0; j < 9; j++ {
 									bp := state.Board[i][j]
 									if bp != nil {
-										switch bp.Piece.Code() {
+										switch bp.Piece {
 										case shogi.FU:
 											fallthrough
 										case shogi.TO:
@@ -134,55 +134,55 @@ func Parse(r io.Reader) (*shogi.State, error) {
 								turn = shogi.TurnSecond
 							}
 							file := 9 - i
-							state.SetBoardPiece(file, rank, &shogi.BoardPiece{Turn: turn, Piece: shogi.NewPiece(codeMap[e[1:]])})
+							state.SetBoardPiece(file, rank, &shogi.BoardPiece{Turn: turn, Piece: codeMap[e[1:]]})
 						}
 					}
 				}
 			case 'I':
-				state.SetBoardPiece(1, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.KY)})
-				state.SetBoardPiece(2, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.KE)})
-				state.SetBoardPiece(3, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.GI)})
-				state.SetBoardPiece(4, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.KI)})
-				state.SetBoardPiece(5, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.OU)})
-				state.SetBoardPiece(6, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.KI)})
-				state.SetBoardPiece(7, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.GI)})
-				state.SetBoardPiece(8, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.KE)})
-				state.SetBoardPiece(9, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.KY)})
-				state.SetBoardPiece(2, 2, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.KA)})
-				state.SetBoardPiece(8, 2, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.HI)})
-				state.SetBoardPiece(1, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(2, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(3, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(4, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(5, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(6, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(7, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(8, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(9, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(1, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(2, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(3, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(4, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(5, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(6, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(7, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(8, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(9, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.FU)})
-				state.SetBoardPiece(2, 8, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.HI)})
-				state.SetBoardPiece(8, 8, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.KA)})
-				state.SetBoardPiece(1, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.KY)})
-				state.SetBoardPiece(2, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.KE)})
-				state.SetBoardPiece(3, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.GI)})
-				state.SetBoardPiece(4, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.KI)})
-				state.SetBoardPiece(5, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.OU)})
-				state.SetBoardPiece(6, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.KI)})
-				state.SetBoardPiece(7, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.GI)})
-				state.SetBoardPiece(8, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.KE)})
-				state.SetBoardPiece(9, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.NewPiece(shogi.KY)})
+				state.SetBoardPiece(1, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.KY})
+				state.SetBoardPiece(2, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.KE})
+				state.SetBoardPiece(3, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.GI})
+				state.SetBoardPiece(4, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.KI})
+				state.SetBoardPiece(5, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.OU})
+				state.SetBoardPiece(6, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.KI})
+				state.SetBoardPiece(7, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.GI})
+				state.SetBoardPiece(8, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.KE})
+				state.SetBoardPiece(9, 1, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.KY})
+				state.SetBoardPiece(2, 2, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.KA})
+				state.SetBoardPiece(8, 2, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.HI})
+				state.SetBoardPiece(1, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.FU})
+				state.SetBoardPiece(2, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.FU})
+				state.SetBoardPiece(3, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.FU})
+				state.SetBoardPiece(4, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.FU})
+				state.SetBoardPiece(5, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.FU})
+				state.SetBoardPiece(6, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.FU})
+				state.SetBoardPiece(7, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.FU})
+				state.SetBoardPiece(8, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.FU})
+				state.SetBoardPiece(9, 3, &shogi.BoardPiece{Turn: shogi.TurnSecond, Piece: shogi.FU})
+				state.SetBoardPiece(1, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.FU})
+				state.SetBoardPiece(2, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.FU})
+				state.SetBoardPiece(3, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.FU})
+				state.SetBoardPiece(4, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.FU})
+				state.SetBoardPiece(5, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.FU})
+				state.SetBoardPiece(6, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.FU})
+				state.SetBoardPiece(7, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.FU})
+				state.SetBoardPiece(8, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.FU})
+				state.SetBoardPiece(9, 7, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.FU})
+				state.SetBoardPiece(2, 8, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.HI})
+				state.SetBoardPiece(8, 8, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.KA})
+				state.SetBoardPiece(1, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.KY})
+				state.SetBoardPiece(2, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.KE})
+				state.SetBoardPiece(3, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.GI})
+				state.SetBoardPiece(4, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.KI})
+				state.SetBoardPiece(5, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.OU})
+				state.SetBoardPiece(6, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.KI})
+				state.SetBoardPiece(7, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.GI})
+				state.SetBoardPiece(8, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.KE})
+				state.SetBoardPiece(9, 9, &shogi.BoardPiece{Turn: shogi.TurnFirst, Piece: shogi.KY})
 				for _, e := range rePos.FindAllStringSubmatch(line, -1) {
 					file, rank := int(e[0][0]-'0'), int(e[0][1]-'0')
 					code := codeMap[e[0][2:]]
-					if state.Board[rank-1][9-file].Piece.Code() == code {
+					if state.Board[rank-1][9-file].Piece == code {
 						state.Board[rank-1][9-file] = nil
 					}
 				}

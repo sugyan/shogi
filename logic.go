@@ -9,7 +9,7 @@ func (s *State) Clone() *State {
 			if bp != nil {
 				state.Board[i][j] = &BoardPiece{
 					Turn:  bp.Turn,
-					Piece: NewPiece(bp.Piece.Code()),
+					Piece: bp.Piece,
 				}
 			}
 		}
@@ -29,7 +29,7 @@ searchTarget:
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
 			bp := s.Board[i][j]
-			if bp != nil && bp.Piece.Code() == OU && bp.Turn != turn {
+			if bp != nil && bp.Piece == OU && bp.Turn != turn {
 				targetPos = &Position{9 - j, i + 1}
 				break searchTarget
 			}
@@ -50,13 +50,66 @@ func (s *State) CandidateMoves(turn Turn) []*Move {
 		for j := 0; j < 9; j++ {
 			bp := s.Board[i][j]
 			if bp != nil && bp.Turn == turn {
-				src := &Position{9 - j, i + 1}
+				src := Pos(9-j, i+1)
 				for _, dst := range s.movable(bp, src) {
-					results = append(results, &Move{
-						Src:   src,
-						Dst:   dst,
-						Piece: bp.Piece,
-					})
+					mustPromote := false
+					if turn == TurnFirst && (src.Rank <= 3 || dst.Rank <= 3) {
+						switch bp.Piece {
+						case FU:
+							fallthrough
+						case KY:
+							if dst.Rank <= 1 {
+								mustPromote = true
+							}
+						case KE:
+							if dst.Rank <= 2 {
+								mustPromote = true
+							}
+						case KA:
+							mustPromote = true
+						case HI:
+							mustPromote = true
+						}
+						if promoted, ok := promoteMap[bp.Piece]; ok {
+							results = append(results, &Move{
+								Src:   src,
+								Dst:   dst,
+								Piece: promoted,
+							})
+						}
+					}
+					if turn == TurnSecond && (src.Rank >= 7 || dst.Rank >= 7) {
+						switch bp.Piece {
+						case FU:
+							fallthrough
+						case KY:
+							if dst.Rank >= 9 {
+								mustPromote = true
+							}
+						case KE:
+							if dst.Rank >= 8 {
+								mustPromote = true
+							}
+						case KA:
+							mustPromote = true
+						case HI:
+							mustPromote = true
+						}
+						if promoted, ok := promoteMap[bp.Piece]; ok {
+							results = append(results, &Move{
+								Src:   src,
+								Dst:   dst,
+								Piece: promoted,
+							})
+						}
+					}
+					if !mustPromote {
+						results = append(results, &Move{
+							Src:   src,
+							Dst:   dst,
+							Piece: bp.Piece,
+						})
+					}
 				}
 			}
 		}
@@ -66,7 +119,7 @@ func (s *State) CandidateMoves(turn Turn) []*Move {
 
 func (s *State) movable(bp *BoardPiece, src *Position) []*Position {
 	positions := []*Position{}
-	switch bp.Piece.Code() {
+	switch bp.Piece {
 	case FU:
 		switch bp.Turn {
 		case TurnFirst:
