@@ -43,6 +43,7 @@ type State struct {
 
 // Move type
 type Move struct {
+	Turn  Turn
 	Src   *Position
 	Dst   *Position
 	Piece Piece
@@ -100,7 +101,11 @@ func (s *State) MoveString(move *Move) (string, error) {
 		RY: "竜",
 		OU: "玉",
 	}
-	result := fmt.Sprintf("%c%c",
+	result := "▲"
+	if move.Turn == TurnSecond {
+		result = "△"
+	}
+	result += fmt.Sprintf("%c%c",
 		[]rune("123456789")[move.Dst.File-1],
 		[]rune("一二三四五六七八九")[move.Dst.Rank-1],
 	)

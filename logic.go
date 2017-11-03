@@ -72,6 +72,7 @@ func (s *State) CandidateMoves(turn Turn) []*Move {
 						}
 						if promoted, ok := promoteMap[bp.Piece]; ok {
 							results = append(results, &Move{
+								Turn:  turn,
 								Src:   src,
 								Dst:   dst,
 								Piece: promoted,
@@ -97,6 +98,7 @@ func (s *State) CandidateMoves(turn Turn) []*Move {
 						}
 						if promoted, ok := promoteMap[bp.Piece]; ok {
 							results = append(results, &Move{
+								Turn:  turn,
 								Src:   src,
 								Dst:   dst,
 								Piece: promoted,
@@ -105,6 +107,7 @@ func (s *State) CandidateMoves(turn Turn) []*Move {
 					}
 					if !mustPromote {
 						results = append(results, &Move{
+							Turn:  turn,
 							Src:   src,
 							Dst:   dst,
 							Piece: bp.Piece,
