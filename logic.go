@@ -55,9 +55,7 @@ func (s *State) CandidateMoves(turn Turn) []*Move {
 					mustPromote := false
 					if turn == TurnFirst && (src.Rank <= 3 || dst.Rank <= 3) {
 						switch bp.Piece {
-						case FU:
-							fallthrough
-						case KY:
+						case FU, KY:
 							if dst.Rank <= 1 {
 								mustPromote = true
 							}
@@ -81,9 +79,7 @@ func (s *State) CandidateMoves(turn Turn) []*Move {
 					}
 					if turn == TurnSecond && (src.Rank >= 7 || dst.Rank >= 7) {
 						switch bp.Piece {
-						case FU:
-							fallthrough
-						case KY:
+						case FU, KY:
 							if dst.Rank >= 9 {
 								mustPromote = true
 							}
@@ -169,15 +165,7 @@ func (s *State) movable(bp *BoardPiece, src *Position) []*Position {
 		case TurnSecond:
 			positions = append(positions, &Position{src.File, src.Rank + 1})
 		}
-	case TO:
-		fallthrough
-	case NY:
-		fallthrough
-	case NK:
-		fallthrough
-	case NG:
-		fallthrough
-	case KI:
+	case TO, NY, NK, NG, KI:
 		positions = append(positions, &Position{src.File - 1, src.Rank})
 		positions = append(positions, &Position{src.File + 1, src.Rank})
 		positions = append(positions, &Position{src.File, src.Rank - 1})

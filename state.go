@@ -84,7 +84,10 @@ func (s *State) SetBoardPiece(file, rank int, bp *BoardPiece) error {
 }
 
 // MoveString method
-func (s *State) MoveString(move *Move) (string, error) {
+func (s *State) MoveString(move *Move, prev *Move) (string, error) {
+	if move == nil {
+		return "", fmt.Errorf("move is empty")
+	}
 	nameMap := map[Piece]string{
 		FU: "歩",
 		TO: "と",
@@ -105,10 +108,14 @@ func (s *State) MoveString(move *Move) (string, error) {
 	if move.Turn == TurnSecond {
 		result = "△"
 	}
-	result += fmt.Sprintf("%c%c",
-		[]rune("123456789")[move.Dst.File-1],
-		[]rune("一二三四五六七八九")[move.Dst.Rank-1],
-	)
+	if prev != nil && *move.Dst == *prev.Dst {
+		result += "同"
+	} else {
+		result += fmt.Sprintf("%c%c",
+			[]rune("123456789")[move.Dst.File-1],
+			[]rune("一二三四五六七八九")[move.Dst.Rank-1],
+		)
+	}
 	if move.Src.IsCaptured() {
 		result += nameMap[move.Piece]
 	} else {
