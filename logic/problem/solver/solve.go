@@ -25,21 +25,46 @@ func Solve(state *shogi.State) ([]string, error) {
 		return nil, errors.New("unsolvable")
 	case 1:
 		answer = answers[0]
-	default:
-		// mutlple answers
-		// TODO choose shortest answers
-		length := len(answers[0])
-		pointMap := map[int]int{}
-		for i := 0; i < length; i++ {
-			for j := 0; j < len(answers); j++ {
-				a := answers[j]
-				if i > 0 {
-					move := a[i]
-					prev := a[i-1]
-					if move.Turn == shogi.TurnSecond && *move.Dst == *prev.Dst {
-						pointMap[j]++
+	default: // mutlple answers
+		// check wasted placed pieces
+		for i, answer := range answers {
+			result := []*shogi.Move{}
+			s := state.Clone()
+			for j, move := range answer {
+				result = append(result, move)
+				s = simulate(s, move)
+				if j%2 == 0 && j > 1 {
+					prev := answer[j-1]
+					// TODO: is this OK?
+					if *prev.Src == *shogi.Pos(0, 0) && *prev.Dst == *move.Dst {
+						result = result[:len(result)-2]
+						s = state.Clone()
+						for _, m := range result {
+							s = simulate(s, m)
+						}
 					}
 				}
+			}
+			answers[i] = result
+		}
+		// TODO choose shortest answers
+		length := len(answers[0])
+		// evaluate answers
+		pointMap := map[int]int{}
+		for i, answer := range answers {
+			s := state.Clone()
+			for j := 0; j < length; j++ {
+				move := answer[j]
+				s = simulate(s, move)
+				if j > 0 {
+					prev := answer[j-1]
+					if move.Turn == shogi.TurnSecond && *move.Dst == *prev.Dst {
+						pointMap[i]++
+					}
+				}
+			}
+			if s.Captured[shogi.TurnFirst].Num() > 0 {
+				pointMap[i] -= 10
 			}
 		}
 		maxIndex, point := 0, 0
@@ -74,8 +99,8 @@ func (s *Solver) Solve(history []string, n int) [][]*shogi.Move {
 		return answers
 	}
 	hash := s.state.Hash()
-	// TODO: find endless repitition...
-	if n > 3 {
+	// TODO: find endless repetition...
+	if n > 2 {
 		return nil
 	}
 	for i := len(history) - 1; i >= 0; i-- {
@@ -172,12 +197,6 @@ func isImpossible(state *shogi.State) bool {
 		if pieces == 0 || (pieces == 1 && state.Captured[shogi.TurnFirst].Num() == 0) {
 			return true
 		}
-		for _, move := range state.CandidateMoves(shogi.TurnFirst) {
-			if _, exist := positions[*move.Dst]; exist {
-				return false
-			}
-		}
-		return true
 	}
 	return false
 }
@@ -531,7 +550,6 @@ func counterMoves(state *shogi.State) []*shogi.Move {
 				Piece: piece,
 			}
 			check := simulate(state, move).Check(shogi.TurnFirst)
-			// TODO isn't it wasted?
 			if check == nil {
 				results = append(results, move)
 			}
