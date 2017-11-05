@@ -1,6 +1,8 @@
 package solver
 
 import (
+	"errors"
+
 	"github.com/sugyan/shogi"
 )
 
@@ -16,12 +18,14 @@ func NewSolver(state *shogi.State) *Solver {
 
 // Solve function
 func Solve(state *shogi.State) ([]string, error) {
-	answers := NewSolver(state).Solve()
+	answers := NewSolver(state).Solve([]string{}, 0)
 	var answer []*shogi.Move
-	results := []string{}
-	if len(answers) == 1 {
+	switch len(answers) {
+	case 0:
+		return nil, errors.New("unsolvable")
+	case 1:
 		answer = answers[0]
-	} else {
+	default:
 		// mutlple answers
 		// TODO choose shortest answers
 		length := len(answers[0])
@@ -47,7 +51,10 @@ func Solve(state *shogi.State) ([]string, error) {
 		}
 		answer = answers[maxIndex]
 	}
-	var prev *shogi.Move
+	var (
+		prev    *shogi.Move
+		results []string
+	)
 	for _, move := range answer {
 		ms, err := state.MoveString(move, prev)
 		if err != nil {
@@ -61,10 +68,23 @@ func Solve(state *shogi.State) ([]string, error) {
 }
 
 // Solve method
-func (s *Solver) Solve() [][]*shogi.Move {
+func (s *Solver) Solve(history []string, n int) [][]*shogi.Move {
 	answers := [][]*shogi.Move{}
-	candidates := candidates(s.state)
+	if s.state.Check(shogi.TurnFirst) != nil {
+		return answers
+	}
+	hash := s.state.Hash()
+	// TODO: find endless repitition...
+	if n > 3 {
+		return nil
+	}
+	for i := len(history) - 1; i >= 0; i-- {
+		if history[i] == hash {
+			return nil
+		}
+	}
 
+	candidates := candidates(s.state)
 	// 1 step solving
 	for _, move := range candidates {
 		state := simulate(s.state, move)
@@ -92,11 +112,14 @@ func (s *Solver) Solve() [][]*shogi.Move {
 		if !ok {
 			continue
 		}
-		// TODO find endless repitition...
 		candidateAnswers := [][]*shogi.Move{}
 		for _, counterMove := range counterMoves {
 			nextState := simulate(state, counterMove)
-			solved := NewSolver(nextState).Solve()
+			solved := NewSolver(nextState).Solve(append(history, hash), n+1)
+			if solved == nil {
+				ok = false
+				break
+			}
 			if len(solved) > 0 {
 				for _, answer := range solved {
 					candidateAnswers = append(candidateAnswers, append([]*shogi.Move{move, counterMove}, answer...))
@@ -112,6 +135,14 @@ func (s *Solver) Solve() [][]*shogi.Move {
 		answers = append(answers, candidateAnswers...)
 	}
 	return answers
+}
+
+// IsCheckmate method
+func (s *Solver) IsCheckmate() bool {
+	if s.state.Check(shogi.TurnFirst) != nil && len(counterMoves(s.state)) == 0 {
+		return true
+	}
+	return false
 }
 
 func isImpossible(state *shogi.State) bool {
@@ -141,6 +172,12 @@ func isImpossible(state *shogi.State) bool {
 		if pieces == 0 || (pieces == 1 && state.Captured[shogi.TurnFirst].Num() == 0) {
 			return true
 		}
+		for _, move := range state.CandidateMoves(shogi.TurnFirst) {
+			if _, exist := positions[*move.Dst]; exist {
+				return false
+			}
+		}
+		return true
 	}
 	return false
 }

@@ -18,7 +18,7 @@ func Generate() *shogi.State {
 		var state *shogi.State
 		for {
 			state = random()
-			if solver.IsCheckmate(state, shogi.TurnFirst) {
+			if solver.NewSolver(state).IsCheckmate() {
 				break
 			}
 		}
@@ -156,7 +156,7 @@ func cut(state *shogi.State) {
 		p := positions[i]
 		s := state.Clone()
 		s.SetBoardPiece(p.File, p.Rank, nil)
-		if solver.IsCheckmate(s, shogi.TurnFirst) {
+		if solver.NewSolver(s).IsCheckmate() {
 			bp := state.GetBoardPiece(p.File, p.Rank)
 			state.SetBoardPiece(p.File, p.Rank, nil)
 			state.Captured[shogi.TurnSecond].AddPieces(bp.Piece)
@@ -221,15 +221,7 @@ func candidatePrevStates(state *shogi.State, pp *posPiece) []*shogi.State {
 		candidates = append(candidates, &posPiece{shogi.Pos(pp.pos.File, pp.pos.Rank+1), pp.piece})
 		candidates = append(candidates, &posPiece{shogi.Pos(pp.pos.File-1, pp.pos.Rank-1), pp.piece})
 		candidates = append(candidates, &posPiece{shogi.Pos(pp.pos.File+1, pp.pos.Rank-1), pp.piece})
-	case shogi.TO:
-		fallthrough
-	case shogi.NY:
-		fallthrough
-	case shogi.NK:
-		fallthrough
-	case shogi.NG:
-		fallthrough
-	case shogi.KI:
+	case shogi.TO, shogi.NY, shogi.NK, shogi.NG, shogi.KI:
 		if pp.piece == shogi.KI {
 			candidates = append(candidates, &posPiece{shogi.Pos(-1, -1), pp.piece})
 		}
@@ -406,17 +398,19 @@ func checkSolvable(state *shogi.State) bool {
 	for _, i := range rand.Perm(len(positions)) {
 		p := positions[i]
 		s := state.Clone()
+		bp := state.GetBoardPiece(p.File, p.Rank)
 		s.SetBoardPiece(p.File, p.Rank, nil)
-		answers := solver.Solve(s)
+		s.Captured[shogi.TurnSecond].AddPieces(bp.Piece)
+		answers := solver.NewSolver(s).Solve([]string{}, 0)
 		if len(answers) >= 1 {
 			bp := state.GetBoardPiece(p.File, p.Rank)
 			state.SetBoardPiece(p.File, p.Rank, nil)
 			state.Captured[shogi.TurnSecond].AddPieces(bp.Piece)
 		}
 	}
-	answers := solver.Solve(state)
-	// TODO too easy?
-	return len(answers) == 1
+	answers := solver.NewSolver(state).Solve([]string{}, 0)
+	// TODO check if it is too easy
+	return len(answers) == 1 && len(answers[0]) == 1
 }
 
 func cleanup(state *shogi.State) *shogi.State {
