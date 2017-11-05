@@ -15,7 +15,7 @@ import (
 
 const separator = "+---------------------------+"
 
-var codeMap = map[rune]shogi.PieceCode{
+var codeMap = map[rune]shogi.Piece{
 	'歩': shogi.FU,
 	'と': shogi.TO,
 	'香': shogi.KY,
@@ -93,7 +93,7 @@ func Parse(r io.Reader) (*shogi.State, error) {
 					}
 					state.Board[row][col] = &shogi.BoardPiece{
 						Turn:  turn,
-						Piece: shogi.NewPiece(codeMap[runes[i]]),
+						Piece: codeMap[runes[i]],
 					}
 				}
 				col++
@@ -123,7 +123,7 @@ func Parse(r io.Reader) (*shogi.State, error) {
 					n = numberMap[string(runes[1:])]
 				}
 				for i := 0; i < n; i++ {
-					state.Captured[turn].AddPieces(shogi.NewPiece(codeMap[runes[0]]))
+					state.Captured[turn].AddPieces(codeMap[runes[0]])
 				}
 			}
 		}
@@ -141,13 +141,14 @@ func reader(b []byte) (io.Reader, error) {
 		return nil, err
 	}
 	submatch := re.FindStringSubmatch(scanner.Text())
-	if len(submatch) < 3 {
-		return nil, errors.New("failed to parse header")
+	if len(submatch) > 2 {
+		switch submatch[2] {
+		case "Shift_JIS":
+			return transform.NewReader(bytes.NewBuffer(b), japanese.ShiftJIS.NewDecoder()), nil
+		default:
+			return bytes.NewBuffer(b), nil
+		}
 	}
-	switch submatch[2] {
-	case "Shift_JIS":
-		return transform.NewReader(bytes.NewBuffer(b), japanese.ShiftJIS.NewDecoder()), nil
-	default:
-		return bytes.NewBuffer(b), nil
-	}
+	// default...?
+	return transform.NewReader(bytes.NewBuffer(b), japanese.ShiftJIS.NewDecoder()), nil
 }
