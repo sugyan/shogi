@@ -111,7 +111,7 @@ func (s *Solver) Solve(state *shogi.State, n int) [][]*shogi.Move {
 	hash := state.Hash()
 	// TODO: find endless repetition...
 	if n > 2 {
-		return nil
+		return answers
 	}
 	if result, exist := s.solved[hash]; exist {
 		return result
@@ -126,6 +126,7 @@ func (s *Solver) Solve(state *shogi.State, n int) [][]*shogi.Move {
 		}
 	}
 	if len(answers) > 0 {
+		s.solved[hash] = answers
 		return answers
 	}
 
@@ -149,11 +150,6 @@ func (s *Solver) Solve(state *shogi.State, n int) [][]*shogi.Move {
 		for _, counterMove := range counterMoves {
 			nextState := simulate(ss, counterMove)
 			solved := s.Solve(nextState, n+1)
-			s.solved[hash] = solved
-			if solved == nil {
-				ok = false
-				break
-			}
 			if len(solved) > 0 {
 				for _, answer := range solved {
 					candidateAnswers = append(candidateAnswers, append([]*shogi.Move{move, counterMove}, answer...))
@@ -168,6 +164,7 @@ func (s *Solver) Solve(state *shogi.State, n int) [][]*shogi.Move {
 		}
 		answers = append(answers, candidateAnswers...)
 	}
+	s.solved[hash] = answers
 	return answers
 }
 
@@ -442,14 +439,14 @@ func counterMoves(state *shogi.State) []*shogi.Move {
 	if move == nil {
 		return results
 	}
-	// move?
+	// move
 	for _, m := range state.CandidateMoves(shogi.TurnSecond) {
 		check := simulate(state, m).Check(shogi.TurnFirst)
 		if check == nil {
 			results = append(results, m)
 		}
 	}
-	// use captured pieces?
+	// use captured pieces
 	if state.Captured[shogi.TurnSecond].Num() > 0 {
 		available := []shogi.Piece{}
 		if state.Captured[shogi.TurnSecond].FU > 0 {
