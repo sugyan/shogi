@@ -47,11 +47,19 @@ func Solve(state *shogi.State) ([]string, error) {
 			}
 			answers[i] = result
 		}
-		// TODO choose shortest answers
-		length := len(answers[0])
+		// TODO choose longest answers
+		length := 0
+		for _, answer := range answers {
+			if len(answer) > length {
+				length = len(answer)
+			}
+		}
 		// evaluate answers
 		pointMap := map[int]int{}
 		for i, answer := range answers {
+			if len(answer) != length {
+				continue
+			}
 			s := state.Clone()
 			for j := 0; j < length; j++ {
 				move := answer[j]
@@ -524,34 +532,35 @@ func counterMoves(state *shogi.State) []*shogi.Move {
 		}
 
 		for _, p := range positions {
-			piece := available[0]
-			// check duplicated FU
-			if piece == shogi.FU {
-				ok := true
-				for rank := 1; rank < 10; rank++ {
-					bp := state.GetBoardPiece(p.File, rank)
-					if bp != nil && bp.Turn == shogi.TurnSecond && bp.Piece == shogi.FU {
-						ok = false
-						break
+			for _, piece := range available {
+				// check duplicated FU
+				if piece == shogi.FU {
+					ok := true
+					for rank := 1; rank < 10; rank++ {
+						bp := state.GetBoardPiece(p.File, rank)
+						if bp != nil && bp.Turn == shogi.TurnSecond && bp.Piece == shogi.FU {
+							ok = false
+							break
+						}
+					}
+					if !ok {
+						if len(available) > 1 {
+							piece = available[1]
+						} else {
+							continue
+						}
 					}
 				}
-				if !ok {
-					if len(available) > 1 {
-						piece = available[1]
-					} else {
-						continue
-					}
+				move := &shogi.Move{
+					Turn:  shogi.TurnSecond,
+					Src:   shogi.Pos(0, 0),
+					Dst:   shogi.Pos(p.File, p.Rank),
+					Piece: piece,
 				}
-			}
-			move := &shogi.Move{
-				Turn:  shogi.TurnSecond,
-				Src:   shogi.Pos(0, 0),
-				Dst:   shogi.Pos(p.File, p.Rank),
-				Piece: piece,
-			}
-			check := simulate(state, move).Check(shogi.TurnFirst)
-			if check == nil {
-				results = append(results, move)
+				check := simulate(state, move).Check(shogi.TurnFirst)
+				if check == nil {
+					results = append(results, move)
+				}
 			}
 		}
 	}

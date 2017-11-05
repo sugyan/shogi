@@ -3,18 +3,20 @@ package solver
 import (
 	"bytes"
 	"testing"
+	"time"
 
 	"github.com/sugyan/shogi/format/csa"
 )
 
 func TestSolvers(t *testing.T) {
 	for i, data := range testData {
-		t.Logf("Q%d...", i+1)
 		state, err := csa.Parse(bytes.NewBufferString(data.q))
 		if err != nil {
 			t.Fatal(err)
 		}
+		start := time.Now()
 		answer, err := Solve(state)
+		elapsed := time.Since(start)
 		if err != nil {
 			t.Error(err)
 			continue
@@ -31,6 +33,7 @@ func TestSolvers(t *testing.T) {
 				t.Errorf("error Q%d - A%d: %s != %s", i+1, j+1, move, data.a[j])
 			}
 		}
+		t.Logf("Q%d: OK (elapsed time: %v)", i+1, elapsed)
 	}
 }
 
