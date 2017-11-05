@@ -8,17 +8,19 @@ import (
 
 // Solver type
 type Solver struct {
-	state *shogi.State
+	solved map[string][][]*shogi.Move
 }
 
 // NewSolver function
-func NewSolver(state *shogi.State) *Solver {
-	return &Solver{state: state}
+func NewSolver() *Solver {
+	return &Solver{
+		solved: map[string][][]*shogi.Move{},
+	}
 }
 
 // Solve function
 func Solve(state *shogi.State) ([]string, error) {
-	answers := NewSolver(state).Solve([]string{}, 0)
+	answers := NewSolver().Solve(state, 0)
 	var answer []*shogi.Move
 	switch len(answers) {
 	case 0:
@@ -101,27 +103,25 @@ func Solve(state *shogi.State) ([]string, error) {
 }
 
 // Solve method
-func (s *Solver) Solve(history []string, n int) [][]*shogi.Move {
+func (s *Solver) Solve(state *shogi.State, n int) [][]*shogi.Move {
 	answers := [][]*shogi.Move{}
-	if s.state.Check(shogi.TurnFirst) != nil {
+	if state.Check(shogi.TurnFirst) != nil {
 		return answers
 	}
-	hash := s.state.Hash()
+	hash := state.Hash()
 	// TODO: find endless repetition...
 	if n > 2 {
 		return nil
 	}
-	for i := len(history) - 1; i >= 0; i-- {
-		if history[i] == hash {
-			return nil
-		}
+	if result, exist := s.solved[hash]; exist {
+		return result
 	}
 
-	candidates := candidates(s.state)
+	candidates := candidates(state)
 	// 1 step solving
 	for _, move := range candidates {
-		state := simulate(s.state, move)
-		if len(counterMoves(state)) == 0 {
+		ss := simulate(state, move)
+		if len(counterMoves(ss)) == 0 {
 			answers = append(answers, []*shogi.Move{move})
 		}
 	}
@@ -131,13 +131,13 @@ func (s *Solver) Solve(history []string, n int) [][]*shogi.Move {
 
 	// recursive solving
 	for _, move := range candidates {
-		state := simulate(s.state, move)
-		counterMoves := counterMoves(state)
+		ss := simulate(state, move)
+		counterMoves := counterMoves(ss)
 
 		ok := true
 		// simple check
 		for _, counterMove := range counterMoves {
-			if isImpossible(simulate(state, counterMove)) {
+			if isImpossible(simulate(ss, counterMove)) {
 				ok = false
 				break
 			}
@@ -147,8 +147,9 @@ func (s *Solver) Solve(history []string, n int) [][]*shogi.Move {
 		}
 		candidateAnswers := [][]*shogi.Move{}
 		for _, counterMove := range counterMoves {
-			nextState := simulate(state, counterMove)
-			solved := NewSolver(nextState).Solve(append(history, hash), n+1)
+			nextState := simulate(ss, counterMove)
+			solved := s.Solve(nextState, n+1)
+			s.solved[hash] = solved
 			if solved == nil {
 				ok = false
 				break
@@ -171,8 +172,8 @@ func (s *Solver) Solve(history []string, n int) [][]*shogi.Move {
 }
 
 // IsCheckmate method
-func (s *Solver) IsCheckmate() bool {
-	if s.state.Check(shogi.TurnFirst) != nil && len(counterMoves(s.state)) == 0 {
+func (s *Solver) IsCheckmate(state *shogi.State) bool {
+	if state.Check(shogi.TurnFirst) != nil && len(counterMoves(state)) == 0 {
 		return true
 	}
 	return false
@@ -544,11 +545,7 @@ func counterMoves(state *shogi.State) []*shogi.Move {
 						}
 					}
 					if !ok {
-						if len(available) > 1 {
-							piece = available[1]
-						} else {
-							continue
-						}
+						continue
 					}
 				}
 				move := &shogi.Move{

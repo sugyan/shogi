@@ -12,20 +12,32 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+type generator struct {
+	solver *solver.Solver
+}
+
 // Generate function
 func Generate() *shogi.State {
+	// TODO: timeout?
+	generator := &generator{
+		solver: solver.NewSolver(),
+	}
+	return generator.generate()
+}
+
+func (g *generator) generate() *shogi.State {
 	for {
 		var state *shogi.State
 		for {
 			state = random()
-			if solver.NewSolver(state).IsCheckmate() {
+			if g.solver.IsCheckmate(state) {
 				break
 			}
 		}
-		cut(state)
+		g.cut(state)
 		result := rewind(state)
 		if result != nil {
-			if checkSolvable(result) {
+			if g.checkSolvable(result) {
 				return cleanup(result)
 			}
 		}
@@ -136,7 +148,7 @@ func random() *shogi.State {
 	return s
 }
 
-func cut(state *shogi.State) {
+func (g *generator) cut(state *shogi.State) {
 	positions := []*shogi.Position{}
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
@@ -156,7 +168,7 @@ func cut(state *shogi.State) {
 		p := positions[i]
 		s := state.Clone()
 		s.SetBoardPiece(p.File, p.Rank, nil)
-		if solver.NewSolver(s).IsCheckmate() {
+		if g.solver.IsCheckmate(s) {
 			bp := state.GetBoardPiece(p.File, p.Rank)
 			state.SetBoardPiece(p.File, p.Rank, nil)
 			state.Captured[shogi.TurnSecond].AddPieces(bp.Piece)
@@ -382,7 +394,7 @@ func candidatePrevStates(state *shogi.State, pp *posPiece) []*shogi.State {
 	return states
 }
 
-func checkSolvable(state *shogi.State) bool {
+func (g *generator) checkSolvable(state *shogi.State) bool {
 	positions := []*shogi.Position{}
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
@@ -401,14 +413,14 @@ func checkSolvable(state *shogi.State) bool {
 		bp := state.GetBoardPiece(p.File, p.Rank)
 		s.SetBoardPiece(p.File, p.Rank, nil)
 		s.Captured[shogi.TurnSecond].AddPieces(bp.Piece)
-		answers := solver.NewSolver(s).Solve([]string{}, 0)
+		answers := g.solver.Solve(s, 0)
 		if len(answers) >= 1 {
 			bp := state.GetBoardPiece(p.File, p.Rank)
 			state.SetBoardPiece(p.File, p.Rank, nil)
 			state.Captured[shogi.TurnSecond].AddPieces(bp.Piece)
 		}
 	}
-	answers := solver.NewSolver(state).Solve([]string{}, 0)
+	answers := g.solver.Solve(state, 0)
 	// TODO check if it is too easy
 	return len(answers) == 1 && len(answers[0]) == 1
 }
