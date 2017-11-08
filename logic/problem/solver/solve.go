@@ -6,21 +6,26 @@ import (
 	"github.com/sugyan/shogi"
 )
 
+// DefaultMaxDepth constant
+const DefaultMaxDepth = 3
+
 // Solver type
 type Solver struct {
-	solved map[string][][]*shogi.Move
+	maxDepth int
+	solved   map[string][][]*shogi.Move
 }
 
 // NewSolver function
-func NewSolver() *Solver {
+func NewSolver(maxDepth int) *Solver {
 	return &Solver{
-		solved: map[string][][]*shogi.Move{},
+		maxDepth: maxDepth,
+		solved:   map[string][][]*shogi.Move{},
 	}
 }
 
 // Solve function
 func Solve(state *shogi.State) ([]string, error) {
-	answers := NewSolver().Solve(state, 0)
+	answers := NewSolver(DefaultMaxDepth).Solve(state, 0)
 	var answer []*shogi.Move
 	switch len(answers) {
 	case 0:
@@ -110,7 +115,7 @@ func (s *Solver) Solve(state *shogi.State, n int) [][]*shogi.Move {
 	}
 	hash := state.Hash()
 	// TODO: find endless repetition...
-	if n > 2 {
+	if n >= s.maxDepth {
 		return answers
 	}
 	if result, exist := s.solved[hash]; exist {
