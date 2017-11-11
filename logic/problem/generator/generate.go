@@ -67,14 +67,15 @@ func (g *generator) generate() *shogi.State {
 			switch g.steps {
 			case 1:
 				if g.checkSolvable(state) {
-					return cleanup(state)
+					return g.cleanup(state)
 				}
 			case 3:
 				states := g.rewind(state, shogi.TurnSecond)
 				for _, i := range rand.Perm(len(states)) {
 					s := states[i]
-					// TODO check
-					return s
+					if g.checkSolvable(s) {
+						return g.cleanup(s)
+					}
 				}
 			}
 		}
@@ -83,8 +84,8 @@ func (g *generator) generate() *shogi.State {
 
 func (g *generator) rewind(state *shogi.State, turn shogi.Turn) []*shogi.State {
 	var (
-		targetFile, targetRank int
-		posPieces              []*posPiece
+		targetPos *shogi.Position
+		posPieces []*posPiece
 	)
 	// search pieces
 	for i := 0; i < 9; i++ {
@@ -97,7 +98,7 @@ func (g *generator) rewind(state *shogi.State, turn shogi.Turn) []*shogi.State {
 					piece: bp.Piece,
 				})
 				if bp.Piece == shogi.OU {
-					targetFile, targetRank = file, rank
+					targetPos = shogi.Pos(file, rank)
 				}
 			}
 		}
@@ -118,9 +119,9 @@ func (g *generator) rewind(state *shogi.State, turn shogi.Turn) []*shogi.State {
 		}
 	case shogi.TurnSecond:
 		for _, pp := range posPieces {
-			states := candidatePrevStatesS(state, pp, shogi.Pos(targetFile, targetRank))
-			for _, i := range rand.Perm(len(states)) {
-				s := states[i]
+			candidates := candidatePrevStatesS(state, pp, targetPos)
+			for _, i := range rand.Perm(len(candidates)) {
+				s := candidates[i]
 				if s.Check(shogi.TurnFirst) != nil {
 					results = append(results, g.rewind(s, shogi.TurnFirst)...)
 					break
@@ -469,37 +470,36 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos *shogi.Pos
 		}
 	}
 
-	available := map[shogi.Piece]struct{}{}
+	available := []shogi.Piece{nil}
 	if state.Captured[shogi.TurnSecond].FU > 0 {
-		available[shogi.FU] = struct{}{}
-		available[shogi.TO] = struct{}{}
+		available = append(available, shogi.FU)
+		available = append(available, shogi.TO)
 	}
 	if state.Captured[shogi.TurnSecond].KY > 0 {
-		available[shogi.KY] = struct{}{}
-		available[shogi.NY] = struct{}{}
+		available = append(available, shogi.KY)
+		available = append(available, shogi.NY)
 	}
 	if state.Captured[shogi.TurnSecond].KE > 0 {
-		available[shogi.KE] = struct{}{}
-		available[shogi.NK] = struct{}{}
+		available = append(available, shogi.KE)
+		available = append(available, shogi.NK)
 	}
 	if state.Captured[shogi.TurnSecond].GI > 0 {
-		available[shogi.GI] = struct{}{}
-		available[shogi.NG] = struct{}{}
+		available = append(available, shogi.GI)
+		available = append(available, shogi.NG)
 	}
 	if state.Captured[shogi.TurnSecond].KI > 0 {
-		available[shogi.KI] = struct{}{}
+		available = append(available, shogi.KI)
 	}
 	if state.Captured[shogi.TurnSecond].KA > 0 {
-		available[shogi.KA] = struct{}{}
-		available[shogi.UM] = struct{}{}
+		available = append(available, shogi.KA)
+		available = append(available, shogi.UM)
 	}
 	if state.Captured[shogi.TurnSecond].HI > 0 {
-		available[shogi.HI] = struct{}{}
-		available[shogi.RY] = struct{}{}
+		available = append(available, shogi.HI)
+		available = append(available, shogi.RY)
 	}
 
 	if pp.piece == shogi.OU {
-		available[nil] = struct{}{}
 		for _, p := range []*shogi.Position{
 			shogi.Pos(-1, -1), shogi.Pos(-1, +0), shogi.Pos(-1, +1),
 			shogi.Pos(+0, -1), shogi.Pos(+0, +1),
@@ -510,171 +510,48 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos *shogi.Pos
 				continue
 			}
 			bp := state.GetBoardPiece(file, rank)
-			if bp == nil {
-				for piece := range available {
-					s := state.Clone()
-					s.SetBoardPiece(file, rank, &shogi.BoardPiece{
-						Turn:  shogi.TurnSecond,
-						Piece: shogi.OU,
-					})
-					switch piece {
-					case nil:
-						s.SetBoardPiece(pp.pos.File, pp.pos.Rank, nil)
-					default:
-						ok := true
-						if piece == shogi.FU {
-							for i := 0; i < 9; i++ {
-								bpf := state.GetBoardPiece(i+1, pp.pos.Rank)
-								if bpf != nil && bpf.Turn == shogi.TurnSecond && bpf.Piece == shogi.FU {
-									ok = false
-									break
-								}
+			if bp != nil {
+				continue
+			}
+			for _, piece := range available {
+				s := state.Clone()
+				s.SetBoardPiece(file, rank, &shogi.BoardPiece{
+					Turn:  shogi.TurnSecond,
+					Piece: shogi.OU,
+				})
+				switch piece {
+				case nil:
+					s.SetBoardPiece(pp.pos.File, pp.pos.Rank, nil)
+				default:
+					ok := true
+					if piece == shogi.FU {
+						for i := 0; i < 9; i++ {
+							bpf := state.GetBoardPiece(i+1, pp.pos.Rank)
+							if bpf != nil && bpf.Turn == shogi.TurnSecond && bpf.Piece == shogi.FU {
+								ok = false
+								break
 							}
 						}
-						if !ok {
-							continue
-						}
-						s.SetBoardPiece(pp.pos.File, pp.pos.Rank, &shogi.BoardPiece{
-							Turn:  shogi.TurnFirst,
-							Piece: piece,
-						})
-						s.Captured[shogi.TurnSecond].SubPieces(piece)
 					}
-					states = append(states, s)
+					if !ok {
+						continue
+					}
+					s.SetBoardPiece(pp.pos.File, pp.pos.Rank, &shogi.BoardPiece{
+						Turn:  shogi.TurnFirst,
+						Piece: piece,
+					})
+					s.Captured[shogi.TurnSecond].SubPieces(piece)
 				}
+				states = append(states, s)
 			}
 		}
 	} else {
-		dFile, dRank := pp.pos.File-targetPos.File, pp.pos.Rank-targetPos.Rank
 		if pp.pos.Rank == 1 && (pp.piece == shogi.FU || pp.piece == shogi.KY) {
 			return states
 		}
 		if pp.pos.Rank <= 2 && pp.piece == shogi.KE {
 			return states
 		}
-		if abs(dFile) > 1 {
-			// HI/RY only available
-			ok := true
-			if dFile > 0 {
-				for i := 1; i < abs(dFile); i++ {
-					if state.GetBoardPiece(pp.pos.File-i, pp.pos.Rank) != nil {
-						ok = false
-						break
-					}
-				}
-			} else {
-				for i := 1; i < abs(dFile); i++ {
-					if state.GetBoardPiece(pp.pos.File+i, pp.pos.Rank) != nil {
-						ok = false
-						break
-					}
-				}
-			}
-			if !ok {
-				return states
-			}
-			for p := range available {
-				if p != shogi.HI {
-					delete(available, p)
-				}
-			}
-		}
-		if abs(dRank) > 1 {
-			if dFile != 0 {
-				// KE only
-				for p := range available {
-					if p != shogi.KE {
-						delete(available, p)
-					}
-				}
-			} else {
-				// HI/RY or KY only available
-				ok := true
-				if dRank > 0 {
-					for i := 1; i < abs(dRank); i++ {
-						if state.GetBoardPiece(pp.pos.File, pp.pos.Rank-i) != nil {
-							ok = false
-							break
-						}
-					}
-				} else {
-					for i := 1; i < abs(dRank); i++ {
-						if state.GetBoardPiece(pp.pos.File, pp.pos.Rank+i) != nil {
-							ok = false
-							break
-						}
-					}
-				}
-				if !ok {
-					return states
-				}
-				if dRank > 0 {
-					for p := range available {
-						if p != shogi.HI && p != shogi.KY {
-							delete(available, p)
-						}
-					}
-				} else {
-					for p := range available {
-						if p != shogi.HI {
-							delete(available, p)
-						}
-					}
-				}
-			}
-		}
-		switch dRank {
-		case -1:
-			if dFile == 0 {
-				for p := range available {
-					if p != shogi.HI && p != shogi.UM && p != shogi.KI {
-						delete(available, p)
-					}
-				}
-			} else {
-				for p := range available {
-					if p != shogi.RY && p != shogi.KA && p != shogi.GI {
-						delete(available, p)
-					}
-				}
-			}
-		case 0:
-			for p := range available {
-				if p != shogi.HI && p != shogi.UM && p != shogi.KI {
-					delete(available, p)
-				}
-			}
-		case 1:
-			if dFile == 0 {
-				for p := range available {
-					if p != shogi.HI && p != shogi.UM && p != shogi.KI && p != shogi.GI && p != shogi.KY && p != shogi.FU {
-						delete(available, p)
-					}
-				}
-			} else {
-				for p := range available {
-					if p != shogi.RY && p != shogi.KA && p != shogi.KI && p != shogi.GI {
-						delete(available, p)
-					}
-				}
-			}
-		}
-		if _, exist := available[shogi.KI]; exist {
-			available[shogi.NG] = struct{}{}
-			available[shogi.NK] = struct{}{}
-			available[shogi.NY] = struct{}{}
-			available[shogi.TO] = struct{}{}
-		}
-		if _, exist := available[shogi.KA]; exist {
-			available[shogi.UM] = struct{}{}
-		}
-		if _, exist := available[shogi.HI]; exist {
-			available[shogi.RY] = struct{}{}
-		}
-		if len(available) == 0 {
-			return states
-		}
-
 		prevPositions := []*shogi.Position{}
 		// TODO promotion...?
 		switch pp.piece {
@@ -728,7 +605,7 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos *shogi.Pos
 			// TODO
 		}
 		for _, prevPos := range prevPositions {
-			for piece := range available {
+			for _, piece := range available {
 				s := state.Clone()
 				s.SetBoardPiece(pp.pos.File, pp.pos.Rank, &shogi.BoardPiece{
 					Turn:  shogi.TurnFirst,
@@ -748,90 +625,122 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos *shogi.Pos
 }
 
 func (g *generator) checkSolvable(state *shogi.State) bool {
-	positions := []*shogi.Position{}
-	for i := 0; i < 9; i++ {
-		for j := 0; j < 9; j++ {
-			file, rank := 9-i, j+1
-			bp := state.GetBoardPiece(file, rank)
-			if bp != nil {
-				if bp.Piece != shogi.OU {
-					positions = append(positions, shogi.Pos(file, rank))
+	answers := g.solver.Solve(state, 0)
+	if len(answers) == 0 {
+		return false
+	}
+	length := 0
+	for _, answer := range answers {
+		// TODO check wasted placed pieces
+		if len(answer) > length {
+			length = len(answer)
+		}
+	}
+	switch g.steps {
+	case 1:
+		if len(answers) == 1 && length == 1 {
+			return true
+		}
+		return false
+	case 3:
+		if length == 3 {
+			a := answers[0][0]
+			for _, answer := range answers {
+				if *a != *answer[0] {
+					return false
+				}
+			}
+			return true
+		}
+		return false
+	}
+	return false
+}
+
+func (g *generator) cleanup(state *shogi.State) *shogi.State {
+	// remove unnecessary pieces
+	{
+		posPieces := []*posPiece{}
+		for i := 0; i < 9; i++ {
+			for j := 0; j < 9; j++ {
+				file, rank := 9-i, j+1
+				bp := state.GetBoardPiece(file, rank)
+				if bp != nil && bp.Piece != shogi.OU {
+					posPieces = append(posPieces, &posPiece{
+						pos:   shogi.Pos(file, rank),
+						piece: bp.Piece,
+					})
 				}
 			}
 		}
-	}
-	for _, i := range rand.Perm(len(positions)) {
-		p := positions[i]
-		s := state.Clone()
-		bp := state.GetBoardPiece(p.File, p.Rank)
-		s.SetBoardPiece(p.File, p.Rank, nil)
-		s.Captured[shogi.TurnSecond].AddPieces(bp.Piece)
-		answers := g.solver.Solve(s, 0)
-		if len(answers) >= 1 {
-			bp := state.GetBoardPiece(p.File, p.Rank)
-			state.SetBoardPiece(p.File, p.Rank, nil)
-			state.Captured[shogi.TurnSecond].AddPieces(bp.Piece)
-		}
-	}
-	answers := g.solver.Solve(state, 0)
-	// TODO check if it is too easy
-	return len(answers) == 1 && len(answers[0]) == 1
-}
-
-func cleanup(state *shogi.State) *shogi.State {
-	posPieces := []*posPiece{}
-	for i := 0; i < 9; i++ {
-		for j := 0; j < 9; j++ {
-			file, rank := 9-i, j+1
-			bp := state.GetBoardPiece(file, rank)
-			if bp != nil && bp.Turn == shogi.TurnFirst {
-				posPieces = append(posPieces, &posPiece{
-					pos:   shogi.Pos(file, rank),
-					piece: bp.Piece,
-				})
+		for _, i := range rand.Perm(len(posPieces)) {
+			pp := posPieces[i]
+			s := state.Clone()
+			s.SetBoardPiece(pp.pos.File, pp.pos.Rank, nil)
+			s.Captured[shogi.TurnSecond].AddPieces(pp.piece)
+			if s.Check(shogi.TurnFirst) == nil && g.checkSolvable(s) {
+				state.SetBoardPiece(pp.pos.File, pp.pos.Rank, nil)
+				state.Captured[shogi.TurnSecond].AddPieces(pp.piece)
 			}
 		}
 	}
 	// reaplace TO, NY, NK, NG to KI or TO
-	for _, i := range rand.Perm(len(posPieces)) {
-		pp := posPieces[i]
-		switch pp.piece {
-		case shogi.TO:
-			fallthrough
-		case shogi.NY:
-			fallthrough
-		case shogi.NK:
-			fallthrough
-		case shogi.NG:
-			if state.Captured[shogi.TurnSecond].KI > 0 {
-				state.SetBoardPiece(pp.pos.File, pp.pos.Rank, &shogi.BoardPiece{
-					Turn:  shogi.TurnFirst,
-					Piece: shogi.KI,
-				})
-				state.Captured[shogi.TurnSecond].KI--
+	{
+		posPieces := map[shogi.Turn][]*posPiece{}
+		for i := 0; i < 9; i++ {
+			for j := 0; j < 9; j++ {
+				file, rank := 9-i, j+1
+				bp := state.GetBoardPiece(file, rank)
+				if bp != nil {
+					posPieces[bp.Turn] = append(posPieces[bp.Turn], &posPiece{
+						pos:   shogi.Pos(file, rank),
+						piece: bp.Piece,
+					})
+				}
+			}
+		}
+		for _, turn := range []shogi.Turn{shogi.TurnSecond, shogi.TurnFirst} {
+			for _, i := range rand.Perm(len(posPieces[turn])) {
+				pp := posPieces[turn][i]
 				switch pp.piece {
 				case shogi.TO:
-					state.Captured[shogi.TurnSecond].FU++
+					fallthrough
 				case shogi.NY:
-					state.Captured[shogi.TurnSecond].KY++
+					fallthrough
 				case shogi.NK:
-					state.Captured[shogi.TurnSecond].KE++
+					fallthrough
 				case shogi.NG:
-					state.Captured[shogi.TurnSecond].GI++
-				}
-			} else if state.Captured[shogi.TurnSecond].FU > 0 {
-				state.SetBoardPiece(pp.pos.File, pp.pos.Rank, &shogi.BoardPiece{
-					Turn:  shogi.TurnFirst,
-					Piece: shogi.TO,
-				})
-				state.Captured[shogi.TurnSecond].FU--
-				switch pp.piece {
-				case shogi.NY:
-					state.Captured[shogi.TurnSecond].KY++
-				case shogi.NK:
-					state.Captured[shogi.TurnSecond].KE++
-				case shogi.NG:
-					state.Captured[shogi.TurnSecond].GI++
+					if state.Captured[shogi.TurnSecond].KI > 0 {
+						state.SetBoardPiece(pp.pos.File, pp.pos.Rank, &shogi.BoardPiece{
+							Turn:  turn,
+							Piece: shogi.KI,
+						})
+						state.Captured[shogi.TurnSecond].KI--
+						switch pp.piece {
+						case shogi.TO:
+							state.Captured[shogi.TurnSecond].FU++
+						case shogi.NY:
+							state.Captured[shogi.TurnSecond].KY++
+						case shogi.NK:
+							state.Captured[shogi.TurnSecond].KE++
+						case shogi.NG:
+							state.Captured[shogi.TurnSecond].GI++
+						}
+					} else if state.Captured[shogi.TurnSecond].FU > 0 {
+						state.SetBoardPiece(pp.pos.File, pp.pos.Rank, &shogi.BoardPiece{
+							Turn:  shogi.TurnFirst,
+							Piece: shogi.TO,
+						})
+						state.Captured[shogi.TurnSecond].FU--
+						switch pp.piece {
+						case shogi.NY:
+							state.Captured[shogi.TurnSecond].KY++
+						case shogi.NK:
+							state.Captured[shogi.TurnSecond].KE++
+						case shogi.NG:
+							state.Captured[shogi.TurnSecond].GI++
+						}
+					}
 				}
 			}
 		}
