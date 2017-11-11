@@ -59,31 +59,19 @@ func (cp *CapturedPieces) Num() int {
 // AddPieces method
 func (cp *CapturedPieces) AddPieces(p Piece) {
 	switch p {
-	case FU:
-		fallthrough
-	case TO:
+	case FU, TO:
 		cp.FU++
-	case KY:
-		fallthrough
-	case NY:
+	case KY, NY:
 		cp.KY++
-	case KE:
-		fallthrough
-	case NK:
+	case KE, NK:
 		cp.KE++
-	case GI:
-		fallthrough
-	case NG:
+	case GI, NG:
 		cp.GI++
 	case KI:
 		cp.KI++
-	case KA:
-		fallthrough
-	case UM:
+	case KA, UM:
 		cp.KA++
-	case HI:
-		fallthrough
-	case RY:
+	case HI, RY:
 		cp.HI++
 	}
 }
@@ -91,19 +79,19 @@ func (cp *CapturedPieces) AddPieces(p Piece) {
 // SubPieces method
 func (cp *CapturedPieces) SubPieces(p Piece) {
 	switch p {
-	case FU:
+	case FU, TO:
 		cp.FU--
-	case KY:
+	case KY, NY:
 		cp.KY--
-	case KE:
+	case KE, NK:
 		cp.KE--
-	case GI:
+	case GI, NG:
 		cp.GI--
 	case KI:
 		cp.KI--
-	case KA:
+	case KA, UM:
 		cp.KA--
-	case HI:
+	case HI, RY:
 		cp.HI--
 	}
 }

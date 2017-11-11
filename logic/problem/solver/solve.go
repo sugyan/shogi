@@ -2,25 +2,31 @@ package solver
 
 import (
 	"errors"
+	"math"
 
 	"github.com/sugyan/shogi"
 )
 
+// DefaultMaxDepth constant
+const DefaultMaxDepth = 3
+
 // Solver type
 type Solver struct {
-	solved map[string][][]*shogi.Move
+	maxDepth int
+	solved   map[string][][]*shogi.Move
 }
 
 // NewSolver function
-func NewSolver() *Solver {
+func NewSolver(maxDepth int) *Solver {
 	return &Solver{
-		solved: map[string][][]*shogi.Move{},
+		maxDepth: maxDepth,
+		solved:   map[string][][]*shogi.Move{},
 	}
 }
 
 // Solve function
 func Solve(state *shogi.State) ([]string, error) {
-	answers := NewSolver().Solve(state, 0)
+	answers := NewSolver(DefaultMaxDepth).Solve(state, 0)
 	var answer []*shogi.Move
 	switch len(answers) {
 	case 0:
@@ -49,7 +55,6 @@ func Solve(state *shogi.State) ([]string, error) {
 			}
 			answers[i] = result
 		}
-		// TODO choose longest answers
 		length := 0
 		for _, answer := range answers {
 			if len(answer) > length {
@@ -57,8 +62,9 @@ func Solve(state *shogi.State) ([]string, error) {
 			}
 		}
 		// evaluate answers
-		pointMap := map[int]int{}
+		pointMap := map[int]float64{}
 		for i, answer := range answers {
+			pointMap[i] = 0.0
 			if len(answer) != length {
 				continue
 			}
@@ -77,7 +83,7 @@ func Solve(state *shogi.State) ([]string, error) {
 				pointMap[i] -= 10
 			}
 		}
-		maxIndex, point := 0, 0
+		maxIndex, point := 0, math.Inf(-1)
 		for k, v := range pointMap {
 			if v > point {
 				point = v
@@ -110,7 +116,7 @@ func (s *Solver) Solve(state *shogi.State, n int) [][]*shogi.Move {
 	}
 	hash := state.Hash()
 	// TODO: find endless repetition...
-	if n > 2 {
+	if n >= s.maxDepth {
 		return answers
 	}
 	if result, exist := s.solved[hash]; exist {
