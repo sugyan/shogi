@@ -88,16 +88,16 @@ func Generate(state *shogi.State, options *StyleOptions) (image.Image, error) {
 
 	xStep := 387.0 / 9.0
 	yStep := 432.0 / 9.0
-	xOffset := xStep * 3.0
-	dst := image.NewRGBA(image.Rectangle{Min: image.ZP, Max: boardImg.Bounds().Size().Add(image.Pt(int(xStep*6), 0))})
+	xOffset := 138
+	dst := image.NewRGBA(image.Rectangle{Min: image.ZP, Max: boardImg.Bounds().Size().Add(image.Pt(276, 0))})
 	for i := 0; i < dst.Bounds().Dx(); i++ {
 		for j := 0; j < dst.Bounds().Dy(); j++ {
 			dst.Set(i, j, color.White)
 		}
 	}
 	// board
-	draw.Draw(dst, dst.Bounds().Add(image.Pt(int(xOffset), 0)), boardImg, boardImg.Bounds().Min, draw.Over)
-	draw.Draw(dst, dst.Bounds().Add(image.Pt(int(xOffset), 0)), gridImg, gridImg.Bounds().Min, draw.Over)
+	draw.Draw(dst, dst.Bounds().Add(image.Pt(xOffset, 0)), boardImg, boardImg.Bounds().Min, draw.Over)
+	draw.Draw(dst, dst.Bounds().Add(image.Pt(xOffset, 0)), gridImg, gridImg.Bounds().Min, draw.Over)
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
 			bp := state.Board[i][j]
@@ -107,7 +107,7 @@ func Generate(state *shogi.State, options *StyleOptions) (image.Image, error) {
 					return nil, err
 				}
 				r := dst.Bounds().
-					Add(image.Pt(int(xOffset)+11, 11)).
+					Add(image.Pt(xOffset+11, 11)).
 					Add(image.Pt(int(xStep*float64(j)), int(yStep*float64(i))))
 				draw.Draw(dst, r, pieceImg, pieceImg.Bounds().Min, draw.Over)
 			}
@@ -120,7 +120,7 @@ func Generate(state *shogi.State, options *StyleOptions) (image.Image, error) {
 		switch turn {
 		case shogi.TurnFirst:
 			offset = image.Pt(
-				int(xOffset)+boardImg.Bounds().Dx()+2,
+				xOffset+boardImg.Bounds().Dx()+2,
 				int(yStep*float64(-4))+boardImg.Bounds().Dy(),
 			)
 		case shogi.TurnSecond:
@@ -144,7 +144,7 @@ func Generate(state *shogi.State, options *StyleOptions) (image.Image, error) {
 					r := dst.Bounds().
 						Add(offset).
 						Add(image.Pt(
-							int(xStep*1.5*float64(j)),
+							int(66*float64(j)),
 							int(yStep*float64(i))))
 					draw.Draw(dst, r, pieceImg, pieceImg.Bounds().Min, draw.Over)
 					if data.num > 1 {
