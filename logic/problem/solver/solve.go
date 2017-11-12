@@ -90,12 +90,13 @@ func Solve(state *shogi.State) ([]string, error) {
 	var (
 		results []string
 	)
+	s := state.Clone()
 	for _, move := range answer {
-		ms, err := state.MoveString(move)
-		state.Apply(move)
+		ms, err := s.MoveString(move)
 		if err != nil {
 			return nil, err
 		}
+		s.Apply(move)
 		results = append(results, ms)
 	}
 	return results, nil
