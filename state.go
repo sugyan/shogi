@@ -39,8 +39,9 @@ func (p *Position) IsCaptured() bool {
 
 // State definition
 type State struct {
-	Board    [9][9]*BoardPiece
-	Captured map[Turn]*CapturedPieces
+	Board      [9][9]*BoardPiece
+	Captured   map[Turn]*CapturedPieces
+	latestMove *Move
 }
 
 // Move type
@@ -128,11 +129,32 @@ func (s *State) SetBoardPiece(file, rank int, bp *BoardPiece) error {
 	return nil
 }
 
-// MoveString method
-func (s *State) MoveString(move *Move, prev *Move) (string, error) {
-	if move == nil {
-		return "", fmt.Errorf("move is empty")
+// Apply method
+func (s *State) Apply(move *Move) {
+	// update state
+	s.latestMove = move
+	if move.Src.File > 0 && move.Src.Rank > 0 {
+		bp := s.GetBoardPiece(move.Dst.File, move.Dst.Rank)
+		if bp != nil {
+			s.Captured[move.Turn].AddPieces(bp.Piece)
+		}
+		s.SetBoardPiece(move.Src.File, move.Src.Rank, nil)
+		s.SetBoardPiece(move.Dst.File, move.Dst.Rank, &BoardPiece{
+			Turn:  move.Turn,
+			Piece: move.Piece,
+		})
+	} else {
+		s.SetBoardPiece(move.Dst.File, move.Dst.Rank, &BoardPiece{
+			Turn:  move.Turn,
+			Piece: move.Piece,
+		})
+		s.Captured[move.Turn].SubPieces(move.Piece)
 	}
+}
+
+// MoveString method
+func (s *State) MoveString(move *Move) (string, error) {
+	// move string
 	nameMap := map[Piece]string{
 		FU: "歩",
 		TO: "と",
@@ -153,7 +175,7 @@ func (s *State) MoveString(move *Move, prev *Move) (string, error) {
 	if move.Turn == TurnSecond {
 		result = "△"
 	}
-	if prev != nil && *move.Dst == *prev.Dst {
+	if s.latestMove != nil && *move.Dst == *s.latestMove.Dst {
 		result += "同"
 	} else {
 		result += fmt.Sprintf("%c%c",

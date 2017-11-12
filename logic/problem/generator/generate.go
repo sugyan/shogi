@@ -45,7 +45,7 @@ func Generate(pType problem) *shogi.State {
 	// TODO: timeout?
 	generator := &generator{
 		steps:  pType.steps(),
-		solver: solver.NewSolver(2), // TODO speed up...
+		solver: solver.NewSolver(2), // TODO: speed up...
 	}
 	return generator.generate()
 }
@@ -236,7 +236,7 @@ func random() *shogi.State {
 	return s
 }
 
-// TODO fix bug...
+// TODO: fix bug...
 func (g *generator) cut(state *shogi.State) {
 	positions := []*shogi.Position{}
 	for i := 0; i < 9; i++ {
@@ -553,7 +553,7 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos *shogi.Pos
 			return states
 		}
 		prevPositions := []*shogi.Position{}
-		// TODO promotion...?
+		// TODO: promotion...?
 		switch pp.piece {
 		case shogi.FU:
 			if pp.pos.Rank > 2 && state.GetBoardPiece(pp.pos.File, pp.pos.Rank-1) == nil {
@@ -727,7 +727,21 @@ func (g *generator) checkSolvable(state *shogi.State) bool {
 	}
 	length := 0
 	for _, answer := range answers {
-		// TODO check wasted placed pieces
+		// check wasted placed pieces
+		// TODO: use common logic of solver
+		for {
+			if len(answer) > 1 {
+				last := answer[len(answer)-1]
+				prev := answer[len(answer)-2]
+				if *prev.Src == *shogi.Pos(0, 0) && *prev.Dst == *last.Dst {
+					answer = answer[:len(answer)-2]
+				} else {
+					break
+				}
+			} else {
+				break
+			}
+		}
 		if len(answer) > length {
 			length = len(answer)
 		}

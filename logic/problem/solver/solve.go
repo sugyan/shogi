@@ -35,47 +35,42 @@ func Solve(state *shogi.State) ([]string, error) {
 		answer = answers[0]
 	default: // mutlple answers
 		// check wasted placed pieces
+		length := 0
 		for i, answer := range answers {
-			result := []*shogi.Move{}
-			s := state.Clone()
-			for j, move := range answer {
-				result = append(result, move)
-				s = simulate(s, move)
-				if j%2 == 0 && j > 1 {
-					prev := answer[j-1]
-					// TODO: is this OK?
-					if *prev.Src == *shogi.Pos(0, 0) && *prev.Dst == *move.Dst {
-						result = result[:len(result)-2]
-						s = state.Clone()
-						for _, m := range result {
-							s = simulate(s, m)
-						}
+			for {
+				if len(answer) > 1 {
+					last := answer[len(answer)-1]
+					prev := answer[len(answer)-2]
+					if *prev.Src == *shogi.Pos(0, 0) && *prev.Dst == *last.Dst {
+						answer = answer[:len(answer)-2]
+					} else {
+						break
 					}
+				} else {
+					break
 				}
 			}
-			answers[i] = result
-		}
-		length := 0
-		for _, answer := range answers {
 			if len(answer) > length {
 				length = len(answer)
 			}
+			answers[i] = answer
 		}
 		// evaluate answers
 		pointMap := map[int]float64{}
 		for i, answer := range answers {
 			pointMap[i] = 0.0
 			if len(answer) != length {
+				pointMap[i] = math.Inf(-1)
 				continue
 			}
 			s := state.Clone()
 			for j := 0; j < length; j++ {
 				move := answer[j]
-				s = simulate(s, move)
+				s.Apply(move)
 				if j > 0 {
 					prev := answer[j-1]
 					if move.Turn == shogi.TurnSecond && *move.Dst == *prev.Dst {
-						pointMap[i]++
+						pointMap[i] += 1.0
 					}
 				}
 			}
@@ -93,17 +88,15 @@ func Solve(state *shogi.State) ([]string, error) {
 		answer = answers[maxIndex]
 	}
 	var (
-		prev    *shogi.Move
 		results []string
 	)
 	for _, move := range answer {
-		ms, err := state.MoveString(move, prev)
+		ms, err := state.MoveString(move)
+		state.Apply(move)
 		if err != nil {
 			return nil, err
 		}
 		results = append(results, ms)
-		state = simulate(state, move)
-		prev = move
 	}
 	return results, nil
 }
@@ -126,7 +119,8 @@ func (s *Solver) Solve(state *shogi.State, n int) [][]*shogi.Move {
 	candidates := candidates(state)
 	// 1 step solving
 	for _, move := range candidates {
-		ss := simulate(state, move)
+		ss := state.Clone()
+		ss.Apply(move)
 		if len(counterMoves(ss)) == 0 {
 			answers = append(answers, []*shogi.Move{move})
 		}
@@ -138,13 +132,16 @@ func (s *Solver) Solve(state *shogi.State, n int) [][]*shogi.Move {
 
 	// recursive solving
 	for _, move := range candidates {
-		ss := simulate(state, move)
+		ss := state.Clone()
+		ss.Apply(move)
 		counterMoves := counterMoves(ss)
 
 		ok := true
 		// simple check
 		for _, counterMove := range counterMoves {
-			if isImpossible(simulate(ss, counterMove)) {
+			sss := ss.Clone()
+			sss.Apply(counterMove)
+			if isImpossible(sss) {
 				ok = false
 				break
 			}
@@ -154,7 +151,8 @@ func (s *Solver) Solve(state *shogi.State, n int) [][]*shogi.Move {
 		}
 		candidateAnswers := [][]*shogi.Move{}
 		for _, counterMove := range counterMoves {
-			nextState := simulate(ss, counterMove)
+			nextState := ss.Clone()
+			nextState.Apply(counterMove)
 			solved := s.Solve(nextState, n+1)
 			if len(solved) > 0 {
 				for _, answer := range solved {
@@ -216,7 +214,9 @@ func isImpossible(state *shogi.State) bool {
 func candidates(state *shogi.State) []*shogi.Move {
 	results := []*shogi.Move{}
 	for _, move := range state.CandidateMoves(shogi.TurnFirst) {
-		if simulate(state, move).Check(shogi.TurnFirst) != nil {
+		s := state.Clone()
+		s.Apply(move)
+		if s.Check(shogi.TurnFirst) != nil {
 			results = append(results, move)
 		}
 	}
@@ -415,30 +415,6 @@ func candidates(state *shogi.State) []*shogi.Move {
 	return results
 }
 
-func simulate(state *shogi.State, move *shogi.Move) *shogi.State {
-	// copy board state and captured
-	s := state.Clone()
-	// move, or use captured piece
-	if move.Src.File > 0 && move.Src.Rank > 0 {
-		bp := s.GetBoardPiece(move.Dst.File, move.Dst.Rank)
-		if bp != nil {
-			s.Captured[move.Turn].AddPieces(bp.Piece)
-		}
-		s.SetBoardPiece(move.Src.File, move.Src.Rank, nil)
-		s.SetBoardPiece(move.Dst.File, move.Dst.Rank, &shogi.BoardPiece{
-			Turn:  move.Turn,
-			Piece: move.Piece,
-		})
-	} else {
-		s.SetBoardPiece(move.Dst.File, move.Dst.Rank, &shogi.BoardPiece{
-			Turn:  move.Turn,
-			Piece: move.Piece,
-		})
-		s.Captured[move.Turn].SubPieces(move.Piece)
-	}
-	return s
-}
-
 func counterMoves(state *shogi.State) []*shogi.Move {
 	results := []*shogi.Move{}
 	move := state.Check(shogi.TurnFirst)
@@ -447,7 +423,9 @@ func counterMoves(state *shogi.State) []*shogi.Move {
 	}
 	// move
 	for _, m := range state.CandidateMoves(shogi.TurnSecond) {
-		check := simulate(state, m).Check(shogi.TurnFirst)
+		s := state.Clone()
+		s.Apply(m)
+		check := s.Check(shogi.TurnFirst)
 		if check == nil {
 			results = append(results, m)
 		}
@@ -557,7 +535,9 @@ func counterMoves(state *shogi.State) []*shogi.Move {
 					Dst:   shogi.Pos(p.File, p.Rank),
 					Piece: piece,
 				}
-				check := simulate(state, move).Check(shogi.TurnFirst)
+				s := state.Clone()
+				s.Apply(move)
+				check := s.Check(shogi.TurnFirst)
 				if check == nil {
 					results = append(results, move)
 				}
