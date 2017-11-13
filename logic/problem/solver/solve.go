@@ -26,35 +26,14 @@ func NewSolver(maxDepth int) *Solver {
 
 // Solve function
 func Solve(state *shogi.State) ([]string, error) {
-	answers := NewSolver(DefaultMaxDepth).Solve(state, 0)
+	answers, length := NewSolver(DefaultMaxDepth).ValidAnswers(state)
 	var answer []*shogi.Move
 	switch len(answers) {
 	case 0:
 		return nil, errors.New("unsolvable")
 	case 1:
 		answer = answers[0]
-	default: // mutlple answers
-		// check wasted placed pieces
-		length := 0
-		for i, answer := range answers {
-			for {
-				if len(answer) > 1 {
-					last := answer[len(answer)-1]
-					prev := answer[len(answer)-2]
-					if *prev.Src == *shogi.Pos(0, 0) && *prev.Dst == *last.Dst {
-						answer = answer[:len(answer)-2]
-					} else {
-						break
-					}
-				} else {
-					break
-				}
-			}
-			if len(answer) > length {
-				length = len(answer)
-			}
-			answers[i] = answer
-		}
+	default:
 		// evaluate answers
 		pointMap := map[int]float64{}
 		for i, answer := range answers {
@@ -100,6 +79,44 @@ func Solve(state *shogi.State) ([]string, error) {
 		results = append(results, ms)
 	}
 	return results, nil
+}
+
+// ValidAnswers method
+func (s *Solver) ValidAnswers(state *shogi.State) ([][]*shogi.Move, int) {
+	answers := s.Solve(state, 0)
+	if len(answers) == 0 {
+		return [][]*shogi.Move{}, 0
+	}
+	if len(answers) == 1 {
+		return answers, len(answers[0])
+	}
+	length := 0
+	results := [][]*shogi.Move{}
+	for i, answer := range answers {
+		ok := true
+		for j := 2; j < len(answer); j += 2 {
+			last := answer[j]
+			prev := answer[j-1]
+			if *prev.Src == *shogi.Pos(0, 0) && *prev.Dst == *last.Dst {
+				ok = false
+				break
+			}
+		}
+		if ok {
+			if len(answer) > length {
+				length = len(answer)
+			}
+			answers[i] = answer
+		} else {
+			answers[i] = nil
+		}
+	}
+	for _, answer := range answers {
+		if answer != nil && len(answer) == length {
+			results = append(results, answer)
+		}
+	}
+	return results, length
 }
 
 // Solve method

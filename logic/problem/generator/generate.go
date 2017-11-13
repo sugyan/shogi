@@ -8,7 +8,8 @@ import (
 	"github.com/sugyan/shogi/logic/problem/solver"
 )
 
-type problem interface {
+// Problem interface
+type Problem interface {
 	steps() int
 }
 
@@ -41,7 +42,7 @@ type generator struct {
 }
 
 // Generate function
-func Generate(pType problem) *shogi.State {
+func Generate(pType Problem) *shogi.State {
 	// TODO: timeout?
 	generator := &generator{
 		steps:  pType.steps(),
@@ -72,6 +73,9 @@ func (g *generator) generate() *shogi.State {
 			case 3:
 				states := g.rewind(s, shogi.TurnSecond)
 				for _, i := range rand.Perm(len(states)) {
+					if i > 5 {
+						break
+					}
 					ss := states[i]
 					if g.checkSolvable(ss) {
 						return g.cleanup(ss)
@@ -731,30 +735,9 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos *shogi.Pos
 }
 
 func (g *generator) checkSolvable(state *shogi.State) bool {
-	answers := g.solver.Solve(state, 0)
+	answers, length := g.solver.ValidAnswers(state)
 	if len(answers) == 0 {
 		return false
-	}
-	length := 0
-	for _, answer := range answers {
-		// check wasted placed pieces
-		// TODO: use common logic of solver
-		for {
-			if len(answer) > 1 {
-				last := answer[len(answer)-1]
-				prev := answer[len(answer)-2]
-				if *prev.Src == *shogi.Pos(0, 0) && *prev.Dst == *last.Dst {
-					answer = answer[:len(answer)-2]
-				} else {
-					break
-				}
-			} else {
-				break
-			}
-		}
-		if len(answer) > length {
-			length = len(answer)
-		}
 	}
 	switch g.steps {
 	case 1:
