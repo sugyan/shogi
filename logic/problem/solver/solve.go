@@ -94,6 +94,7 @@ func (s *Solver) ValidAnswers(state *shogi.State) ([][]*shogi.Move, int) {
 	results := [][]*shogi.Move{}
 	for i, answer := range answers {
 		ok := true
+		// TODO: fix
 		for j := 2; j < len(answer); j += 2 {
 			last := answer[j]
 			prev := answer[j-1]
@@ -248,185 +249,112 @@ func candidates(state *shogi.State) []*shogi.Move {
 			}
 		}
 	}
-	if state.Captured[shogi.TurnFirst].FU > 0 {
-		// TODO check mating with a FU drop
-		if targetRank+1 < 10 {
-			if state.GetBoardPiece(targetFile, targetRank+1) == nil {
-				results = append(results, &shogi.Move{
-					Turn:  shogi.TurnFirst,
-					Src:   shogi.Pos(0, 0),
-					Dst:   shogi.Pos(targetFile, targetRank+1),
-					Piece: shogi.FU,
-				})
+	for _, piece := range state.Captured[shogi.TurnFirst].Available() {
+		d := []*shogi.Position{}
+		switch piece {
+		case shogi.FU:
+			// TODO checkmating with dropping FU
+			d = []*shogi.Position{
+				shogi.Pos(0, 1),
+			}
+		case shogi.KY:
+			for i := 1; targetRank+i < 10; i++ {
+				if state.GetBoardPiece(targetFile, targetRank+i) == nil {
+					d = append(d, shogi.Pos(0, i))
+				} else {
+					break
+				}
+			}
+		case shogi.KE:
+			d = []*shogi.Position{
+				shogi.Pos(1, 2),
+				shogi.Pos(-1, 2),
+			}
+		case shogi.GI:
+			d = []*shogi.Position{
+				shogi.Pos(-1, -1),
+				shogi.Pos(+1, -1),
+				shogi.Pos(+0, +1),
+				shogi.Pos(-1, +1),
+				shogi.Pos(+1, +1),
+			}
+		case shogi.KI:
+			d = []*shogi.Position{
+				shogi.Pos(+0, -1),
+				shogi.Pos(-1, +0),
+				shogi.Pos(+1, +0),
+				shogi.Pos(-1, +1),
+				shogi.Pos(+0, +1),
+				shogi.Pos(+1, +1),
+			}
+		case shogi.KA:
+			for i := 1; targetFile+i < 10 && targetRank+i < 10; i++ {
+				if state.GetBoardPiece(targetFile+i, targetRank+i) == nil {
+					d = append(d, shogi.Pos(+i, +i))
+				} else {
+					break
+				}
+			}
+			for i := 1; targetFile+i < 10 && targetRank-i > 0; i++ {
+				if state.GetBoardPiece(targetFile+i, targetRank-i) == nil {
+					d = append(d, shogi.Pos(+i, -i))
+				} else {
+					break
+				}
+			}
+			for i := 1; targetFile-i > 0 && targetRank+i < 10; i++ {
+				if state.GetBoardPiece(targetFile-i, targetRank+i) == nil {
+					d = append(d, shogi.Pos(-i, +i))
+				} else {
+					break
+				}
+			}
+			for i := 1; targetFile-i > 0 && targetRank-i > 0; i++ {
+				if state.GetBoardPiece(targetFile-i, targetRank-i) == nil {
+					d = append(d, shogi.Pos(-i, -i))
+				} else {
+					break
+				}
+			}
+		case shogi.HI:
+			for i := 1; targetFile+i < 10; i++ {
+				if state.GetBoardPiece(targetFile+i, targetRank) == nil {
+					d = append(d, shogi.Pos(+i, 0))
+				} else {
+					break
+				}
+			}
+			for i := 1; targetRank+i < 10; i++ {
+				if state.GetBoardPiece(targetFile, targetRank+i) == nil {
+					d = append(d, shogi.Pos(0, +i))
+				} else {
+					break
+				}
+			}
+			for i := 1; targetFile-i > 0; i++ {
+				if state.GetBoardPiece(targetFile-i, targetRank) == nil {
+					d = append(d, shogi.Pos(-i, 0))
+				} else {
+					break
+				}
+			}
+			for i := 1; targetRank-i > 0; i++ {
+				if state.GetBoardPiece(targetFile, targetRank-i) == nil {
+					d = append(d, shogi.Pos(0, -i))
+				} else {
+					break
+				}
 			}
 		}
-	}
-	if state.Captured[shogi.TurnFirst].KY > 0 {
-		for i := 1; targetRank+i < 10; i++ {
-			if state.GetBoardPiece(targetFile, targetRank+i) == nil {
+		for _, p := range d {
+			file, rank := targetFile+p.File, targetRank+p.Rank
+			if (file > 0 && file < 10 && rank > 0 && rank < 10) && state.GetBoardPiece(file, rank) == nil {
 				results = append(results, &shogi.Move{
 					Turn:  shogi.TurnFirst,
 					Src:   shogi.Pos(0, 0),
-					Dst:   shogi.Pos(targetFile, targetRank+i),
-					Piece: shogi.KY,
+					Dst:   shogi.Pos(file, rank),
+					Piece: piece,
 				})
-			} else {
-				break
-			}
-		}
-	}
-	if state.Captured[shogi.TurnFirst].KE > 0 {
-		for _, d := range []*shogi.Position{
-			shogi.Pos(1, 2),
-			shogi.Pos(-1, 2),
-		} {
-			if (targetFile+d.File > 0 && targetFile+d.File < 10 && targetRank+d.Rank > 0 && targetRank+d.Rank < 10) &&
-				state.GetBoardPiece(targetFile+d.File, targetRank+d.Rank) == nil {
-				results = append(results, &shogi.Move{
-					Turn:  shogi.TurnFirst,
-					Src:   shogi.Pos(0, 0),
-					Dst:   shogi.Pos(targetFile+d.File, targetRank+d.Rank),
-					Piece: shogi.KE,
-				})
-			}
-		}
-	}
-	if state.Captured[shogi.TurnFirst].GI > 0 {
-		for _, d := range []*shogi.Position{
-			shogi.Pos(-1, -1),
-			shogi.Pos(+1, -1),
-			shogi.Pos(+0, +1),
-			shogi.Pos(-1, +1),
-			shogi.Pos(+1, +1),
-		} {
-			if (targetFile+d.File > 0 && targetFile+d.File < 10 && targetRank+d.Rank > 0 && targetRank+d.Rank < 10) &&
-				state.GetBoardPiece(targetFile+d.File, targetRank+d.Rank) == nil {
-				results = append(results, &shogi.Move{
-					Turn:  shogi.TurnFirst,
-					Src:   shogi.Pos(0, 0),
-					Dst:   shogi.Pos(targetFile+d.File, targetRank+d.Rank),
-					Piece: shogi.GI,
-				})
-			}
-		}
-	}
-	if state.Captured[shogi.TurnFirst].KI > 0 {
-		for _, d := range []*shogi.Position{
-			shogi.Pos(+0, -1),
-			shogi.Pos(-1, +0),
-			shogi.Pos(+1, +0),
-			shogi.Pos(-1, +1),
-			shogi.Pos(+0, +1),
-			shogi.Pos(+1, +1),
-		} {
-			if (targetFile+d.File > 0 && targetFile+d.File < 10 && targetRank+d.Rank > 0 && targetRank+d.Rank < 10) &&
-				state.GetBoardPiece(targetFile+d.File, targetRank+d.Rank) == nil {
-				results = append(results, &shogi.Move{
-					Turn:  shogi.TurnFirst,
-					Src:   shogi.Pos(0, 0),
-					Dst:   shogi.Pos(targetFile+d.File, targetRank+d.Rank),
-					Piece: shogi.KI,
-				})
-			}
-		}
-	}
-	if state.Captured[shogi.TurnFirst].KA > 0 {
-		for i := 1; targetFile+i < 10 && targetRank+i < 10; i++ {
-			if state.GetBoardPiece(targetFile+i, targetRank+i) == nil {
-				results = append(results, &shogi.Move{
-					Turn:  shogi.TurnFirst,
-					Src:   shogi.Pos(0, 0),
-					Dst:   shogi.Pos(targetFile+i, targetRank+i),
-					Piece: shogi.KA,
-				})
-			} else {
-				break
-			}
-		}
-		for i := 1; targetFile+i < 10 && targetRank-i > 0; i++ {
-			if state.GetBoardPiece(targetFile+i, targetRank-i) == nil {
-				results = append(results, &shogi.Move{
-					Turn:  shogi.TurnFirst,
-					Src:   shogi.Pos(0, 0),
-					Dst:   shogi.Pos(targetFile+i, targetRank-i),
-					Piece: shogi.KA,
-				})
-			} else {
-				break
-			}
-		}
-		for i := 1; targetFile-i > 0 && targetRank+i < 10; i++ {
-			if state.GetBoardPiece(targetFile-i, targetRank+i) == nil {
-				results = append(results, &shogi.Move{
-					Turn:  shogi.TurnFirst,
-					Src:   shogi.Pos(0, 0),
-					Dst:   shogi.Pos(targetFile-i, targetRank+i),
-					Piece: shogi.KA,
-				})
-			} else {
-				break
-			}
-		}
-		for i := 1; targetFile-i > 0 && targetRank-i > 0; i++ {
-			if state.GetBoardPiece(targetFile-i, targetRank-i) == nil {
-				results = append(results, &shogi.Move{
-					Turn:  shogi.TurnFirst,
-					Src:   shogi.Pos(0, 0),
-					Dst:   shogi.Pos(targetFile-i, targetRank-i),
-					Piece: shogi.KA,
-				})
-			} else {
-				break
-			}
-		}
-	}
-	if state.Captured[shogi.TurnFirst].HI > 0 {
-		for i := 1; targetFile+i < 10; i++ {
-			if state.GetBoardPiece(targetFile+i, targetRank) == nil {
-				results = append(results, &shogi.Move{
-					Turn:  shogi.TurnFirst,
-					Src:   shogi.Pos(0, 0),
-					Dst:   shogi.Pos(targetFile+i, targetRank),
-					Piece: shogi.HI,
-				})
-			} else {
-				break
-			}
-		}
-		for i := 1; targetRank+i < 10; i++ {
-			if state.GetBoardPiece(targetFile, targetRank+i) == nil {
-				results = append(results, &shogi.Move{
-					Turn:  shogi.TurnFirst,
-					Src:   shogi.Pos(0, 0),
-					Dst:   shogi.Pos(targetFile, targetRank+i),
-					Piece: shogi.HI,
-				})
-			} else {
-				break
-			}
-		}
-		for i := 1; targetFile-i > 0; i++ {
-			if state.GetBoardPiece(targetFile-i, targetRank) == nil {
-				results = append(results, &shogi.Move{
-					Turn:  shogi.TurnFirst,
-					Src:   shogi.Pos(0, 0),
-					Dst:   shogi.Pos(targetFile-i, targetRank),
-					Piece: shogi.HI,
-				})
-			} else {
-				break
-			}
-		}
-		for i := 1; targetRank-i > 0; i++ {
-			if state.GetBoardPiece(targetFile, targetRank-i) == nil {
-				results = append(results, &shogi.Move{
-					Turn:  shogi.TurnFirst,
-					Src:   shogi.Pos(0, 0),
-					Dst:   shogi.Pos(targetFile, targetRank-i),
-					Piece: shogi.HI,
-				})
-			} else {
-				break
 			}
 		}
 	}

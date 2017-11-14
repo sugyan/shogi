@@ -95,3 +95,30 @@ func (cp *CapturedPieces) SubPieces(p Piece) {
 		cp.HI--
 	}
 }
+
+// Available method
+func (cp *CapturedPieces) Available() []Piece {
+	results := []Piece{}
+	if cp.FU > 0 {
+		results = append(results, FU)
+	}
+	if cp.KY > 0 {
+		results = append(results, KY)
+	}
+	if cp.KE > 0 {
+		results = append(results, KE)
+	}
+	if cp.GI > 0 {
+		results = append(results, GI)
+	}
+	if cp.KI > 0 {
+		results = append(results, KI)
+	}
+	if cp.KA > 0 {
+		results = append(results, KA)
+	}
+	if cp.HI > 0 {
+		results = append(results, HI)
+	}
+	return results
+}
