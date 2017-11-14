@@ -10,14 +10,14 @@ import (
 
 // Problem interface
 type Problem interface {
-	steps() int
+	Steps() int
 }
 
 type problemType struct {
 	n int
 }
 
-func (p *problemType) steps() int {
+func (p *problemType) Steps() int {
 	return p.n
 }
 
@@ -45,7 +45,7 @@ type generator struct {
 func Generate(pType Problem) *shogi.State {
 	// TODO: timeout?
 	generator := &generator{
-		steps:  pType.steps(),
+		steps:  pType.Steps(),
 		solver: solver.NewSolver(2), // TODO: speed up...
 	}
 	return generator.generate()
@@ -164,7 +164,7 @@ func random() *shogi.State {
 		positions = positions[1:]
 	}
 	// other pieces
-	for piece, num := range map[shogi.Piece]int{
+	for originalPiece, num := range map[shogi.Piece]int{
 		shogi.FU: 18,
 		shogi.KY: 4,
 		shogi.KE: 4,
@@ -178,11 +178,15 @@ func random() *shogi.State {
 			p := positions[0]
 			positions = positions[1:]
 			// set pieces
-			turn := shogi.TurnFirst
+			var (
+				piece = originalPiece
+				turn  = shogi.TurnFirst
+			)
 			if rand.Intn(3) > 0 {
 				turn = shogi.TurnSecond
 			}
-			if piece == shogi.FU {
+			switch originalPiece {
+			case shogi.FU:
 				if turn == shogi.TurnFirst && p.Rank <= 3 {
 					if p.Rank == 1 || rand.Intn(2) == 0 {
 						piece = shogi.TO
@@ -201,34 +205,40 @@ func random() *shogi.State {
 						continue
 					}
 				}
-			}
-			if piece == shogi.KY && turn == shogi.TurnFirst {
-				if p.Rank <= 3 && rand.Intn(3) == 0 {
-					piece = shogi.NY
-				} else if p.Rank <= 1 {
-					turn = shogi.TurnSecond
+			case shogi.KY:
+				if turn == shogi.TurnFirst {
+					if p.Rank <= 3 && rand.Intn(4) == 0 {
+						piece = shogi.NY
+					} else if p.Rank <= 1 {
+						turn = shogi.TurnSecond
+					}
 				}
-			}
-			if piece == shogi.KE && turn == shogi.TurnFirst {
-				if p.Rank <= 3 && rand.Intn(3) == 0 {
-					piece = shogi.NK
-				} else if p.Rank <= 2 {
-					turn = shogi.TurnSecond
+			case shogi.KE:
+				if turn == shogi.TurnFirst {
+					if p.Rank <= 3 && rand.Intn(4) == 0 {
+						piece = shogi.NK
+					} else if p.Rank <= 2 {
+						turn = shogi.TurnSecond
+					}
 				}
-			}
-			if piece == shogi.GI && turn == shogi.TurnFirst {
-				if p.Rank <= 3 && rand.Intn(3) == 0 {
-					piece = shogi.NG
+			case shogi.GI:
+				if turn == shogi.TurnFirst {
+					if p.Rank <= 3 && rand.Intn(4) == 0 {
+						piece = shogi.NG
+					}
 				}
-			}
-			if piece == shogi.KA && turn == shogi.TurnFirst && p.Rank <= 6 {
-				if rand.Intn(2) == 0 {
-					piece = shogi.UM
+			case shogi.KI:
+			case shogi.KA:
+				if turn == shogi.TurnFirst && p.Rank <= 6 {
+					if rand.Intn(2) == 0 {
+						piece = shogi.UM
+					}
 				}
-			}
-			if piece == shogi.HI && turn == shogi.TurnFirst && p.Rank <= 6 {
-				if rand.Intn(2) == 0 {
-					piece = shogi.RY
+			case shogi.HI:
+				if turn == shogi.TurnFirst && p.Rank <= 6 {
+					if rand.Intn(2) == 0 {
+						piece = shogi.RY
+					}
 				}
 			}
 			s.SetBoardPiece(p.File, p.Rank, &shogi.BoardPiece{
