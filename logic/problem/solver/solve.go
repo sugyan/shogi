@@ -427,11 +427,12 @@ searchTarget:
 			}
 			for _, p := range positions {
 				// check wasted placing
-				// TODO: this is not perfect...
-				if moves, exist := movableS[*p]; !exist {
-					continue
-				} else if len(moves) == 1 && moves[0].Piece == shogi.OU {
-					if len(movableF[*p]) > 1 {
+				if moves, exist := movableS[*p]; exist && len(moves) == 1 && moves[0].Piece == shogi.OU {
+					src := map[shogi.Position]struct{}{}
+					for _, m := range movableF[*p] {
+						src[*m.Src] = struct{}{}
+					}
+					if len(src) > 1 {
 						continue
 					}
 				}
