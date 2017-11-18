@@ -328,7 +328,17 @@ func candidatePrevStatesF(state *shogi.State, pp *posPiece) []*shogi.State {
 		if pp.pos.Rank <= 3 {
 			switch pp.piece {
 			case shogi.TO:
-				candidates = append(candidates, &posPiece{shogi.Pos(pp.pos.File, pp.pos.Rank+1), shogi.FU})
+				ok := true
+				for i := 0; i < 9; i++ {
+					bp := state.GetBoardPiece(pp.pos.File, i+1)
+					if bp != nil && bp.Turn == shogi.TurnFirst && bp.Piece == shogi.FU {
+						ok = false
+						break
+					}
+				}
+				if ok {
+					candidates = append(candidates, &posPiece{shogi.Pos(pp.pos.File, pp.pos.Rank+1), shogi.FU})
+				}
 			case shogi.NY:
 				for i := 1; pp.pos.Rank+i < 10; i++ {
 					if state.GetBoardPiece(pp.pos.File, pp.pos.Rank+i) == nil {
@@ -827,13 +837,7 @@ func (g *generator) cleanup(state *shogi.State) *shogi.State {
 			for _, i := range rand.Perm(len(posPieces[turn])) {
 				pp := posPieces[turn][i]
 				switch pp.piece {
-				case shogi.TO:
-					fallthrough
-				case shogi.NY:
-					fallthrough
-				case shogi.NK:
-					fallthrough
-				case shogi.NG:
+				case shogi.TO, shogi.NY, shogi.NK, shogi.NG:
 					if state.Captured[shogi.TurnSecond].KI > 0 {
 						state.SetBoardPiece(pp.pos.File, pp.pos.Rank, &shogi.BoardPiece{
 							Turn:  turn,
