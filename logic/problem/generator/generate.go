@@ -46,7 +46,7 @@ func Generate(pType Problem) *shogi.State {
 	// TODO: timeout?
 	generator := &generator{
 		steps:  pType.Steps(),
-		solver: solver.NewSolver(2), // TODO: speed up...
+		solver: solver.NewSolver(3),
 	}
 	return generator.generate()
 }
@@ -748,6 +748,15 @@ func (g *generator) checkSolvable(state *shogi.State) bool {
 	answers, length := g.solver.ValidAnswers(state)
 	if len(answers) == 0 {
 		return false
+	}
+	if len(answers) == 1 {
+		s := state.Clone()
+		for _, move := range answers[0] {
+			s.Apply(move)
+		}
+		if s.Captured[shogi.TurnFirst].Num() > 0 {
+			return false
+		}
 	}
 	switch g.steps {
 	case 1:
