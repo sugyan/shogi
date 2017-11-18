@@ -417,24 +417,21 @@ searchTarget:
 			}
 		}
 		if len(positions) > 0 {
-			movable := map[shogi.Position][]*shogi.Move{}
+			movableF := map[shogi.Position][]*shogi.Move{}
+			movableS := map[shogi.Position][]*shogi.Move{}
+			for _, m := range state.CandidateMoves(shogi.TurnFirst) {
+				movableF[*m.Dst] = append(movableF[*m.Dst], m)
+			}
 			for _, m := range state.CandidateMoves(shogi.TurnSecond) {
-				movable[*m.Dst] = append(movable[*m.Dst], m)
+				movableS[*m.Dst] = append(movableS[*m.Dst], m)
 			}
 			for _, p := range positions {
 				// check wasted placing
 				// TODO: this is not perfect...
-				if moves, exist := movable[*p]; !exist {
+				if moves, exist := movableS[*p]; !exist {
 					continue
 				} else if len(moves) == 1 && moves[0].Piece == shogi.OU {
-					s := state.Clone()
-					s.Apply(&shogi.Move{
-						Turn:  shogi.TurnSecond,
-						Src:   shogi.Pos(targetFile, targetRank),
-						Dst:   p,
-						Piece: shogi.OU,
-					})
-					if s.Check(shogi.TurnFirst) != nil {
+					if len(movableF[*p]) > 1 {
 						continue
 					}
 				}
