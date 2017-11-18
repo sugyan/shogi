@@ -91,31 +91,24 @@ func (s *Solver) ValidAnswers(state *shogi.State) ([][]*shogi.Move, int) {
 		return answers, len(answers[0])
 	}
 	length := 0
-	results := [][]*shogi.Move{}
-	for i, answer := range answers {
-		ok := true
-		// TODO: fix
-		for j := 2; j < len(answer); j += 2 {
-			last := answer[j]
-			prev := answer[j-1]
-			if *prev.Src == *shogi.Pos(0, 0) && *prev.Dst == *last.Dst {
-				ok = false
-				break
-			}
-		}
-		if ok {
-			if len(answer) > length {
-				length = len(answer)
-			}
-			answers[i] = answer
-		} else {
-			answers[i] = nil
+	for _, answer := range answers {
+		if len(answer) > length {
+			length = len(answer)
 		}
 	}
+	results := [][]*shogi.Move{}
 	for _, answer := range answers {
-		if answer != nil && len(answer) == length {
-			results = append(results, answer)
+		if len(answer) != length {
+			continue
 		}
+		s := state.Clone()
+		for _, move := range answer {
+			s.Apply(move)
+		}
+		if s.Captured[shogi.TurnFirst].Num() > 0 {
+			continue
+		}
+		results = append(results, answer)
 	}
 	return results, length
 }
@@ -232,6 +225,7 @@ func isImpossible(state *shogi.State) bool {
 
 func candidates(state *shogi.State) []*shogi.Move {
 	results := []*shogi.Move{}
+
 	for _, move := range state.CandidateMoves(shogi.TurnFirst) {
 		s := state.Clone()
 		s.Apply(move)
@@ -239,6 +233,7 @@ func candidates(state *shogi.State) []*shogi.Move {
 			results = append(results, move)
 		}
 	}
+
 	var targetFile, targetRank int
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
@@ -363,129 +358,113 @@ func candidates(state *shogi.State) []*shogi.Move {
 
 func counterMoves(state *shogi.State) []*shogi.Move {
 	results := []*shogi.Move{}
-	move := state.Check(shogi.TurnFirst)
-	if move == nil {
-		return results
-	}
-	// move
-	for _, m := range state.CandidateMoves(shogi.TurnSecond) {
+
+	for _, move := range state.CandidateMoves(shogi.TurnSecond) {
 		s := state.Clone()
-		s.Apply(m)
+		s.Apply(move)
 		check := s.Check(shogi.TurnFirst)
 		if check == nil {
-			results = append(results, m)
+			results = append(results, move)
 		}
 	}
-	// use captured pieces
-	if state.Captured[shogi.TurnSecond].Num() > 0 {
-		available := []shogi.Piece{}
-		if state.Captured[shogi.TurnSecond].FU > 0 {
-			available = append(available, shogi.FU)
-		}
-		if state.Captured[shogi.TurnSecond].KY > 0 {
-			available = append(available, shogi.KY)
-		}
-		if state.Captured[shogi.TurnSecond].KE > 0 {
-			available = append(available, shogi.KE)
-		}
-		if state.Captured[shogi.TurnSecond].GI > 0 {
-			available = append(available, shogi.GI)
-		}
-		if state.Captured[shogi.TurnSecond].KI > 0 {
-			available = append(available, shogi.KI)
-		}
-		if state.Captured[shogi.TurnSecond].KA > 0 {
-			available = append(available, shogi.KA)
-		}
-		if state.Captured[shogi.TurnSecond].HI > 0 {
-			available = append(available, shogi.HI)
-		}
-		positions := []*shogi.Position{}
-		target := *move.Dst
-		for i := 1; target.File+i < 10; i++ {
-			if state.GetBoardPiece(target.File+i, target.Rank) == nil {
-				positions = append(positions, shogi.Pos(target.File+i, target.Rank))
-			} else {
-				break
-			}
-		}
-		for i := 1; target.Rank+i < 10; i++ {
-			if state.GetBoardPiece(target.File, target.Rank+i) == nil {
-				positions = append(positions, shogi.Pos(target.File, target.Rank+i))
-			} else {
-				break
-			}
-		}
-		for i := 1; target.File-i > 0; i++ {
-			if state.GetBoardPiece(target.File-i, target.Rank) == nil {
-				positions = append(positions, shogi.Pos(target.File-i, target.Rank))
-			} else {
-				break
-			}
-		}
-		for i := 1; target.Rank-i > 0; i++ {
-			if state.GetBoardPiece(target.File, target.Rank-i) == nil {
-				positions = append(positions, shogi.Pos(target.File, target.Rank-i))
-			} else {
-				break
-			}
-		}
-		for i := 1; target.File-i > 0 && target.Rank-i > 0; i++ {
-			if state.GetBoardPiece(target.File-i, target.Rank-i) == nil {
-				positions = append(positions, shogi.Pos(target.File-i, target.Rank-i))
-			} else {
-				break
-			}
-		}
-		for i := 1; target.File-i > 0 && target.Rank+i < 10; i++ {
-			if state.GetBoardPiece(target.File-i, target.Rank+i) == nil {
-				positions = append(positions, shogi.Pos(target.File-i, target.Rank+i))
-			} else {
-				break
-			}
-		}
-		for i := 1; target.File+i < 10 && target.Rank-i > 0; i++ {
-			if state.GetBoardPiece(target.File+i, target.Rank-i) == nil {
-				positions = append(positions, shogi.Pos(target.File+i, target.Rank-i))
-			} else {
-				break
-			}
-		}
-		for i := 1; target.File+i < 10 && target.Rank+i < 10; i++ {
-			if state.GetBoardPiece(target.File+i, target.Rank+i) == nil {
-				positions = append(positions, shogi.Pos(target.File+i, target.Rank+i))
-			} else {
-				break
-			}
-		}
 
-		for _, p := range positions {
-			for _, piece := range available {
-				// check duplicated FU
-				if piece == shogi.FU {
-					ok := true
-					for rank := 1; rank < 10; rank++ {
-						bp := state.GetBoardPiece(p.File, rank)
-						if bp != nil && bp.Turn == shogi.TurnSecond && bp.Piece == shogi.FU {
-							ok = false
-							break
-						}
+	var targetFile, targetRank int
+searchTarget:
+	for i := 0; i < 9; i++ {
+		rank := i + 1
+		for j := 0; j < 9; j++ {
+			file := 9 - j
+			bp := state.GetBoardPiece(file, rank)
+			if bp != nil && bp.Turn == shogi.TurnSecond && bp.Piece == shogi.OU {
+				targetFile, targetRank = file, rank
+				break searchTarget
+			}
+		}
+	}
+	if state.Captured[shogi.TurnSecond].Num() > 0 {
+		available := state.Captured[shogi.TurnSecond].Available()
+		positions := []*shogi.Position{}
+		for _, direction := range []*shogi.Position{
+			shogi.Pos(-1, -1), shogi.Pos(-1, +1), shogi.Pos(+1, -1), shogi.Pos(+1, +1),
+			shogi.Pos(-1, +0), shogi.Pos(+1, +0), shogi.Pos(+0, -1), shogi.Pos(+0, +1),
+		} {
+			candidates := []*shogi.Position{}
+			for i := 1; ; i++ {
+				file := targetFile + i*direction.File
+				rank := targetRank + i*direction.Rank
+				if !(file > 0 && file < 10 && rank > 0 && rank < 10) {
+					break
+				}
+				bp := state.GetBoardPiece(file, rank)
+				if bp == nil {
+					candidates = append(candidates, shogi.Pos(file, rank))
+				} else {
+					d := direction.File * direction.Rank
+					if d == 0 && bp.Turn == shogi.TurnFirst &&
+						((bp.Piece == shogi.HI || bp.Piece == shogi.RY) ||
+							(direction.Rank == 1 && bp.Piece == shogi.KY)) {
+						positions = append(positions, candidates...)
 					}
-					if !ok {
+					if d != 0 && bp.Turn == shogi.TurnFirst &&
+						(bp.Piece == shogi.KA || bp.Piece == shogi.UM) {
+						positions = append(positions, candidates...)
+					}
+					break
+				}
+			}
+			if len(positions) > 0 {
+				break
+			}
+		}
+		if len(positions) > 0 {
+			movable := map[shogi.Position][]*shogi.Move{}
+			for _, m := range state.CandidateMoves(shogi.TurnSecond) {
+				movable[*m.Dst] = append(movable[*m.Dst], m)
+			}
+			for _, p := range positions {
+				// check wasted placing
+				// TODO: this is not perfect...
+				if moves, exist := movable[*p]; !exist {
+					continue
+				} else if len(moves) == 1 && moves[0].Piece == shogi.OU {
+					s := state.Clone()
+					s.Apply(&shogi.Move{
+						Turn:  shogi.TurnSecond,
+						Src:   shogi.Pos(targetFile, targetRank),
+						Dst:   p,
+						Piece: shogi.OU,
+					})
+					if s.Check(shogi.TurnFirst) != nil {
 						continue
 					}
 				}
-				move := &shogi.Move{
-					Turn:  shogi.TurnSecond,
-					Src:   shogi.Pos(0, 0),
-					Dst:   shogi.Pos(p.File, p.Rank),
-					Piece: piece,
-				}
-				s := state.Clone()
-				s.Apply(move)
-				check := s.Check(shogi.TurnFirst)
-				if check == nil {
-					results = append(results, move)
+				for _, piece := range available {
+					// check duplicated FU
+					if piece == shogi.FU {
+						ok := true
+						for rank := 1; rank < 10; rank++ {
+							bp := state.GetBoardPiece(p.File, rank)
+							if bp != nil && bp.Turn == shogi.TurnSecond && bp.Piece == shogi.FU {
+								ok = false
+								break
+							}
+						}
+						if !ok {
+							continue
+						}
+					}
+					move := &shogi.Move{
+						Turn:  shogi.TurnSecond,
+						Src:   shogi.Pos(0, 0),
+						Dst:   shogi.Pos(p.File, p.Rank),
+						Piece: piece,
+					}
+					s := state.Clone()
+					s.Apply(move)
+					check := s.Check(shogi.TurnFirst)
+					if check == nil {
+						results = append(results, move)
+					}
 				}
 			}
 		}

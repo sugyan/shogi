@@ -30,7 +30,7 @@ func TestSolvers(t *testing.T) {
 				continue
 			}
 			if move != data.a[j] {
-				t.Errorf("error Q%d - A%d: %s != %s", i+1, j+1, move, data.a[j])
+				t.Fatalf("error Q%d - A%d: %s != %s", i+1, j+1, move, data.a[j])
 			}
 		}
 		t.Logf("Q%d: OK (elapsed time: %v)", i+1, elapsed)
@@ -57,21 +57,6 @@ P9 *  *  *  *  *  *  *  *  *
 P-00AL
 `,
 		a: []string{"▲2二桂成"},
-	},
-	&data{
-		q: `
-P1 *  *  *  * +TO * -OU-KE * 
-P2 *  *  *  *  *  *  *  *  * 
-P3 *  *  *  * +HI *  *  *  * 
-P4 *  *  * +KA *  *  *  *  * 
-P5 *  *  *  *  *  *  *  *  * 
-P6 *  *  *  *  *  *  *  *  * 
-P7 *  *  *  *  *  *  *  *  * 
-P8 *  *  *  *  *  *  *  *  * 
-P9 *  *  *  *  *  *  *  *  * 
-P-00AL
-`,
-		a: []string{"▲3三飛成"},
 	},
 	&data{
 		q: `
@@ -167,5 +152,21 @@ P+00KI
 P-00AL
 `,
 		a: []string{"▲1四金", "△同馬", "▲2七飛"},
+	},
+	&data{
+		q: `
+P1 *  *  *  *  *  *  * +TO * 
+P2 *  *  *  *  *  *  *  * -KY
+P3 *  *  *  *  * +UM-KI-OU * 
+P4 *  *  *  *  * +HI *  *  * 
+P5 *  *  *  *  *  *  * -KA * 
+P6 *  *  *  *  *  *  *  *  * 
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P+00KI
+P-00AL
+`,
+		a: []string{"▲3二馬", "△同玉", "▲2二金"},
 	},
 }

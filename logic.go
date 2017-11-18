@@ -35,9 +35,9 @@ searchTarget:
 			}
 		}
 	}
-	for _, m := range s.CandidateMoves(turn) {
-		if *m.Dst == *targetPos {
-			return m
+	for _, move := range s.CandidateMoves(turn) {
+		if *move.Dst == *targetPos {
+			return move
 		}
 	}
 	return nil
