@@ -759,32 +759,35 @@ func (g *generator) checkSolvable(state *shogi.State) bool {
 	if len(answers) == 0 {
 		return false
 	}
-	if len(answers) == 1 {
+	if length != g.steps {
+		return false
+	}
+	// check catured pieces
+	ok := false
+	for _, answer := range answers {
 		s := state.Clone()
-		for _, move := range answers[0] {
+		for _, move := range answer {
 			s.Apply(move)
 		}
-		if s.Captured[shogi.TurnFirst].Num() > 0 {
-			return false
+		if s.Captured[shogi.TurnFirst].Num() == 0 {
+			ok = true
 		}
 	}
+	if !ok {
+		return false
+	}
+	// check uniqueness
 	switch g.steps {
 	case 1:
-		if len(answers) == 1 && length == 1 {
-			return true
-		}
-		return false
+		return len(answers) == 1
 	case 3:
-		if length == 3 {
-			a := answers[0][0]
-			for _, answer := range answers {
-				if *a != *answer[0] {
-					return false
-				}
+		a := answers[0][0]
+		for _, answer := range answers {
+			if *a != *answer[0] {
+				return false
 			}
-			return true
 		}
-		return false
+		return true
 	}
 	return false
 }

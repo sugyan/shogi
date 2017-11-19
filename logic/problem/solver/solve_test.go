@@ -8,7 +8,7 @@ import (
 	"github.com/sugyan/shogi/format/csa"
 )
 
-func TestSolvers(t *testing.T) {
+func TestSolver(t *testing.T) {
 	for i, data := range testData {
 		state, err := csa.Parse(bytes.NewBufferString(data.q))
 		if err != nil {

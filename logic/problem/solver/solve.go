@@ -52,6 +52,24 @@ func Solve(state *shogi.State) ([]string, error) {
 						pointMap[i] += 1.0
 					}
 				}
+				if move.Turn == shogi.TurnSecond && *move.Src == *shogi.Pos(0, 0) {
+					switch move.Piece {
+					case shogi.FU:
+						pointMap[i] -= 0.1
+					case shogi.KY:
+						pointMap[i] -= 0.2
+					case shogi.KE:
+						pointMap[i] -= 0.3
+					case shogi.GI:
+						pointMap[i] -= 0.4
+					case shogi.KI:
+						pointMap[i] -= 0.5
+					case shogi.KA:
+						pointMap[i] -= 0.6
+					case shogi.HI:
+						pointMap[i] -= 0.7
+					}
+				}
 			}
 			if s.Captured[shogi.TurnFirst].Num() > 0 {
 				pointMap[i] -= 10
@@ -104,9 +122,6 @@ func (s *Solver) ValidAnswers(state *shogi.State) ([][]*shogi.Move, int) {
 		s := state.Clone()
 		for _, move := range answer {
 			s.Apply(move)
-		}
-		if s.Captured[shogi.TurnFirst].Num() > 0 {
-			continue
 		}
 		results = append(results, answer)
 	}
