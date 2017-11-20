@@ -65,4 +65,35 @@ P-00AL
 `,
 		expected: false,
 	},
+	&checkSolvableData{
+		input: `
+P1 *  *  *  * -KE-OU *  * +UM
+P2 *  *  *  * -KY-FU *  *  * 
+P3 *  *  *  *  * -KY-KI *  * 
+P4 *  *  *  *  *  *  * +HI * 
+P5 *  *  *  *  * +KE *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P-00AL
+`,
+		expected: false,
+	},
+	&checkSolvableData{
+		input: `
+P1 *  * +GI *  * -OU * -HI * 
+P2 *  * +HI * -FU *  *  *  * 
+P3 *  *  *  *  * +KI+FU *  * 
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P+00KE
+P-00AL
+`,
+		expected: false,
+	},
 }

@@ -762,32 +762,33 @@ func (g *generator) checkSolvable(state *shogi.State) bool {
 	if length != g.steps {
 		return false
 	}
-	// check catured pieces
-	ok := false
-	for _, answer := range answers {
-		s := state.Clone()
-		for _, move := range answer {
-			s.Apply(move)
-		}
-		if s.Captured[shogi.TurnFirst].Num() == 0 {
-			ok = true
-		}
-	}
-	if !ok {
-		return false
-	}
 	// check uniqueness
 	switch g.steps {
 	case 1:
 		return len(answers) == 1
 	case 3:
 		a := answers[0][0]
+		// check "first move is unique" and "there is no catured pieces"
+		capturedCountMap := map[string]int{}
 		for _, answer := range answers {
 			if *a != *answer[0] {
 				return false
 			}
+			s := state.Clone()
+			mss := []string{}
+			for _, move := range answer {
+				ms, _ := s.MoveString(move)
+				mss = append(mss, ms)
+				s.Apply(move)
+			}
+			capturedCountMap[mss[1]] += s.Captured[shogi.TurnFirst].Num()
 		}
-		return true
+		for _, v := range capturedCountMap {
+			if v == 0 {
+				return true
+			}
+		}
+		return false
 	}
 	return false
 }
