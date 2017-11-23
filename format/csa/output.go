@@ -4,7 +4,67 @@ import (
 	"fmt"
 
 	"github.com/sugyan/shogi"
+	"github.com/sugyan/shogi/record"
 )
+
+type initialStateOption int
+
+// constant variables
+const (
+	InitialStateOption1 initialStateOption = iota
+	InitialStateOption2
+)
+
+// Converter type
+type Converter struct {
+	opt *ConvertOption
+}
+
+// ConvertOption type
+type ConvertOption struct {
+	InitialState initialStateOption
+}
+
+// NewConverter function
+func NewConverter(opt *ConvertOption) *Converter {
+	if opt == nil {
+		opt = &ConvertOption{}
+	}
+	return &Converter{opt: opt}
+}
+
+// ConvertToString function
+func (c *Converter) ConvertToString(record *record.Record) string {
+	result := ""
+	switch c.opt.InitialState {
+	case InitialStateOption1:
+		result += InitialState1(record.State)
+	case InitialStateOption2:
+		result += InitialState2(record.State)
+	}
+	// TODO
+	result += "+\n"
+	for _, move := range record.Moves {
+		result += moveToString(move) + "\n"
+	}
+	return result
+}
+
+func moveToString(move *shogi.Move) string {
+	result := make([]byte, 0, 6)
+	switch move.Turn {
+	case shogi.TurnFirst:
+		result = append(result, '+')
+	case shogi.TurnSecond:
+		result = append(result, '-')
+	}
+	result = append(result, '0'+byte(move.Src.File))
+	result = append(result, '0'+byte(move.Src.Rank))
+	result = append(result, '0'+byte(move.Dst.File))
+	result = append(result, '0'+byte(move.Dst.Rank))
+	result = append(result, []byte(move.Piece.String())...)
+	return string(result)
+}
 
 // InitialState1 function
 func InitialState1(state *shogi.State) string {

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/sugyan/shogi"
+	"github.com/sugyan/shogi/record"
 )
 
 var codeMap = map[string]shogi.Piece{
@@ -27,16 +28,20 @@ var codeMap = map[string]shogi.Piece{
 }
 
 // Parse function
-func Parse(r io.Reader) (*shogi.State, error) {
-	rePos := regexp.MustCompile(`\d\d(?:FU|KY|KE|GI|KI|KA|HI|OU|TO|NY|NK|NG|UM|RY|AL)`)
-	reRow := regexp.MustCompile(`^P[1-9](?:[\+\-](?:FU|KY|KE|GI|KI|KA|HI|OU|TO|NY|NK|NG|UM|RY)| \* ){9}$`)
+func Parse(r io.Reader) (*record.Record, error) {
+	piecesPattern := `(?:FU|KY|KE|GI|KI|KA|HI|OU|TO|NY|NK|NG|UM|RY)`
+	rePos := regexp.MustCompile(`\d\d(?:` + piecesPattern + `|AL)`)
+	reRow := regexp.MustCompile(`^P[1-9](?:[\+\-]` + piecesPattern + `| \* ){9}$`)
+	reMove := regexp.MustCompile(`^[\+\-]\d{4}` + piecesPattern + `$`)
 
 	state := shogi.NewState()
+	moves := []*shogi.Move{}
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if strings.HasPrefix(line, "P") {
+		switch {
+		case strings.HasPrefix(line, "P"):
 			switch line[1] {
 			case '+':
 				fallthrough
@@ -70,57 +75,14 @@ func Parse(r io.Reader) (*shogi.State, error) {
 								for j := 0; j < 9; j++ {
 									bp := state.Board[i][j]
 									if bp != nil {
-										switch bp.Piece {
-										case shogi.FU:
-											fallthrough
-										case shogi.TO:
-											state.Captured[turn].FU--
-										case shogi.KY:
-											fallthrough
-										case shogi.NY:
-											state.Captured[turn].KY--
-										case shogi.KE:
-											fallthrough
-										case shogi.NK:
-											state.Captured[turn].KE--
-										case shogi.GI:
-											fallthrough
-										case shogi.NG:
-											state.Captured[turn].GI--
-										case shogi.KI:
-											state.Captured[turn].KI--
-										case shogi.KA:
-											fallthrough
-										case shogi.UM:
-											state.Captured[turn].KA--
-										case shogi.HI:
-											fallthrough
-										case shogi.RY:
-											state.Captured[turn].HI--
-										}
+										state.Captured[turn].SubPieces(bp.Piece)
 									}
 								}
 							}
 						}
 					}
 				}
-			case '1':
-				fallthrough
-			case '2':
-				fallthrough
-			case '3':
-				fallthrough
-			case '4':
-				fallthrough
-			case '5':
-				fallthrough
-			case '6':
-				fallthrough
-			case '7':
-				fallthrough
-			case '8':
-				fallthrough
-			case '9':
+			case '1', '2', '3', '4', '5', '6', '7', '8', '9':
 				if reRow.MatchString(line) {
 					rank := int(line[1] - '0')
 					for i := 0; i < 9; i++ {
@@ -187,7 +149,24 @@ func Parse(r io.Reader) (*shogi.State, error) {
 					}
 				}
 			}
+		case strings.HasPrefix(line, "+") || strings.HasPrefix(line, "-"):
+			if reMove.MatchString(line) {
+				move := &shogi.Move{}
+				switch line[0] {
+				case '+':
+					move.Turn = shogi.TurnFirst
+				case '-':
+					move.Turn = shogi.TurnSecond
+				}
+				move.Src = shogi.Pos(int(line[1]-'0'), int(line[2]-'0'))
+				move.Dst = shogi.Pos(int(line[3]-'0'), int(line[4]-'0'))
+				move.Piece = codeMap[line[5:7]]
+				moves = append(moves, move)
+			}
 		}
 	}
-	return state, nil
+	return &record.Record{
+		State: state,
+		Moves: moves,
+	}, nil
 }

@@ -25,7 +25,7 @@ func NewSolver(maxDepth int) *Solver {
 }
 
 // Solve function
-func Solve(state *shogi.State) ([]string, error) {
+func Solve(state *shogi.State) ([]*shogi.Move, error) {
 	answers, length := NewSolver(DefaultMaxDepth).ValidAnswers(state)
 	var answer []*shogi.Move
 	switch len(answers) {
@@ -48,11 +48,11 @@ func Solve(state *shogi.State) ([]string, error) {
 				s.Apply(move)
 				if j > 0 {
 					prev := answer[j-1]
-					if move.Turn == shogi.TurnSecond && *move.Dst == *prev.Dst {
+					if move.Turn == shogi.TurnSecond && move.Dst == prev.Dst {
 						pointMap[i] += 1.0
 					}
 				}
-				if move.Turn == shogi.TurnSecond && *move.Src == *shogi.Pos(0, 0) {
+				if move.Turn == shogi.TurnSecond && move.Src == shogi.Pos(0, 0) {
 					switch move.Piece {
 					case shogi.FU:
 						pointMap[i] -= 0.1
@@ -84,19 +84,7 @@ func Solve(state *shogi.State) ([]string, error) {
 		}
 		answer = answers[maxIndex]
 	}
-	var (
-		results []string
-	)
-	s := state.Clone()
-	for _, move := range answer {
-		ms, err := s.MoveString(move)
-		if err != nil {
-			return nil, err
-		}
-		s.Apply(move)
-		results = append(results, ms)
-	}
-	return results, nil
+	return answer, nil
 }
 
 // ValidAnswers method
@@ -149,7 +137,7 @@ func (s *Solver) Solve(state *shogi.State, n int) [][]*shogi.Move {
 		ss := state.Clone()
 		ss.Apply(move)
 		if len(counterMoves(ss)) == 0 {
-			if !(move.Piece == shogi.FU && *move.Src == *shogi.Pos(0, 0)) {
+			if !(move.Piece == shogi.FU && move.Src == shogi.Pos(0, 0)) {
 				answers = append(answers, []*shogi.Move{move})
 			}
 		}
@@ -229,7 +217,7 @@ func isImpossible(state *shogi.State) bool {
 	positions := map[shogi.Position]struct{}{}
 	for _, m := range state.CandidateMoves(shogi.TurnSecond) {
 		if m.Piece == shogi.OU {
-			positions[*m.Dst] = struct{}{}
+			positions[m.Dst] = struct{}{}
 		}
 	}
 	if len(positions) > 0 {
@@ -262,10 +250,10 @@ func candidates(state *shogi.State) []*shogi.Move {
 		}
 	}
 	for _, piece := range state.Captured[shogi.TurnFirst].Available() {
-		d := []*shogi.Position{}
+		d := []shogi.Position{}
 		switch piece {
 		case shogi.FU:
-			d = []*shogi.Position{
+			d = []shogi.Position{
 				shogi.Pos(0, 1),
 			}
 		case shogi.KY:
@@ -277,12 +265,12 @@ func candidates(state *shogi.State) []*shogi.Move {
 				}
 			}
 		case shogi.KE:
-			d = []*shogi.Position{
+			d = []shogi.Position{
 				shogi.Pos(1, 2),
 				shogi.Pos(-1, 2),
 			}
 		case shogi.GI:
-			d = []*shogi.Position{
+			d = []shogi.Position{
 				shogi.Pos(-1, -1),
 				shogi.Pos(+1, -1),
 				shogi.Pos(+0, +1),
@@ -290,7 +278,7 @@ func candidates(state *shogi.State) []*shogi.Move {
 				shogi.Pos(+1, +1),
 			}
 		case shogi.KI:
-			d = []*shogi.Position{
+			d = []shogi.Position{
 				shogi.Pos(+0, -1),
 				shogi.Pos(-1, +0),
 				shogi.Pos(+1, +0),
@@ -399,12 +387,12 @@ searchTarget:
 	}
 	if state.Captured[shogi.TurnSecond].Num() > 0 {
 		available := state.Captured[shogi.TurnSecond].Available()
-		positions := []*shogi.Position{}
-		for _, direction := range []*shogi.Position{
+		positions := []shogi.Position{}
+		for _, direction := range []shogi.Position{
 			shogi.Pos(-1, -1), shogi.Pos(-1, +1), shogi.Pos(+1, -1), shogi.Pos(+1, +1),
 			shogi.Pos(-1, +0), shogi.Pos(+1, +0), shogi.Pos(+0, -1), shogi.Pos(+0, +1),
 		} {
-			candidates := []*shogi.Position{}
+			candidates := []shogi.Position{}
 			for i := 1; ; i++ {
 				file := targetFile + i*direction.File
 				rank := targetRank + i*direction.Rank
@@ -436,17 +424,17 @@ searchTarget:
 			movableF := map[shogi.Position][]*shogi.Move{}
 			movableS := map[shogi.Position][]*shogi.Move{}
 			for _, m := range state.CandidateMoves(shogi.TurnFirst) {
-				movableF[*m.Dst] = append(movableF[*m.Dst], m)
+				movableF[m.Dst] = append(movableF[m.Dst], m)
 			}
 			for _, m := range state.CandidateMoves(shogi.TurnSecond) {
-				movableS[*m.Dst] = append(movableS[*m.Dst], m)
+				movableS[m.Dst] = append(movableS[m.Dst], m)
 			}
 			for _, p := range positions {
 				// check wasted placing
-				if moves, exist := movableS[*p]; exist && len(moves) == 1 && moves[0].Piece == shogi.OU {
+				if moves, exist := movableS[p]; exist && len(moves) == 1 && moves[0].Piece == shogi.OU {
 					src := map[shogi.Position]struct{}{}
-					for _, m := range movableF[*p] {
-						src[*m.Src] = struct{}{}
+					for _, m := range movableF[p] {
+						src[m.Src] = struct{}{}
 					}
 					if len(src) > 1 {
 						continue

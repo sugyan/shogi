@@ -24,19 +24,19 @@ func (s *State) Clone() *State {
 
 // Check method
 func (s *State) Check(turn Turn) *Move {
-	var targetPos *Position
+	var targetPos Position
 searchTarget:
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
 			bp := s.Board[i][j]
 			if bp != nil && bp.Piece == OU && bp.Turn != turn {
-				targetPos = &Position{9 - j, i + 1}
+				targetPos = Position{9 - j, i + 1}
 				break searchTarget
 			}
 		}
 	}
 	for _, move := range s.CandidateMoves(turn) {
-		if *move.Dst == *targetPos {
+		if move.Dst == targetPos {
 			return move
 		}
 	}
@@ -116,21 +116,21 @@ func (s *State) CandidateMoves(turn Turn) []*Move {
 	return results
 }
 
-func (s *State) movable(bp *BoardPiece, src *Position) []*Position {
-	positions := []*Position{}
+func (s *State) movable(bp *BoardPiece, src Position) []Position {
+	positions := []Position{}
 	switch bp.Piece {
 	case FU:
 		switch bp.Turn {
 		case TurnFirst:
-			positions = append(positions, &Position{src.File, src.Rank - 1})
+			positions = append(positions, Position{src.File, src.Rank - 1})
 		case TurnSecond:
-			positions = append(positions, &Position{src.File, src.Rank + 1})
+			positions = append(positions, Position{src.File, src.Rank + 1})
 		}
 	case KY:
 		switch bp.Turn {
 		case TurnFirst:
 			for i := 1; src.Rank-i > 0; i++ {
-				dst := &Position{src.File, src.Rank - i}
+				dst := Position{src.File, src.Rank - i}
 				positions = append(positions, dst)
 				if s.GetBoardPiece(dst.File, dst.Rank) != nil {
 					break
@@ -138,7 +138,7 @@ func (s *State) movable(bp *BoardPiece, src *Position) []*Position {
 			}
 		case TurnSecond:
 			for i := 1; src.Rank+i < 10; i++ {
-				dst := &Position{src.File, src.Rank + i}
+				dst := Position{src.File, src.Rank + i}
 				positions = append(positions, dst)
 				if s.GetBoardPiece(dst.File, dst.Rank) != nil {
 					break
@@ -148,114 +148,114 @@ func (s *State) movable(bp *BoardPiece, src *Position) []*Position {
 	case KE:
 		switch bp.Turn {
 		case TurnFirst:
-			positions = append(positions, &Position{src.File - 1, src.Rank - 2})
-			positions = append(positions, &Position{src.File + 1, src.Rank - 2})
+			positions = append(positions, Position{src.File - 1, src.Rank - 2})
+			positions = append(positions, Position{src.File + 1, src.Rank - 2})
 		case TurnSecond:
-			positions = append(positions, &Position{src.File - 1, src.Rank + 2})
-			positions = append(positions, &Position{src.File + 1, src.Rank + 2})
+			positions = append(positions, Position{src.File - 1, src.Rank + 2})
+			positions = append(positions, Position{src.File + 1, src.Rank + 2})
 		}
 	case GI:
-		positions = append(positions, &Position{src.File - 1, src.Rank - 1})
-		positions = append(positions, &Position{src.File + 1, src.Rank - 1})
-		positions = append(positions, &Position{src.File - 1, src.Rank + 1})
-		positions = append(positions, &Position{src.File + 1, src.Rank + 1})
+		positions = append(positions, Position{src.File - 1, src.Rank - 1})
+		positions = append(positions, Position{src.File + 1, src.Rank - 1})
+		positions = append(positions, Position{src.File - 1, src.Rank + 1})
+		positions = append(positions, Position{src.File + 1, src.Rank + 1})
 		switch bp.Turn {
 		case TurnFirst:
-			positions = append(positions, &Position{src.File, src.Rank - 1})
+			positions = append(positions, Position{src.File, src.Rank - 1})
 		case TurnSecond:
-			positions = append(positions, &Position{src.File, src.Rank + 1})
+			positions = append(positions, Position{src.File, src.Rank + 1})
 		}
 	case TO, NY, NK, NG, KI:
-		positions = append(positions, &Position{src.File - 1, src.Rank})
-		positions = append(positions, &Position{src.File + 1, src.Rank})
-		positions = append(positions, &Position{src.File, src.Rank - 1})
-		positions = append(positions, &Position{src.File, src.Rank + 1})
+		positions = append(positions, Position{src.File - 1, src.Rank})
+		positions = append(positions, Position{src.File + 1, src.Rank})
+		positions = append(positions, Position{src.File, src.Rank - 1})
+		positions = append(positions, Position{src.File, src.Rank + 1})
 		switch bp.Turn {
 		case TurnFirst:
-			positions = append(positions, &Position{src.File - 1, src.Rank - 1})
-			positions = append(positions, &Position{src.File + 1, src.Rank - 1})
+			positions = append(positions, Position{src.File - 1, src.Rank - 1})
+			positions = append(positions, Position{src.File + 1, src.Rank - 1})
 		case TurnSecond:
-			positions = append(positions, &Position{src.File - 1, src.Rank + 1})
-			positions = append(positions, &Position{src.File + 1, src.Rank + 1})
+			positions = append(positions, Position{src.File - 1, src.Rank + 1})
+			positions = append(positions, Position{src.File + 1, src.Rank + 1})
 		}
 	case UM:
-		for _, d := range []*Position{&Position{0, -1}, &Position{0, 1}, &Position{-1, 0}, &Position{1, 0}} {
-			positions = append(positions, &Position{src.File + d.File, src.Rank + d.Rank})
+		for _, d := range []Position{Position{0, -1}, Position{0, 1}, Position{-1, 0}, Position{1, 0}} {
+			positions = append(positions, Position{src.File + d.File, src.Rank + d.Rank})
 		}
 		fallthrough
 	case KA:
 		for i := 1; src.File-i > 0 && src.Rank-i > 0; i++ {
-			dst := &Position{src.File - i, src.Rank - i}
+			dst := Position{src.File - i, src.Rank - i}
 			positions = append(positions, dst)
 			if s.GetBoardPiece(dst.File, dst.Rank) != nil {
 				break
 			}
 		}
 		for i := 1; src.File-i > 0 && src.Rank+i < 10; i++ {
-			dst := &Position{src.File - i, src.Rank + i}
+			dst := Position{src.File - i, src.Rank + i}
 			positions = append(positions, dst)
 			if s.GetBoardPiece(dst.File, dst.Rank) != nil {
 				break
 			}
 		}
 		for i := 1; src.File+i < 10 && src.Rank-i > 0; i++ {
-			dst := &Position{src.File + i, src.Rank - i}
+			dst := Position{src.File + i, src.Rank - i}
 			positions = append(positions, dst)
 			if s.GetBoardPiece(dst.File, dst.Rank) != nil {
 				break
 			}
 		}
 		for i := 1; src.File+i < 10 && src.Rank+i < 10; i++ {
-			dst := &Position{src.File + i, src.Rank + i}
+			dst := Position{src.File + i, src.Rank + i}
 			positions = append(positions, dst)
 			if s.GetBoardPiece(dst.File, dst.Rank) != nil {
 				break
 			}
 		}
 	case RY:
-		for _, d := range []*Position{&Position{1, 1}, &Position{1, -1}, &Position{-1, 1}, &Position{-1, -1}} {
-			positions = append(positions, &Position{src.File + d.File, src.Rank + d.Rank})
+		for _, d := range []Position{Position{1, 1}, Position{1, -1}, Position{-1, 1}, Position{-1, -1}} {
+			positions = append(positions, Position{src.File + d.File, src.Rank + d.Rank})
 		}
 		fallthrough
 	case HI:
 		for i := 1; src.File+i < 10; i++ {
-			dst := &Position{src.File + i, src.Rank}
+			dst := Position{src.File + i, src.Rank}
 			positions = append(positions, dst)
 			if s.GetBoardPiece(dst.File, dst.Rank) != nil {
 				break
 			}
 		}
 		for i := 1; src.File-i > 0; i++ {
-			dst := &Position{src.File - i, src.Rank}
+			dst := Position{src.File - i, src.Rank}
 			positions = append(positions, dst)
 			if s.GetBoardPiece(dst.File, dst.Rank) != nil {
 				break
 			}
 		}
 		for i := 1; src.Rank+i < 10; i++ {
-			dst := &Position{src.File, src.Rank + i}
+			dst := Position{src.File, src.Rank + i}
 			positions = append(positions, dst)
 			if s.GetBoardPiece(dst.File, dst.Rank) != nil {
 				break
 			}
 		}
 		for i := 1; src.Rank-i > 0; i++ {
-			dst := &Position{src.File, src.Rank - i}
+			dst := Position{src.File, src.Rank - i}
 			positions = append(positions, dst)
 			if s.GetBoardPiece(dst.File, dst.Rank) != nil {
 				break
 			}
 		}
 	case OU:
-		for _, d := range []*Position{
-			&Position{1, 1}, &Position{1, -1}, &Position{-1, 1}, &Position{-1, -1},
-			&Position{0, 1}, &Position{0, -1}, &Position{-1, 0}, &Position{1, 0},
+		for _, d := range []Position{
+			Position{1, 1}, Position{1, -1}, Position{-1, 1}, Position{-1, -1},
+			Position{0, 1}, Position{0, -1}, Position{-1, 0}, Position{1, 0},
 		} {
-			positions = append(positions, &Position{src.File + d.File, src.Rank + d.Rank})
+			positions = append(positions, Position{src.File + d.File, src.Rank + d.Rank})
 		}
 	}
 	// filtering to valid positions
-	results := []*Position{}
+	results := []Position{}
 	for _, pos := range positions {
 		if pos.File > 0 && pos.File < 10 && pos.Rank > 0 && pos.Rank < 10 {
 			dstBp := s.Board[pos.Rank-1][9-pos.File]

@@ -28,7 +28,7 @@ var (
 )
 
 type posPiece struct {
-	pos   *shogi.Position
+	pos   shogi.Position
 	piece shogi.Piece
 }
 
@@ -88,7 +88,7 @@ func (g *generator) generate() *shogi.State {
 
 func (g *generator) rewind(state *shogi.State, turn shogi.Turn) []*shogi.State {
 	var (
-		targetPos *shogi.Position
+		targetPos shogi.Position
 		posPieces []*posPiece
 	)
 	// search pieces
@@ -147,7 +147,7 @@ func random() *shogi.State {
 	s := shogi.NewState()
 	targetFile := rand.Intn(4) + 1
 	targetRank := rand.Intn(4) + 1
-	positions := make([]*shogi.Position, 0, 81)
+	positions := make([]shogi.Position, 0, 81)
 	for _, n := range rand.Perm(81) {
 		file, rank := int(n/9)+1, n%9+1
 		d := abs(file-targetFile) + abs(rank-targetRank)
@@ -252,7 +252,7 @@ func random() *shogi.State {
 
 // TODO: fix bug...
 func (g *generator) cut(state *shogi.State) {
-	positions := []*shogi.Position{}
+	positions := []shogi.Position{}
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
 			file, rank := 9-i, j+1
@@ -487,7 +487,7 @@ func candidatePrevStatesF(state *shogi.State, pp *posPiece) []*shogi.State {
 }
 
 // previous states of second turn's player
-func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos *shogi.Position) []*shogi.State {
+func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos shogi.Position) []*shogi.State {
 	states := []*shogi.State{}
 	if pp.piece != shogi.OU {
 		dFile, dRank := pp.pos.File-targetPos.File, pp.pos.Rank-targetPos.Rank
@@ -534,7 +534,7 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos *shogi.Pos
 	}
 
 	if pp.piece == shogi.OU {
-		for _, p := range []*shogi.Position{
+		for _, p := range []shogi.Position{
 			shogi.Pos(-1, -1), shogi.Pos(-1, +0), shogi.Pos(-1, +1),
 			shogi.Pos(+0, -1), shogi.Pos(+0, +1),
 			shogi.Pos(+1, -1), shogi.Pos(+1, +0), shogi.Pos(+1, +1),
@@ -586,7 +586,7 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos *shogi.Pos
 		if pp.pos.Rank <= 2 && pp.piece == shogi.KE {
 			return states
 		}
-		prevPositions := []*shogi.Position{}
+		prevPositions := []shogi.Position{}
 		// TODO: promotion...?
 		switch pp.piece {
 		case shogi.FU:
@@ -602,14 +602,14 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos *shogi.Pos
 				}
 			}
 		case shogi.KE:
-			for _, d := range []*shogi.Position{shogi.Pos(-1, -2), shogi.Pos(+1, -2)} {
+			for _, d := range []shogi.Position{shogi.Pos(-1, -2), shogi.Pos(+1, -2)} {
 				file, rank := pp.pos.File+d.File, pp.pos.Rank+d.Rank
 				if file > 0 && file < 10 && rank > 0 && rank < 10 && state.GetBoardPiece(file, rank) == nil {
 					prevPositions = append(prevPositions, shogi.Pos(file, rank))
 				}
 			}
 		case shogi.GI:
-			for _, d := range []*shogi.Position{
+			for _, d := range []shogi.Position{
 				shogi.Pos(-1, -1),
 				shogi.Pos(+0, -1),
 				shogi.Pos(+1, -1),
@@ -622,7 +622,7 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos *shogi.Pos
 				}
 			}
 		case shogi.TO, shogi.NY, shogi.NK, shogi.NG, shogi.KI:
-			for _, d := range []*shogi.Position{
+			for _, d := range []shogi.Position{
 				shogi.Pos(-1, -1),
 				shogi.Pos(+0, -1),
 				shogi.Pos(+1, -1),
@@ -636,7 +636,7 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos *shogi.Pos
 				}
 			}
 		case shogi.UM:
-			for _, d := range []*shogi.Position{
+			for _, d := range []shogi.Position{
 				shogi.Pos(+0, -1),
 				shogi.Pos(+0, +1),
 				shogi.Pos(-1, +0),
@@ -682,7 +682,7 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos *shogi.Pos
 				}
 			}
 		case shogi.RY:
-			for _, d := range []*shogi.Position{
+			for _, d := range []shogi.Position{
 				shogi.Pos(-1, -1),
 				shogi.Pos(-1, +1),
 				shogi.Pos(+1, -1),

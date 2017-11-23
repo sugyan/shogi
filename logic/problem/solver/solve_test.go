@@ -10,12 +10,12 @@ import (
 
 func TestSolver(t *testing.T) {
 	for i, data := range testData {
-		state, err := csa.Parse(bytes.NewBufferString(data.q))
+		record, err := csa.Parse(bytes.NewBufferString(data.q))
 		if err != nil {
 			t.Fatal(err)
 		}
 		start := time.Now()
-		answer, err := Solve(state)
+		answer, err := Solve(record.State)
 		elapsed := time.Since(start)
 		if err != nil {
 			t.Error(err)
@@ -25,12 +25,17 @@ func TestSolver(t *testing.T) {
 			t.Errorf("answer length mismatch: %d (expected: %d)", len(answer), len(data.a))
 			continue
 		}
-		for j, move := range answer {
+		results, err := record.State.MoveStrings(answer)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+		for j, str := range results {
 			if len(answer) >= 3 && j >= len(answer)-2 {
 				continue
 			}
-			if move != data.a[j] {
-				t.Fatalf("error Q%d - A%d: %s != %s", i+1, j+1, move, data.a[j])
+			if str != data.a[j] {
+				t.Fatalf("error Q%d - A%d: %s != %s", i+1, j+1, str, data.a[j])
 			}
 		}
 		t.Logf("Q%d: OK (elapsed time: %v)", i+1, elapsed)

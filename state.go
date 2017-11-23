@@ -28,8 +28,8 @@ type Position struct {
 }
 
 // Pos function
-func Pos(file, rank int) *Position {
-	return &Position{file, rank}
+func Pos(file, rank int) Position {
+	return Position{file, rank}
 }
 
 // IsCaptured method
@@ -47,8 +47,8 @@ type State struct {
 // Move type
 type Move struct {
 	Turn  Turn
-	Src   *Position
-	Dst   *Position
+	Src   Position
+	Dst   Position
 	Piece Piece
 }
 
@@ -152,6 +152,21 @@ func (s *State) Apply(move *Move) {
 	}
 }
 
+// MoveStrings method
+func (s *State) MoveStrings(moves []*Move) ([]string, error) {
+	results := []string{}
+	state := s.Clone()
+	for _, move := range moves {
+		ms, err := state.MoveString(move)
+		if err != nil {
+			return nil, err
+		}
+		state.Apply(move)
+		results = append(results, ms)
+	}
+	return results, nil
+}
+
 // MoveString method
 func (s *State) MoveString(move *Move) (string, error) {
 	// move string
@@ -175,7 +190,7 @@ func (s *State) MoveString(move *Move) (string, error) {
 	if move.Turn == TurnSecond {
 		result = "△"
 	}
-	if s.latestMove != nil && *move.Dst == *s.latestMove.Dst {
+	if s.latestMove != nil && move.Dst == s.latestMove.Dst {
 		result += "同"
 	} else {
 		result += fmt.Sprintf("%c%c",

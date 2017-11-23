@@ -15,11 +15,11 @@ func TestCheckSolvable(t *testing.T) {
 		solver: solver.NewSolver(3),
 	}
 	for i, data := range checkSolvableTestData {
-		state, err := csa.Parse(bytes.NewBufferString(data.input))
+		record, err := csa.Parse(bytes.NewBufferString(data.input))
 		if err != nil {
 			t.Fatal(err)
 		}
-		result := g.checkSolvable(state)
+		result := g.checkSolvable(record.State)
 		if result != data.expected {
 			t.Fatalf("error: (result: %v, expected: %v)", result, data.expected)
 		}
