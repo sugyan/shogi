@@ -18,9 +18,18 @@ import (
 func main() {
 	// generate
 	state := generator.Generate(generator.ProblemType3)
-	println(csa.InitialState1(state))
 	// solve
 	answer, err := solver.Solve(state)
+	if err != nil {
+		log.Fatal(err)
+	}
+	record := &record.Record{
+		State: state,
+		Moves: answer,
+	}
+	println(record.ConvertToString(csa.NewConverter(nil)))
+
+	answerStr, err := state.MoveStrings(answer)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,6 +51,10 @@ P8 *  *  *  *  *  *  *  *  *
 P9 *  *  *  *  *  *  *  *  * 
 P+00HI
 P-00AL
++
++2322TO
+-1213OU
++0023HI
 
 Answer: ▲2二歩成 -> △1三玉 -> ▲2三飛
 ```
