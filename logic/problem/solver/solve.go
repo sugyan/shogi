@@ -149,7 +149,9 @@ func (s *Solver) Solve(state *shogi.State, n int) [][]*shogi.Move {
 		ss := state.Clone()
 		ss.Apply(move)
 		if len(counterMoves(ss)) == 0 {
-			answers = append(answers, []*shogi.Move{move})
+			if !(move.Piece == shogi.FU && *move.Src == *shogi.Pos(0, 0)) {
+				answers = append(answers, []*shogi.Move{move})
+			}
 		}
 	}
 	if len(answers) > 0 {
@@ -263,7 +265,6 @@ func candidates(state *shogi.State) []*shogi.Move {
 		d := []*shogi.Position{}
 		switch piece {
 		case shogi.FU:
-			// TODO checkmating with dropping FU
 			d = []*shogi.Position{
 				shogi.Pos(0, 1),
 			}
