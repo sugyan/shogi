@@ -68,7 +68,10 @@ func (g *generator) generate() *shogi.State {
 			switch g.steps {
 			case 1:
 				if g.checkSolvable(s) {
-					return g.cleanup(s)
+					g.cleanup(s)
+					if countPieces(s)[shogi.TurnSecond] > 2 {
+						return s
+					}
 				}
 			case 3:
 				states := g.rewind(s, shogi.TurnSecond)
@@ -76,9 +79,13 @@ func (g *generator) generate() *shogi.State {
 					if i > 5 {
 						break
 					}
-					ss := states[i]
-					if g.checkSolvable(ss) {
-						return g.cleanup(ss)
+					s := states[i]
+					if g.checkSolvable(s) {
+						g.cleanup(s)
+						if countPieces(s)[shogi.TurnSecond] > 1 {
+							return s
+						}
+						break
 					}
 				}
 			}
@@ -250,7 +257,6 @@ func random() *shogi.State {
 	return s
 }
 
-// TODO: fix bug...
 func (g *generator) cut(state *shogi.State) {
 	positions := []shogi.Position{}
 	for i := 0; i < 9; i++ {
@@ -258,14 +264,14 @@ func (g *generator) cut(state *shogi.State) {
 			file, rank := 9-i, j+1
 			bp := state.GetBoardPiece(file, rank)
 			if bp != nil {
-				if bp.Turn == shogi.TurnFirst {
+				if bp.Piece != shogi.OU {
 					positions = append(positions, shogi.Pos(file, rank))
 				}
 			}
 		}
 	}
 	for _, i := range rand.Perm(len(positions)) {
-		if rand.Intn(5) == 0 {
+		if rand.Intn(3) == 0 {
 			continue
 		}
 		p := positions[i]
@@ -881,4 +887,18 @@ func (g *generator) cleanup(state *shogi.State) *shogi.State {
 		}
 	}
 	return state
+}
+
+func countPieces(state *shogi.State) map[shogi.Turn]int {
+	result := map[shogi.Turn]int{}
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			file, rank := 9-j, i+1
+			bp := state.GetBoardPiece(file, rank)
+			if bp != nil {
+				result[bp.Turn]++
+			}
+		}
+	}
+	return result
 }
