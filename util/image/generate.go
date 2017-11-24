@@ -65,9 +65,10 @@ const (
 
 // StyleOptions type
 type StyleOptions struct {
-	Board BoardStyle
-	Grid  GridStyle
-	Piece PieceStyle
+	Board     BoardStyle
+	Grid      GridStyle
+	Piece     PieceStyle
+	HighLight *shogi.Position
 }
 
 func init() {
@@ -98,6 +99,18 @@ func Generate(state *shogi.State, options *StyleOptions) (image.Image, error) {
 	// board
 	draw.Draw(dst, dst.Bounds().Add(image.Pt(xOffset, 0)), boardImg, boardImg.Bounds().Min, draw.Over)
 	draw.Draw(dst, dst.Bounds().Add(image.Pt(xOffset, 0)), gridImg, gridImg.Bounds().Min, draw.Over)
+	if options.HighLight != nil {
+		focusImage, err := loadImage("data/focus/focus_bold_o.png")
+		i, j := options.HighLight.Rank-1, 9-options.HighLight.File
+		if err != nil {
+			return nil, err
+		}
+		r := dst.Bounds().
+			Add(image.Pt(xOffset+11, 11)).
+			Add(image.Pt(int(xStep*float64(j)), int(yStep*float64(i))))
+		draw.Draw(dst, r, focusImage, focusImage.Bounds().Min, draw.Over)
+
+	}
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
 			bp := state.Board[i][j]
