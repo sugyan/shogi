@@ -4,7 +4,6 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
-	"fmt"
 )
 
 // Turn type
@@ -42,14 +41,6 @@ type State struct {
 	Board      [9][9]*BoardPiece
 	Captured   map[Turn]*CapturedPieces
 	latestMove *Move
-}
-
-// Move type
-type Move struct {
-	Turn  Turn
-	Src   Position
-	Dst   Position
-	Piece Piece
 }
 
 // NewState function
@@ -127,90 +118,4 @@ func (s *State) SetBoardPiece(file, rank int, bp *BoardPiece) error {
 		s.Board[rank-1][9-file] = nil
 	}
 	return nil
-}
-
-// Apply method
-func (s *State) Apply(move *Move) {
-	// update state
-	s.latestMove = move
-	if move.Src.File > 0 && move.Src.Rank > 0 {
-		bp := s.GetBoardPiece(move.Dst.File, move.Dst.Rank)
-		if bp != nil {
-			s.Captured[move.Turn].AddPieces(bp.Piece)
-		}
-		s.SetBoardPiece(move.Src.File, move.Src.Rank, nil)
-		s.SetBoardPiece(move.Dst.File, move.Dst.Rank, &BoardPiece{
-			Turn:  move.Turn,
-			Piece: move.Piece,
-		})
-	} else {
-		s.SetBoardPiece(move.Dst.File, move.Dst.Rank, &BoardPiece{
-			Turn:  move.Turn,
-			Piece: move.Piece,
-		})
-		s.Captured[move.Turn].SubPieces(move.Piece)
-	}
-}
-
-// MoveStrings method
-func (s *State) MoveStrings(moves []*Move) ([]string, error) {
-	results := []string{}
-	state := s.Clone()
-	for _, move := range moves {
-		ms, err := state.MoveString(move)
-		if err != nil {
-			return nil, err
-		}
-		state.Apply(move)
-		results = append(results, ms)
-	}
-	return results, nil
-}
-
-// MoveString method
-func (s *State) MoveString(move *Move) (string, error) {
-	// move string
-	nameMap := map[Piece]string{
-		FU: "歩",
-		TO: "と",
-		KY: "香",
-		NY: "成香",
-		KE: "桂",
-		NK: "成桂",
-		GI: "銀",
-		NG: "成銀",
-		KI: "金",
-		KA: "角",
-		UM: "馬",
-		HI: "飛",
-		RY: "竜",
-		OU: "玉",
-	}
-	result := "▲"
-	if move.Turn == TurnSecond {
-		result = "△"
-	}
-	if s.latestMove != nil && move.Dst == s.latestMove.Dst {
-		result += "同"
-	} else {
-		result += fmt.Sprintf("%c%c",
-			[]rune("123456789")[move.Dst.File-1],
-			[]rune("一二三四五六七八九")[move.Dst.Rank-1],
-		)
-	}
-	if move.Src.IsCaptured() {
-		result += nameMap[move.Piece]
-	} else {
-		bp := s.GetBoardPiece(move.Src.File, move.Src.Rank)
-		if bp == nil {
-			return "", fmt.Errorf("piece does not exist in (%d, %d)", move.Src.File, move.Src.Rank)
-		}
-		if bp.Piece != move.Piece {
-			result += nameMap[bp.Piece] + "成"
-		} else {
-			result += nameMap[move.Piece]
-		}
-	}
-	// TODO special case
-	return result, nil
 }
