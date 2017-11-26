@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/sugyan/shogi.svg?branch=master)](https://travis-ci.org/sugyan/shogi)
+
 # shogi
 
 Shogi (将棋) program
