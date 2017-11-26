@@ -63,10 +63,6 @@ func (s *State) CandidateMoves(turn Turn) []*Move {
 							if dst.Rank <= 2 {
 								mustPromote = true
 							}
-						case KA:
-							mustPromote = true
-						case HI:
-							mustPromote = true
 						}
 						if promoted, ok := promoteMap[bp.Piece]; ok {
 							results = append(results, &Move{
@@ -87,10 +83,6 @@ func (s *State) CandidateMoves(turn Turn) []*Move {
 							if dst.Rank >= 8 {
 								mustPromote = true
 							}
-						case KA:
-							mustPromote = true
-						case HI:
-							mustPromote = true
 						}
 						if promoted, ok := promoteMap[bp.Piece]; ok {
 							results = append(results, &Move{

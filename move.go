@@ -1,6 +1,8 @@
 package shogi
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Move type
 type Move struct {
@@ -105,6 +107,9 @@ func (s *State) MoveString(move *Move) (string, error) {
 			result += nameMap[bp.Piece] + "成"
 		} else {
 			result += nameMap[move.Piece]
+			if (move.Turn == TurnFirst && move.Dst.Rank <= 3) || (move.Turn == TurnSecond && move.Dst.Rank >= 7) {
+				result += "不成"
+			}
 		}
 	}
 	// TODO special case
