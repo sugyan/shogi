@@ -200,12 +200,24 @@ func TestMoveString(t *testing.T) {
 		state.SetBoardPiece(4, 4, &BoardPiece{TurnFirst, GI})
 		state.SetBoardPiece(5, 4, &BoardPiece{TurnFirst, KA})
 		state.SetBoardPiece(6, 4, &BoardPiece{TurnFirst, HI})
+		state.SetBoardPiece(1, 1, &BoardPiece{TurnFirst, TO})
+		state.SetBoardPiece(2, 1, &BoardPiece{TurnFirst, NY})
+		state.SetBoardPiece(3, 1, &BoardPiece{TurnFirst, NK})
+		state.SetBoardPiece(4, 1, &BoardPiece{TurnFirst, NG})
+		state.SetBoardPiece(5, 1, &BoardPiece{TurnFirst, UM})
+		state.SetBoardPiece(6, 1, &BoardPiece{TurnFirst, RY})
 		state.SetBoardPiece(9, 6, &BoardPiece{TurnSecond, FU})
 		state.SetBoardPiece(8, 6, &BoardPiece{TurnSecond, KY})
 		state.SetBoardPiece(7, 5, &BoardPiece{TurnSecond, KE})
 		state.SetBoardPiece(6, 6, &BoardPiece{TurnSecond, GI})
 		state.SetBoardPiece(5, 6, &BoardPiece{TurnSecond, KA})
 		state.SetBoardPiece(4, 6, &BoardPiece{TurnSecond, HI})
+		state.SetBoardPiece(9, 9, &BoardPiece{TurnSecond, TO})
+		state.SetBoardPiece(8, 9, &BoardPiece{TurnSecond, NY})
+		state.SetBoardPiece(7, 9, &BoardPiece{TurnSecond, NK})
+		state.SetBoardPiece(6, 9, &BoardPiece{TurnSecond, NG})
+		state.SetBoardPiece(5, 9, &BoardPiece{TurnSecond, UM})
+		state.SetBoardPiece(4, 9, &BoardPiece{TurnSecond, RY})
 		tests := []testData{
 			// FU
 			testData{
@@ -217,12 +229,20 @@ func TestMoveString(t *testing.T) {
 				expected: "▲1三歩成",
 			},
 			testData{
+				move:     &Move{TurnFirst, Pos(1, 1), Pos(1, 2), TO},
+				expected: "▲1二と",
+			},
+			testData{
 				move:     &Move{TurnSecond, Pos(9, 6), Pos(9, 7), FU},
 				expected: "△9七歩不成",
 			},
 			testData{
 				move:     &Move{TurnSecond, Pos(9, 6), Pos(9, 7), TO},
 				expected: "△9七歩成",
+			},
+			testData{
+				move:     &Move{TurnSecond, Pos(9, 9), Pos(9, 8), TO},
+				expected: "△9八と",
 			},
 			// KY
 			testData{
@@ -234,12 +254,20 @@ func TestMoveString(t *testing.T) {
 				expected: "▲2三香成",
 			},
 			testData{
+				move:     &Move{TurnFirst, Pos(2, 1), Pos(2, 2), NY},
+				expected: "▲2二成香",
+			},
+			testData{
 				move:     &Move{TurnSecond, Pos(8, 6), Pos(8, 7), KY},
 				expected: "△8七香不成",
 			},
 			testData{
 				move:     &Move{TurnSecond, Pos(8, 6), Pos(8, 7), NY},
 				expected: "△8七香成",
+			},
+			testData{
+				move:     &Move{TurnSecond, Pos(8, 9), Pos(8, 8), NY},
+				expected: "△8八成香",
 			},
 			// KE
 			testData{
@@ -251,12 +279,20 @@ func TestMoveString(t *testing.T) {
 				expected: "▲2三桂成",
 			},
 			testData{
+				move:     &Move{TurnFirst, Pos(3, 1), Pos(3, 2), NK},
+				expected: "▲3二成桂",
+			},
+			testData{
 				move:     &Move{TurnSecond, Pos(7, 5), Pos(8, 7), KE},
 				expected: "△8七桂不成",
 			},
 			testData{
 				move:     &Move{TurnSecond, Pos(7, 5), Pos(8, 7), NK},
 				expected: "△8七桂成",
+			},
+			testData{
+				move:     &Move{TurnSecond, Pos(7, 9), Pos(7, 8), NK},
+				expected: "△7八成桂",
 			},
 			// GI
 			testData{
@@ -268,12 +304,20 @@ func TestMoveString(t *testing.T) {
 				expected: "▲4三銀成",
 			},
 			testData{
+				move:     &Move{TurnFirst, Pos(4, 1), Pos(4, 2), NG},
+				expected: "▲4二成銀",
+			},
+			testData{
 				move:     &Move{TurnSecond, Pos(6, 6), Pos(6, 7), GI},
 				expected: "△6七銀不成",
 			},
 			testData{
 				move:     &Move{TurnSecond, Pos(6, 6), Pos(6, 7), NG},
 				expected: "△6七銀成",
+			},
+			testData{
+				move:     &Move{TurnSecond, Pos(6, 9), Pos(6, 8), NG},
+				expected: "△6八成銀",
 			},
 			// KA
 			testData{
@@ -285,12 +329,20 @@ func TestMoveString(t *testing.T) {
 				expected: "▲4三角成",
 			},
 			testData{
+				move:     &Move{TurnFirst, Pos(5, 1), Pos(5, 2), UM},
+				expected: "▲5二馬",
+			},
+			testData{
 				move:     &Move{TurnSecond, Pos(5, 6), Pos(6, 7), KA},
 				expected: "△6七角不成",
 			},
 			testData{
 				move:     &Move{TurnSecond, Pos(5, 6), Pos(6, 7), UM},
 				expected: "△6七角成",
+			},
+			testData{
+				move:     &Move{TurnSecond, Pos(5, 9), Pos(5, 8), UM},
+				expected: "△5八馬",
 			},
 			// HI
 			testData{
@@ -302,12 +354,20 @@ func TestMoveString(t *testing.T) {
 				expected: "▲6三飛成",
 			},
 			testData{
+				move:     &Move{TurnFirst, Pos(6, 1), Pos(6, 2), RY},
+				expected: "▲6二竜",
+			},
+			testData{
 				move:     &Move{TurnSecond, Pos(4, 6), Pos(4, 7), HI},
 				expected: "△4七飛不成",
 			},
 			testData{
 				move:     &Move{TurnSecond, Pos(4, 6), Pos(4, 7), RY},
 				expected: "△4七飛成",
+			},
+			testData{
+				move:     &Move{TurnSecond, Pos(4, 9), Pos(4, 8), RY},
+				expected: "△4八竜",
 			},
 		}
 		for _, test := range tests {

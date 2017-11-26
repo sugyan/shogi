@@ -107,7 +107,7 @@ func (s *State) MoveString(move *Move) (string, error) {
 			result += nameMap[bp.Piece] + "成"
 		} else {
 			result += nameMap[move.Piece]
-			if (move.Turn == TurnFirst && move.Dst.Rank <= 3) || (move.Turn == TurnSecond && move.Dst.Rank >= 7) {
+			if !move.Piece.Promoted() && ((move.Turn == TurnFirst && move.Dst.Rank <= 3) || (move.Turn == TurnSecond && move.Dst.Rank >= 7)) {
 				result += "不成"
 			}
 		}

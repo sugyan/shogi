@@ -3,6 +3,7 @@ package shogi
 // Piece type
 type Piece interface {
 	String() string
+	Promoted() bool
 }
 
 type piece struct {
@@ -38,6 +39,14 @@ var promoteMap = map[Piece]Piece{
 
 func (p *piece) String() string {
 	return p.code
+}
+
+func (p *piece) Promoted() bool {
+	switch p {
+	case TO, NY, NK, NG, UM, RY:
+		return true
+	}
+	return false
 }
 
 // CapturedPieces type
