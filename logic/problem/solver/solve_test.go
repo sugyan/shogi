@@ -15,7 +15,7 @@ func TestSolver(t *testing.T) {
 			t.Fatal(err)
 		}
 		start := time.Now()
-		answer, err := Solve(record.State)
+		answer := Solve(record.State)
 		elapsed := time.Since(start)
 		if err != nil {
 			t.Error(err)
