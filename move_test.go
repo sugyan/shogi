@@ -396,12 +396,12 @@ func TestMoveString(t *testing.T) {
 				expected: "▲6二竜",
 			},
 			testData{
-				move:     &Move{TurnFirst, Pos(9, 3), Pos(9, 4), HI},
-				expected: "▲9四飛不成",
+				move:     &Move{TurnFirst, Pos(9, 3), Pos(9, 5), HI},
+				expected: "▲9五飛不成",
 			},
 			testData{
-				move:     &Move{TurnFirst, Pos(9, 3), Pos(9, 4), RY},
-				expected: "▲9四飛成",
+				move:     &Move{TurnFirst, Pos(9, 3), Pos(9, 5), RY},
+				expected: "▲9五飛成",
 			},
 			testData{
 				move:     &Move{TurnSecond, Pos(4, 6), Pos(4, 7), HI},
@@ -416,12 +416,12 @@ func TestMoveString(t *testing.T) {
 				expected: "△4八竜",
 			},
 			testData{
-				move:     &Move{TurnSecond, Pos(1, 7), Pos(1, 6), HI},
-				expected: "△1六飛不成",
+				move:     &Move{TurnSecond, Pos(1, 7), Pos(1, 5), HI},
+				expected: "△1五飛不成",
 			},
 			testData{
-				move:     &Move{TurnSecond, Pos(1, 7), Pos(1, 6), RY},
-				expected: "△1六飛成",
+				move:     &Move{TurnSecond, Pos(1, 7), Pos(1, 5), RY},
+				expected: "△1五飛成",
 			},
 		}
 		for _, test := range tests {
@@ -433,6 +433,134 @@ func TestMoveString(t *testing.T) {
 			}
 			if result != test.expected {
 				t.Errorf("error: expected: %s, actual: %s", test.expected, result)
+			}
+		}
+	}
+	// 成・不成
+	{
+		{
+			// P1 *  *  * -GI *  * +KI-GI *
+			// P2 *  * +KI *  *  *  *  *  *
+			// P3+KI-GI *  *  * +KI-GI *  *
+			// P4 *  *  *  * -KI *  *  *  *
+			// P5 *  *  * -KI * +KI *  *  *
+			// P6 *  *  *  * +KI *  *  *  *
+			// P7 *  * +GI-KI *  *  * +GI-KI
+			// P8 *  *  *  *  *  * -KI *  *
+			// P9 * +GI-KI *  * +GI *  *  *
+			state := NewState()
+			state.SetBoardPiece(9, 3, &BoardPiece{TurnFirst, KI})
+			state.SetBoardPiece(7, 2, &BoardPiece{TurnFirst, KI})
+			state.SetBoardPiece(4, 3, &BoardPiece{TurnFirst, KI})
+			state.SetBoardPiece(3, 1, &BoardPiece{TurnFirst, KI})
+			state.SetBoardPiece(5, 6, &BoardPiece{TurnFirst, KI})
+			state.SetBoardPiece(4, 5, &BoardPiece{TurnFirst, KI})
+			state.SetBoardPiece(8, 9, &BoardPiece{TurnFirst, GI})
+			state.SetBoardPiece(7, 7, &BoardPiece{TurnFirst, GI})
+			state.SetBoardPiece(4, 9, &BoardPiece{TurnFirst, GI})
+			state.SetBoardPiece(2, 7, &BoardPiece{TurnFirst, GI})
+			state.SetBoardPiece(1, 7, &BoardPiece{TurnSecond, KI})
+			state.SetBoardPiece(3, 8, &BoardPiece{TurnSecond, KI})
+			state.SetBoardPiece(6, 7, &BoardPiece{TurnSecond, KI})
+			state.SetBoardPiece(7, 9, &BoardPiece{TurnSecond, KI})
+			state.SetBoardPiece(5, 4, &BoardPiece{TurnSecond, KI})
+			state.SetBoardPiece(6, 5, &BoardPiece{TurnSecond, KI})
+			state.SetBoardPiece(2, 1, &BoardPiece{TurnSecond, GI})
+			state.SetBoardPiece(3, 3, &BoardPiece{TurnSecond, GI})
+			state.SetBoardPiece(6, 1, &BoardPiece{TurnSecond, GI})
+			state.SetBoardPiece(8, 3, &BoardPiece{TurnSecond, GI})
+			tests := []testData{
+				testData{
+					move:     &Move{TurnFirst, Pos(9, 3), Pos(8, 2), KI},
+					expected: "▲8二金上",
+				},
+				testData{
+					move:     &Move{TurnFirst, Pos(7, 2), Pos(8, 2), KI},
+					expected: "▲8二金寄",
+				},
+				testData{
+					move:     &Move{TurnFirst, Pos(4, 3), Pos(3, 2), KI},
+					expected: "▲3二金上",
+				},
+				testData{
+					move:     &Move{TurnFirst, Pos(3, 1), Pos(3, 2), KI},
+					expected: "▲3二金引",
+				},
+				testData{
+					move:     &Move{TurnFirst, Pos(5, 6), Pos(5, 5), KI},
+					expected: "▲5五金上",
+				},
+				testData{
+					move:     &Move{TurnFirst, Pos(4, 5), Pos(5, 5), KI},
+					expected: "▲5五金寄",
+				},
+				testData{
+					move:     &Move{TurnFirst, Pos(8, 9), Pos(8, 8), GI},
+					expected: "▲8八銀上",
+				},
+				testData{
+					move:     &Move{TurnFirst, Pos(7, 7), Pos(8, 8), GI},
+					expected: "▲8八銀引",
+				},
+				testData{
+					move:     &Move{TurnFirst, Pos(4, 9), Pos(3, 8), GI},
+					expected: "▲3八銀上",
+				},
+				testData{
+					move:     &Move{TurnFirst, Pos(2, 7), Pos(3, 8), GI},
+					expected: "▲3八銀引",
+				},
+				testData{
+					move:     &Move{TurnSecond, Pos(1, 7), Pos(2, 8), KI},
+					expected: "△2八金上",
+				},
+				testData{
+					move:     &Move{TurnSecond, Pos(3, 8), Pos(2, 8), KI},
+					expected: "△2八金寄",
+				},
+				testData{
+					move:     &Move{TurnSecond, Pos(6, 7), Pos(7, 8), KI},
+					expected: "△7八金上",
+				},
+				testData{
+					move:     &Move{TurnSecond, Pos(7, 9), Pos(7, 8), KI},
+					expected: "△7八金引",
+				},
+				testData{
+					move:     &Move{TurnSecond, Pos(5, 4), Pos(5, 5), KI},
+					expected: "△5五金上",
+				},
+				testData{
+					move:     &Move{TurnSecond, Pos(6, 5), Pos(5, 5), KI},
+					expected: "△5五金寄",
+				},
+				testData{
+					move:     &Move{TurnSecond, Pos(2, 1), Pos(2, 2), GI},
+					expected: "△2二銀上",
+				},
+				testData{
+					move:     &Move{TurnSecond, Pos(3, 3), Pos(2, 2), GI},
+					expected: "△2二銀引",
+				},
+				testData{
+					move:     &Move{TurnSecond, Pos(6, 1), Pos(7, 2), GI},
+					expected: "△7二銀上",
+				},
+				testData{
+					move:     &Move{TurnSecond, Pos(8, 3), Pos(7, 2), GI},
+					expected: "△7二銀引",
+				},
+			}
+			for _, test := range tests {
+				s := state.Clone()
+				result, err := s.MoveString(test.move)
+				if err != nil {
+					t.Error(err)
+					continue
+				}
+				if result != test.expected {
+					t.Errorf("error: expected: %s, actual: %s", test.expected, result)
+				}
 			}
 		}
 	}

@@ -89,32 +89,53 @@ func (s *State) MoveString(move *Move) (string, error) {
 			}
 		}
 	} else {
+		// check movable
+		moves := []*Move{}
 		ok := false
 		for _, m := range s.CandidateMoves(move.Turn) {
 			if m.Dst == move.Dst && m.Piece == move.Piece {
 				ok = true
-				break
+				bp := s.GetBoardPiece(m.Src.File, m.Src.Rank)
+				if bp.Piece == move.Piece {
+					moves = append(moves, m)
+				}
 			}
 		}
 		if !ok {
 			return "", fmt.Errorf("piece %s does not exist which move to (%d, %d)", move.Piece, move.Dst.File, move.Dst.Rank)
 		}
+		// piece name
 		bp := s.GetBoardPiece(move.Src.File, move.Src.Rank)
 		if bp == nil {
 			return "", fmt.Errorf("piece does not exist in (%d, %d)", move.Src.File, move.Src.Rank)
 		}
-		if bp.Piece != move.Piece {
-			result += nameMap[bp.Piece] + "成"
-		} else {
-			result += nameMap[move.Piece]
-			if !move.Piece.Promoted() && move.Piece != KI {
-				if (move.Turn == TurnFirst && (move.Src.Rank <= 3 || move.Dst.Rank <= 3)) ||
-					(move.Turn == TurnSecond && (move.Src.Rank >= 7 || move.Dst.Rank >= 7)) {
-					result += "不成"
+		result += nameMap[bp.Piece]
+		// relative position and movements
+		switch len(moves) {
+		case 2:
+			if moves[0].Src.Rank != moves[1].Src.Rank {
+				d := move.Src.Rank - move.Dst.Rank
+				if move.Turn == TurnSecond {
+					d *= -1
+				}
+				switch d {
+				case -1:
+					result += "引"
+				case +0:
+					result += "寄"
+				case +1:
+					result += "上"
 				}
 			}
 		}
+		if bp.Piece != move.Piece {
+			result += "成"
+		} else if !move.Piece.Promoted() && move.Piece != KI {
+			if (move.Turn == TurnFirst && (move.Src.Rank <= 3 || move.Dst.Rank <= 3)) ||
+				(move.Turn == TurnSecond && (move.Src.Rank >= 7 || move.Dst.Rank >= 7)) {
+				result += "不成"
+			}
+		}
 	}
-	// TODO special case
 	return result, nil
 }
