@@ -113,7 +113,20 @@ func (s *State) MoveString(move *Move) (string, error) {
 		// relative position and movements
 		switch len(moves) {
 		case 2:
-			if moves[0].Src.Rank != moves[1].Src.Rank {
+			if moves[0].Src.Rank == moves[1].Src.Rank {
+				d := move.Src.File - move.Dst.File
+				if move.Turn == TurnSecond {
+					d *= -1
+				}
+				switch {
+				case d == 0:
+					result += "直"
+				case d > 0:
+					result += "左"
+				case d < 0:
+					result += "右"
+				}
+			} else {
 				d := move.Src.Rank - move.Dst.Rank
 				if move.Turn == TurnSecond {
 					d *= -1
