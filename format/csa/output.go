@@ -53,9 +53,9 @@ func (c *Converter) ConvertToString(record *record.Record) string {
 func moveToString(move *shogi.Move) string {
 	result := make([]byte, 0, 6)
 	switch move.Turn {
-	case shogi.TurnFirst:
+	case shogi.TurnBlack:
 		result = append(result, '+')
-	case shogi.TurnSecond:
+	case shogi.TurnWhite:
 		result = append(result, '-')
 	}
 	result = append(result, '0'+byte(move.Src.File))
@@ -73,15 +73,15 @@ func InitialState1(state *shogi.State) string {
 		rowName := fmt.Sprintf("P%d", i+1)
 		result = append(result, []byte(rowName)...)
 		for j := 0; j < 9; j++ {
-			bp := state.Board[i][j]
-			if bp != nil {
-				switch bp.Turn {
-				case shogi.TurnFirst:
+			b := state.Board[i][j]
+			if b != nil {
+				switch b.Turn {
+				case shogi.TurnBlack:
 					result = append(result, '+')
-				case shogi.TurnSecond:
+				case shogi.TurnWhite:
 					result = append(result, '-')
 				}
-				result = append(result, []byte(bp.Piece.String())...)
+				result = append(result, []byte(b.Piece.String())...)
 			} else {
 				result = append(result, []byte(` * `)...)
 			}
@@ -102,23 +102,23 @@ func InitialState2(state *shogi.State) string {
 	pieces := make(map[shogi.Turn][]*position)
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
-			bp := state.Board[i][j]
-			if bp != nil {
+			b := state.Board[i][j]
+			if b != nil {
 				pos := &position{
 					Rank:  i + 1,
 					File:  9 - j,
-					Piece: bp.Piece,
+					Piece: b.Piece,
 				}
-				pieces[bp.Turn] = append(pieces[bp.Turn], pos)
+				pieces[b.Turn] = append(pieces[b.Turn], pos)
 			}
 		}
 	}
 	for move, positions := range pieces {
 		result = append(result, 'P')
 		switch move {
-		case shogi.TurnFirst:
+		case shogi.TurnBlack:
 			result = append(result, '+')
-		case shogi.TurnSecond:
+		case shogi.TurnWhite:
 			result = append(result, '-')
 		}
 		for _, pos := range positions {
@@ -135,9 +135,9 @@ func handPieces(state *shogi.State) string {
 	useAll := false
 	var useAllTarget shogi.Turn
 	{
-		less := shogi.TurnFirst
-		if state.Captured[shogi.TurnFirst].Num() > state.Captured[shogi.TurnSecond].Num() {
-			less = shogi.TurnSecond
+		less := shogi.TurnBlack
+		if state.Captured[shogi.TurnBlack].Num() > state.Captured[shogi.TurnWhite].Num() {
+			less = shogi.TurnWhite
 		}
 		lessCap := state.Captured[less]
 		remains := &shogi.CapturedPieces{
@@ -151,9 +151,9 @@ func handPieces(state *shogi.State) string {
 		}
 		for i := 0; i < 9; i++ {
 			for j := 0; j < 9; j++ {
-				bp := state.Board[i][j]
-				if bp != nil {
-					switch bp.Piece {
+				b := state.Board[i][j]
+				if b != nil {
+					switch b.Piece {
 					case shogi.FU:
 						fallthrough
 					case shogi.TO:
@@ -198,9 +198,9 @@ func handPieces(state *shogi.State) string {
 		}
 		result = append(result, 'P')
 		switch move {
-		case shogi.TurnFirst:
+		case shogi.TurnBlack:
 			result = append(result, '+')
-		case shogi.TurnSecond:
+		case shogi.TurnWhite:
 			result = append(result, '-')
 		}
 		for i := 0; i < pieces.HI; i++ {
@@ -229,9 +229,9 @@ func handPieces(state *shogi.State) string {
 	if useAll {
 		result = append(result, 'P')
 		switch useAllTarget {
-		case shogi.TurnFirst:
+		case shogi.TurnBlack:
 			result = append(result, '+')
-		case shogi.TurnSecond:
+		case shogi.TurnWhite:
 			result = append(result, '-')
 		}
 		result = append(result, []byte(`00AL`)...)

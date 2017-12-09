@@ -65,8 +65,8 @@ func (cp *CapturedPieces) Num() int {
 	return cp.FU + cp.KY + cp.KE + cp.GI + cp.KI + cp.KA + cp.HI
 }
 
-// AddPieces method
-func (cp *CapturedPieces) AddPieces(p Piece) {
+// Add method
+func (cp *CapturedPieces) Add(p Piece) {
 	switch p {
 	case FU, TO:
 		cp.FU++
@@ -85,8 +85,8 @@ func (cp *CapturedPieces) AddPieces(p Piece) {
 	}
 }
 
-// SubPieces method
-func (cp *CapturedPieces) SubPieces(p Piece) {
+// Sub method
+func (cp *CapturedPieces) Sub(p Piece) {
 	switch p {
 	case FU, TO:
 		cp.FU--

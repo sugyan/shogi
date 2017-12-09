@@ -113,9 +113,9 @@ func Generate(state *shogi.State, options *StyleOptions) (image.Image, error) {
 	}
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
-			bp := state.Board[i][j]
-			if bp != nil {
-				pieceImg, err := pieceImage(bp.Turn, bp.Piece, options.Piece)
+			b := state.Board[i][j]
+			if b != nil {
+				pieceImg, err := pieceImage(b.Turn, b.Piece, options.Piece)
 				if err != nil {
 					return nil, err
 				}
@@ -131,12 +131,12 @@ func Generate(state *shogi.State, options *StyleOptions) (image.Image, error) {
 		pieces := arrangeCapturedPieces(captured)
 		var offset image.Point
 		switch turn {
-		case shogi.TurnFirst:
+		case shogi.TurnBlack:
 			offset = image.Pt(
 				xOffset+boardImg.Bounds().Dx()+2,
 				int(yStep*float64(-4))+boardImg.Bounds().Dy(),
 			)
-		case shogi.TurnSecond:
+		case shogi.TurnWhite:
 			offset = image.Pt(2, 0)
 		}
 		for i := 0; i < 4; i++ {
@@ -145,9 +145,9 @@ func Generate(state *shogi.State, options *StyleOptions) (image.Image, error) {
 				if k < len(pieces) {
 					var data *capturedPiecesData
 					switch turn {
-					case shogi.TurnFirst:
+					case shogi.TurnBlack:
 						data = pieces[k]
-					case shogi.TurnSecond:
+					case shogi.TurnWhite:
 						data = pieces[len(pieces)-k-1]
 					}
 					pieceImg, err := pieceImage(turn, data.piece, options.Piece)
@@ -286,7 +286,7 @@ func pieceImage(turn shogi.Turn, piece shogi.Piece, style PieceStyle) (image.Ima
 	}
 
 	prefix := "+"
-	if turn == shogi.TurnSecond {
+	if turn == shogi.TurnWhite {
 		prefix = "-"
 	}
 	code := piece.String()

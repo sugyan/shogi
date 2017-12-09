@@ -17,21 +17,21 @@ func (s *State) Apply(move *Move) {
 	// update state
 	s.latestMove = move
 	if move.Src.File > 0 && move.Src.Rank > 0 {
-		bp := s.GetBoardPiece(move.Dst.File, move.Dst.Rank)
-		if bp != nil {
-			s.Captured[move.Turn].AddPieces(bp.Piece)
+		b := s.GetBoard(move.Dst.File, move.Dst.Rank)
+		if b != nil {
+			s.Captured[move.Turn].Add(b.Piece)
 		}
-		s.SetBoardPiece(move.Src.File, move.Src.Rank, nil)
-		s.SetBoardPiece(move.Dst.File, move.Dst.Rank, &BoardPiece{
+		s.SetBoard(move.Src.File, move.Src.Rank, nil)
+		s.SetBoard(move.Dst.File, move.Dst.Rank, &BoardPiece{
 			Turn:  move.Turn,
 			Piece: move.Piece,
 		})
 	} else {
-		s.SetBoardPiece(move.Dst.File, move.Dst.Rank, &BoardPiece{
+		s.SetBoard(move.Dst.File, move.Dst.Rank, &BoardPiece{
 			Turn:  move.Turn,
 			Piece: move.Piece,
 		})
-		s.Captured[move.Turn].SubPieces(move.Piece)
+		s.Captured[move.Turn].Sub(move.Piece)
 	}
 }
 
@@ -70,7 +70,7 @@ func (s *State) MoveString(move *Move) (string, error) {
 		OU: "玉",
 	}
 	result := "▲"
-	if move.Turn == TurnSecond {
+	if move.Turn == TurnWhite {
 		result = "△"
 	}
 	if s.latestMove != nil && move.Dst == s.latestMove.Dst {
@@ -95,8 +95,7 @@ func (s *State) MoveString(move *Move) (string, error) {
 		for _, m := range s.CandidateMoves(move.Turn) {
 			if m.Dst == move.Dst && m.Piece == move.Piece {
 				ok = true
-				bp := s.GetBoardPiece(m.Src.File, m.Src.Rank)
-				if bp.Piece == move.Piece {
+				if s.GetBoard(m.Src.File, m.Src.Rank).Piece == move.Piece {
 					moves = append(moves, m)
 				}
 			}
@@ -105,17 +104,17 @@ func (s *State) MoveString(move *Move) (string, error) {
 			return "", fmt.Errorf("piece %s does not exist which move to (%d, %d)", move.Piece, move.Dst.File, move.Dst.Rank)
 		}
 		// piece name
-		bp := s.GetBoardPiece(move.Src.File, move.Src.Rank)
-		if bp == nil {
+		b := s.GetBoard(move.Src.File, move.Src.Rank)
+		if b == nil {
 			return "", fmt.Errorf("piece does not exist in (%d, %d)", move.Src.File, move.Src.Rank)
 		}
-		result += nameMap[bp.Piece]
+		result += nameMap[b.Piece]
 		// relative position and movements
 		switch len(moves) {
 		case 2:
 			if moves[0].Src.Rank == moves[1].Src.Rank {
 				d := move.Src.File - move.Dst.File
-				if move.Turn == TurnSecond {
+				if move.Turn == TurnWhite {
 					d *= -1
 				}
 				switch {
@@ -128,7 +127,7 @@ func (s *State) MoveString(move *Move) (string, error) {
 				}
 			} else {
 				d := move.Src.Rank - move.Dst.Rank
-				if move.Turn == TurnSecond {
+				if move.Turn == TurnWhite {
 					d *= -1
 				}
 				switch d {
@@ -141,11 +140,11 @@ func (s *State) MoveString(move *Move) (string, error) {
 				}
 			}
 		}
-		if bp.Piece != move.Piece {
+		if b.Piece != move.Piece {
 			result += "成"
 		} else if !move.Piece.Promoted() && move.Piece != KI {
-			if (move.Turn == TurnFirst && (move.Src.Rank <= 3 || move.Dst.Rank <= 3)) ||
-				(move.Turn == TurnSecond && (move.Src.Rank >= 7 || move.Dst.Rank >= 7)) {
+			if (move.Turn == TurnBlack && (move.Src.Rank <= 3 || move.Dst.Rank <= 3)) ||
+				(move.Turn == TurnWhite && (move.Src.Rank >= 7 || move.Dst.Rank >= 7)) {
 				result += "不成"
 			}
 		}
