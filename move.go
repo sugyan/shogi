@@ -110,33 +110,76 @@ func (s *State) MoveString(move *Move) (string, error) {
 		}
 		result += nameMap[b.Piece]
 		// relative position and movements
-		switch len(moves) {
-		case 2:
-			if moves[0].Src.Rank == moves[1].Src.Rank {
+		if len(moves) > 1 {
+			sameFile := false
+			sameRank := false
+			switch move.Piece {
+			case KA, UM, HI, RY:
+				if moves[0].Src.File == moves[1].Src.File {
+					sameFile = true
+				}
+				if (moves[0].Src.Rank == moves[1].Src.Rank) ||
+					(moves[0].Src.Rank > move.Dst.Rank && moves[1].Src.Rank > move.Dst.Rank) ||
+					(moves[0].Src.Rank < move.Dst.Rank && moves[1].Src.Rank < move.Dst.Rank) {
+					sameRank = true
+				}
+			default:
+				for _, m := range moves {
+					if m.Src != move.Src && m.Src.File == move.Src.File {
+						sameFile = true
+					}
+					if m.Src != move.Src && m.Src.Rank == move.Src.Rank {
+						sameRank = true
+					}
+				}
+			}
+			if sameRank {
 				d := move.Src.File - move.Dst.File
 				if move.Turn == TurnWhite {
 					d *= -1
 				}
 				switch {
 				case d == 0:
-					result += "直"
+					if move.Piece == RY || move.Piece == UM {
+						right := false
+						if move.Src != moves[0].Src {
+							if move.Src.File < moves[0].Src.File {
+								right = true
+							}
+						} else {
+							if move.Src.File < moves[1].Src.File {
+								right = true
+							}
+						}
+						if move.Turn == TurnWhite {
+							right = !right
+						}
+						if right {
+							result += "右"
+						} else {
+							result += "左"
+						}
+					} else {
+						result += "直"
+					}
 				case d > 0:
 					result += "左"
 				case d < 0:
 					result += "右"
 				}
-			} else {
+			}
+			if !sameRank || (sameFile && move.Src.File != move.Dst.File) {
 				d := move.Src.Rank - move.Dst.Rank
 				if move.Turn == TurnWhite {
 					d *= -1
 				}
-				switch d {
-				case -1:
-					result += "引"
-				case +0:
+				switch {
+				case d == 0:
 					result += "寄"
-				case +1:
+				case d > 0:
 					result += "上"
+				case d < 0:
+					result += "引"
 				}
 			}
 		}
