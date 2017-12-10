@@ -11,8 +11,8 @@ type Turn bool
 
 // MoveOrder constants
 const (
-	TurnFirst  Turn = true
-	TurnSecond Turn = false
+	TurnBlack = Turn(true)
+	TurnWhite = Turn(false)
 )
 
 // BoardPiece type
@@ -47,8 +47,8 @@ type State struct {
 func NewState() *State {
 	return &State{
 		Captured: map[Turn]*CapturedPieces{
-			TurnFirst:  &CapturedPieces{},
-			TurnSecond: &CapturedPieces{},
+			TurnBlack: &CapturedPieces{},
+			TurnWhite: &CapturedPieces{},
 		},
 	}
 }
@@ -66,23 +66,23 @@ func (s *State) Hash() string {
 		HI: 13, RY: 14,
 	}
 	turnByteMap := map[Turn]byte{
-		TurnFirst:  1,
-		TurnSecond: 0,
+		TurnBlack: 1,
+		TurnWhite: 0,
 	}
 	hash := sha1.New()
 	for i := 0; i < 9; i++ {
 		bytes := make([]byte, 0, 18)
 		for j := 0; j < 9; j++ {
-			bp := s.Board[i][j]
-			if bp != nil {
-				bytes = append(bytes, []byte{pieceByteMap[bp.Piece], turnByteMap[bp.Turn]}...)
+			b := s.Board[i][j]
+			if b != nil {
+				bytes = append(bytes, []byte{pieceByteMap[b.Piece], turnByteMap[b.Turn]}...)
 			} else {
 				bytes = append(bytes, []byte{0, 0}...)
 			}
 		}
 		hash.Write(bytes)
 	}
-	for _, turn := range []Turn{TurnFirst, TurnSecond} {
+	for _, turn := range []Turn{TurnBlack, TurnWhite} {
 		bytes := make([]byte, 7)
 		bytes[0] = byte(s.Captured[turn].FU)
 		bytes[1] = byte(s.Captured[turn].KY)
@@ -96,23 +96,23 @@ func (s *State) Hash() string {
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-// GetBoardPiece method
-func (s *State) GetBoardPiece(file, rank int) *BoardPiece {
+// GetBoard method
+func (s *State) GetBoard(file, rank int) *BoardPiece {
 	return s.Board[rank-1][9-file]
 }
 
-// SetBoardPiece method
-func (s *State) SetBoardPiece(file, rank int, bp *BoardPiece) error {
+// SetBoard method
+func (s *State) SetBoard(file, rank int, b *BoardPiece) error {
 	if file < 1 || file > 9 {
 		return errors.New("invalid file")
 	}
 	if rank < 1 || rank > 9 {
 		return errors.New("invalid rank")
 	}
-	if bp != nil {
+	if b != nil {
 		s.Board[rank-1][9-file] = &BoardPiece{
-			Turn:  bp.Turn,
-			Piece: bp.Piece,
+			Turn:  b.Turn,
+			Piece: b.Piece,
 		}
 	} else {
 		s.Board[rank-1][9-file] = nil

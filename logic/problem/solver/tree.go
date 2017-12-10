@@ -56,7 +56,7 @@ func (n *node) archy(prefix string) string {
 	if n.parent != nil {
 		move := n.moveState.move
 		sign := '+'
-		if move.Turn == shogi.TurnSecond {
+		if move.Turn == shogi.TurnWhite {
 			sign = '-'
 		}
 		line = fmt.Sprintf("%c%d%d%d%d%s (%c)", sign, move.Src.File, move.Src.Rank, move.Dst.File, move.Dst.Rank, move.Piece, n.result)
@@ -118,9 +118,9 @@ func (n *node) setResult(result nodeResult) nodeResult {
 	switch result {
 	case resultTrue:
 		switch n.moveState.move.Turn {
-		case shogi.TurnFirst:
+		case shogi.TurnBlack:
 			return n.parent.setResult(resultTrue)
-		case shogi.TurnSecond:
+		case shogi.TurnWhite:
 			ok := true
 			for _, sibling := range n.parent.childNodes {
 				if sibling.result != resultTrue {

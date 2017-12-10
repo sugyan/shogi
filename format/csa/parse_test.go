@@ -49,15 +49,15 @@ T6
 		t.Fatal(err)
 	}
 	{
-		bp := record.State.GetBoardPiece(5, 1)
-		if bp != nil && bp.Turn == shogi.TurnSecond && bp.Piece == shogi.OU {
+		b := record.State.GetBoard(5, 1)
+		if b != nil && b.Turn == shogi.TurnWhite && b.Piece == shogi.OU {
 		} else {
 			t.Error("5, 1 is not OU")
 		}
 	}
 	{
-		bp := record.State.GetBoardPiece(5, 9)
-		if bp != nil && bp.Turn == shogi.TurnFirst && bp.Piece == shogi.OU {
+		b := record.State.GetBoard(5, 9)
+		if b != nil && b.Turn == shogi.TurnBlack && b.Piece == shogi.OU {
 		} else {
 			t.Error("5, 9 is not OU")
 		}

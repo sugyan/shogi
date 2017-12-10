@@ -86,9 +86,9 @@ func Parse(r io.Reader) (*shogi.State, error) {
 				if c == '・' {
 					state.Board[row][col] = nil
 				} else {
-					turn := shogi.TurnFirst
+					turn := shogi.TurnBlack
 					if c == 'v' {
-						turn = shogi.TurnSecond
+						turn = shogi.TurnWhite
 						i++
 					}
 					state.Board[row][col] = &shogi.BoardPiece{
@@ -114,16 +114,16 @@ func Parse(r io.Reader) (*shogi.State, error) {
 				var turn shogi.Turn
 				switch submatch[1] {
 				case "先":
-					turn = shogi.TurnFirst
+					turn = shogi.TurnBlack
 				case "後":
-					turn = shogi.TurnSecond
+					turn = shogi.TurnWhite
 				}
 				n := 1
 				if len(runes[1:]) > 0 {
 					n = numberMap[string(runes[1:])]
 				}
 				for i := 0; i < n; i++ {
-					state.Captured[turn].AddPieces(codeMap[runes[0]])
+					state.Captured[turn].Add(codeMap[runes[0]])
 				}
 			}
 		}

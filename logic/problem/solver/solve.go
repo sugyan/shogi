@@ -31,11 +31,11 @@ func selectBestAnswer(state *shogi.State, answers [][]*shogi.Move) []*shogi.Move
 			s.Apply(move)
 			if j > 0 {
 				prev := answer[j-1]
-				if move.Turn == shogi.TurnSecond && move.Dst == prev.Dst {
+				if move.Turn == shogi.TurnWhite && move.Dst == prev.Dst {
 					pointMap[i] += 1.0
 				}
 			}
-			if move.Turn == shogi.TurnSecond && move.Src == shogi.Pos(0, 0) {
+			if move.Turn == shogi.TurnWhite && move.Src == shogi.Pos(0, 0) {
 				switch move.Piece {
 				case shogi.FU:
 					pointMap[i] -= 0.1
@@ -54,7 +54,7 @@ func selectBestAnswer(state *shogi.State, answers [][]*shogi.Move) []*shogi.Move
 				}
 			}
 		}
-		if s.Captured[shogi.TurnFirst].Num() > 0 {
+		if s.Captured[shogi.TurnBlack].Num() > 0 {
 			pointMap[i] -= 10
 		}
 	}
@@ -86,13 +86,13 @@ func (s *Solver) Answers(state *shogi.State) [][]*shogi.Move {
 }
 
 func (s *Solver) do(state *shogi.State, node *node) bool {
-	for _, ms := range candidates(state, shogi.TurnFirst) {
+	for _, ms := range candidates(state, shogi.TurnBlack) {
 		node.addChildNode(ms)
 	}
 
 	solved := false
 	for _, child := range node.childNodes {
-		candidates := candidates(child.moveState.state, shogi.TurnSecond)
+		candidates := candidates(child.moveState.state, shogi.TurnWhite)
 		if len(candidates) == 0 {
 			result := child.setResult(resultTrue)
 			if result == resultTrue {
@@ -110,7 +110,7 @@ func searchTarget(state *shogi.State) *shogi.Position {
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
 			bp := state.Board[i][j]
-			if bp != nil && bp.Piece == shogi.OU && bp.Turn == shogi.TurnSecond {
+			if bp != nil && bp.Piece == shogi.OU && bp.Turn == shogi.TurnWhite {
 				return &shogi.Position{File: 9 - j, Rank: i + 1}
 			}
 		}
@@ -125,15 +125,15 @@ func candidates(state *shogi.State, turn shogi.Turn) []*moveState {
 	for _, m := range state.CandidateMoves(turn) {
 		s := state.Clone()
 		s.Apply(m)
-		check := s.Check(shogi.TurnFirst) != nil
-		if (turn == shogi.TurnFirst && check) || (turn == shogi.TurnSecond && !check) {
+		check := s.Check(shogi.TurnBlack) != nil
+		if (turn == shogi.TurnBlack && check) || (turn == shogi.TurnWhite && !check) {
 			results = append(results, &moveState{m, s})
 		}
 	}
 	switch turn {
-	case shogi.TurnFirst:
+	case shogi.TurnBlack:
 		// check by placing captured pieces
-		for _, piece := range state.Captured[shogi.TurnFirst].Available() {
+		for _, piece := range state.Captured[shogi.TurnBlack].Available() {
 			d := []shogi.Position{}
 			switch piece {
 			case shogi.FU:
@@ -142,7 +142,7 @@ func candidates(state *shogi.State, turn shogi.Turn) []*moveState {
 				}
 			case shogi.KY:
 				for i := 1; target.Rank+i < 10; i++ {
-					if state.GetBoardPiece(target.File, target.Rank+i) == nil {
+					if state.GetBoard(target.File, target.Rank+i) == nil {
 						d = append(d, shogi.Pos(0, i))
 					} else {
 						break
@@ -180,7 +180,7 @@ func candidates(state *shogi.State, turn shogi.Turn) []*moveState {
 					for i := 1; ; i++ {
 						file, rank := target.File+direction.File*i, target.Rank+direction.Rank*i
 						if file > 0 && file < 10 && rank > 0 && rank < 10 &&
-							state.GetBoardPiece(file, rank) == nil {
+							state.GetBoard(file, rank) == nil {
 							d = append(d, shogi.Pos(direction.File*i, direction.Rank*i))
 						} else {
 							break
@@ -197,7 +197,7 @@ func candidates(state *shogi.State, turn shogi.Turn) []*moveState {
 					for i := 1; ; i++ {
 						file, rank := target.File+direction.File*i, target.Rank+direction.Rank*i
 						if file > 0 && file < 10 && rank > 0 && rank < 10 &&
-							state.GetBoardPiece(file, rank) == nil {
+							state.GetBoard(file, rank) == nil {
 							d = append(d, shogi.Pos(direction.File*i, direction.Rank*i))
 						} else {
 							break
@@ -208,9 +208,9 @@ func candidates(state *shogi.State, turn shogi.Turn) []*moveState {
 			for _, pos := range d {
 				file, rank := target.File+pos.File, target.Rank+pos.Rank
 				if file > 0 && file < 10 && rank > 0 && rank < 10 &&
-					state.GetBoardPiece(file, rank) == nil {
+					state.GetBoard(file, rank) == nil {
 					m := &shogi.Move{
-						Turn:  shogi.TurnFirst,
+						Turn:  shogi.TurnBlack,
 						Src:   shogi.Pos(0, 0),
 						Dst:   shogi.Pos(file, rank),
 						Piece: piece,
@@ -221,7 +221,7 @@ func candidates(state *shogi.State, turn shogi.Turn) []*moveState {
 				}
 			}
 		}
-	case shogi.TurnSecond:
+	case shogi.TurnWhite:
 		// TODO
 	}
 	return results
