@@ -24,22 +24,15 @@ func NewSolver() *Solver {
 }
 
 // Solve method
-func (s *Solver) Solve(state *shogi.State) *Node {
-	root := &Node{
-		pn: inf - 1,
-		dn: inf - 1,
-		Move: &shogi.Move{
-			Turn: shogi.TurnWhite,
-		},
-		state: state,
-	}
+func (s *Solver) Solve(root *Node) {
+	root.pn = inf - 1
+	root.dn = inf - 1
 	s.mid(root)
 	if root.getPhi() != inf && root.getDelta() != inf {
 		root.setPhi(inf)
 		root.setDelta(inf)
 		s.mid(root)
 	}
-	return root
 }
 
 func (s *Solver) mid(n *Node) {
@@ -52,11 +45,11 @@ func (s *Solver) mid(n *Node) {
 	}
 	// 2. generate legal moves
 	if len(n.Children) == 0 {
-		for _, ms := range candidates(n.state, !n.Move.Turn) {
+		for _, ms := range candidates(n.State, !n.Move.Turn) {
 			n.Children = append(n.Children, &Node{
-				pn: 1, dn: 1,
-				Move:   ms.move,
-				state:  ms.state,
+				Move:  ms.move,
+				State: ms.state,
+				pn:    1, dn: 1,
 				parent: n,
 			})
 		}
@@ -76,7 +69,7 @@ func (s *Solver) mid(n *Node) {
 	// 4. multiple-iterative deepening
 	for {
 		p, d := n.getPhi(), n.getDelta()
-		md, sp := s.minDelta(n), s.sumPhi(n)
+		sp, md := s.sumPhi(n), s.minDelta(n)
 		if p <= md || d <= sp {
 			if n.Result == ResultU &&
 				((md == 0 && sp >= inf) || (sp == 0 && md >= inf)) {
@@ -148,7 +141,7 @@ func (s *Solver) selectChild(n *Node) (*Node, *hash, uint32) {
 }
 
 func (s *Solver) putInHash(n *Node) {
-	key := n.state.Hash()
+	key := n.State.Hash()
 	s.hash[key] = &hash{
 		pn: n.getPhi(),
 		dn: n.getDelta(),
@@ -156,7 +149,7 @@ func (s *Solver) putInHash(n *Node) {
 }
 
 func (s *Solver) lookUpHash(n *Node) *hash {
-	key := n.state.Hash()
+	key := n.State.Hash()
 	if v, exist := s.hash[key]; exist {
 		return v
 	}

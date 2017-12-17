@@ -17,12 +17,17 @@ const (
 // Node type
 type Node struct {
 	Result   Result
+	Move     *shogi.Move
+	State    *shogi.State
+	Children []*Node
 	pn       uint32
 	dn       uint32
-	Move     *shogi.Move
-	state    *shogi.State
 	parent   *Node
-	Children []*Node
+}
+
+// IsRoot method
+func (n *Node) IsRoot() bool {
+	return n.parent == nil
 }
 
 func (n *Node) getPhi() uint32 {
