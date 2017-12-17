@@ -1,8 +1,6 @@
 package dfpn
 
 import (
-	"log"
-
 	"github.com/sugyan/shogi"
 )
 
@@ -30,12 +28,11 @@ func (s *Solver) Solve(state *shogi.State) *Node {
 	root := &Node{
 		pn: inf - 1,
 		dn: inf - 1,
-		move: &shogi.Move{
+		Move: &shogi.Move{
 			Turn: shogi.TurnWhite,
 		},
 		state: state,
 	}
-	// s.root = root
 	s.mid(root)
 	if root.getPhi() != inf && root.getDelta() != inf {
 		root.setPhi(inf)
@@ -55,21 +52,21 @@ func (s *Solver) mid(n *Node) {
 	}
 	// 2. generate legal moves
 	if len(n.Children) == 0 {
-		for _, ms := range candidates(n.state, !n.move.Turn) {
+		for _, ms := range candidates(n.state, !n.Move.Turn) {
 			n.Children = append(n.Children, &Node{
 				pn: 1, dn: 1,
-				move:   ms.move,
+				Move:   ms.move,
 				state:  ms.state,
 				parent: n,
 			})
 		}
 	}
 	if len(n.Children) == 0 {
-		switch n.move.Turn {
+		switch n.Move.Turn {
 		case shogi.TurnBlack:
-			n.setResult(resultT)
+			n.setResult(ResultT)
 		case shogi.TurnWhite:
-			n.setResult(resultF)
+			n.setResult(ResultF)
 		}
 		s.putInHash(n)
 		return
@@ -81,8 +78,26 @@ func (s *Solver) mid(n *Node) {
 		p, d := n.getPhi(), n.getDelta()
 		md, sp := s.minDelta(n), s.sumPhi(n)
 		if p <= md || d <= sp {
-			n.setPhi(md)
-			n.setDelta(sp)
+			if n.Result == ResultU &&
+				((md == 0 && sp >= inf) || (sp == 0 && md >= inf)) {
+				switch n.Move.Turn {
+				case shogi.TurnBlack:
+					if sp == 0 {
+						n.setResult(ResultT)
+					} else {
+						n.setResult(ResultF)
+					}
+				case shogi.TurnWhite:
+					if sp == 0 {
+						n.setResult(ResultF)
+					} else {
+						n.setResult(ResultT)
+					}
+				}
+			} else {
+				n.setPhi(md)
+				n.setDelta(sp)
+			}
 			s.putInHash(n)
 			return
 		}
@@ -98,7 +113,7 @@ func (s *Solver) mid(n *Node) {
 		if h.dn == inf-1 {
 			c.setDelta(inf)
 		} else {
-			if d2 != inf {
+			if d2 < inf {
 				d2++
 			}
 			min := d2
@@ -125,8 +140,7 @@ func (s *Solver) selectChild(n *Node) (*Node, *hash, uint32) {
 		} else if hash.dn < delta2 {
 			delta2 = hash.dn
 		}
-		if hash.pn == inf {
-			log.Printf("%v %v %v", best, h, delta2)
+		if hash.pn >= inf {
 			return best, h, delta2
 		}
 	}

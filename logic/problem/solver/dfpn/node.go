@@ -4,27 +4,29 @@ import (
 	"github.com/sugyan/shogi"
 )
 
-type result int
+// Result type
+type Result int
 
+// Resulst constants
 const (
-	resultU = iota // Unknown
-	resultT        // True
-	resultF        // False
+	ResultU = iota // Unknown
+	ResultT        // True
+	ResultF        // False
 )
 
 // Node type
 type Node struct {
-	result   result
+	Result   Result
 	pn       uint32
 	dn       uint32
-	move     *shogi.Move
+	Move     *shogi.Move
 	state    *shogi.State
 	parent   *Node
 	Children []*Node
 }
 
 func (n *Node) getPhi() uint32 {
-	switch n.move.Turn {
+	switch n.Move.Turn {
 	case shogi.TurnBlack:
 		return n.dn
 	case shogi.TurnWhite:
@@ -34,7 +36,7 @@ func (n *Node) getPhi() uint32 {
 }
 
 func (n *Node) setPhi(v uint32) {
-	switch n.move.Turn {
+	switch n.Move.Turn {
 	case shogi.TurnBlack:
 		n.dn = v
 	case shogi.TurnWhite:
@@ -43,7 +45,7 @@ func (n *Node) setPhi(v uint32) {
 }
 
 func (n *Node) getDelta() uint32 {
-	switch n.move.Turn {
+	switch n.Move.Turn {
 	case shogi.TurnBlack:
 		return n.pn
 	case shogi.TurnWhite:
@@ -53,7 +55,7 @@ func (n *Node) getDelta() uint32 {
 }
 
 func (n *Node) setDelta(v uint32) {
-	switch n.move.Turn {
+	switch n.Move.Turn {
 	case shogi.TurnBlack:
 		n.pn = v
 	case shogi.TurnWhite:
@@ -61,10 +63,10 @@ func (n *Node) setDelta(v uint32) {
 	}
 }
 
-func (n *Node) setResult(result result) result {
-	n.result = result
-	if (n.move.Turn == shogi.TurnBlack && n.result == resultT) ||
-		(n.move.Turn == shogi.TurnWhite && n.result == resultF) {
+func (n *Node) setResult(result Result) Result {
+	n.Result = result
+	if (n.Move.Turn == shogi.TurnBlack && n.Result == ResultT) ||
+		(n.Move.Turn == shogi.TurnWhite && n.Result == ResultF) {
 		n.setPhi(inf)
 		n.setDelta(0)
 	} else {
@@ -72,41 +74,27 @@ func (n *Node) setResult(result result) result {
 		n.setDelta(inf)
 	}
 	if n.parent == nil {
-		return n.result
+		return n.Result
 	}
-	switch result {
-	case resultT:
-		switch n.move.Turn {
-		case shogi.TurnBlack:
-			return n.parent.setResult(resultT)
-		case shogi.TurnWhite:
-			ok := true
-			for _, sibling := range n.parent.Children {
-				if sibling.result != resultT {
-					ok = false
-					break
-				}
-			}
-			if ok {
-				return n.parent.setResult(resultT)
+
+	checkSibling := false
+	if (result == ResultT && n.Move.Turn == shogi.TurnWhite) ||
+		(result == ResultF && n.Move.Turn == shogi.TurnBlack) {
+		checkSibling = true
+	}
+	if checkSibling {
+		ok := true
+		for _, sibling := range n.parent.Children {
+			if sibling.Result != result {
+				ok = false
+				break
 			}
 		}
-	case resultF:
-		switch n.move.Turn {
-		case shogi.TurnBlack:
-			ok := true
-			for _, sibling := range n.parent.Children {
-				if sibling.result != resultF {
-					ok = false
-					break
-				}
-			}
-			if ok {
-				return n.parent.setResult(resultF)
-			}
-		case shogi.TurnWhite:
-			return n.parent.setResult(resultF)
+		if ok {
+			n.parent.setResult(result)
 		}
+	} else {
+		n.parent.setResult(result)
 	}
-	return resultU
+	return ResultU
 }
