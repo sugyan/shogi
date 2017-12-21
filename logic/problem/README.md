@@ -33,7 +33,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Answer: %s\n", strings.Join(answer, " -> "))
+	fmt.Printf("Answer: %s\n", strings.Join(answerStr, " -> "))
 }
 ```
 
