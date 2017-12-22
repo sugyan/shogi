@@ -1153,6 +1153,62 @@ func TestMoveString(t *testing.T) {
 			}
 		}
 	}
+	// 上成・引成・左成・右成
+	{
+		// P1 *  *  *  *  *  *  *  *  *
+		// P2 *  *  *  *  *  *  * +HI *
+		// P3 *  *  *  *  *  *  *  *  *
+		// P4 *  *  *  *  *  *  * +HI *
+		// P5 * -KE * -KE * +KE * +KE *
+		// P6 * -HI *  *  *  *  *  *  *
+		// P7 *  *  *  *  *  *  *  *  *
+		// P8 * -HI *  *  *  *  *  *  *
+		// P9 *  *  *  *  *  *  *  *  *
+		state := NewState()
+		state.SetBoard(2, 2, &BoardPiece{TurnBlack, HI})
+		state.SetBoard(2, 4, &BoardPiece{TurnBlack, HI})
+		state.SetBoard(2, 5, &BoardPiece{TurnBlack, KE})
+		state.SetBoard(4, 5, &BoardPiece{TurnBlack, KE})
+		state.SetBoard(8, 8, &BoardPiece{TurnWhite, HI})
+		state.SetBoard(8, 6, &BoardPiece{TurnWhite, HI})
+		state.SetBoard(8, 5, &BoardPiece{TurnWhite, KE})
+		state.SetBoard(6, 5, &BoardPiece{TurnWhite, KE})
+		tests := []testData{
+			testData{
+				move:     &Move{TurnBlack, Pos(2, 2), Pos(2, 3), RY},
+				expected: "▲2三飛引成",
+			},
+			testData{
+				move:     &Move{TurnBlack, Pos(2, 4), Pos(2, 3), RY},
+				expected: "▲2三飛上成",
+			},
+			testData{
+				move:     &Move{TurnBlack, Pos(4, 5), Pos(3, 3), NK},
+				expected: "▲3三桂左成",
+			},
+			testData{
+				move:     &Move{TurnBlack, Pos(2, 5), Pos(3, 3), NK},
+				expected: "▲3三桂右成",
+			},
+			testData{
+				move:     &Move{TurnWhite, Pos(8, 8), Pos(8, 7), RY},
+				expected: "△8七飛引成",
+			},
+			testData{
+				move:     &Move{TurnWhite, Pos(8, 6), Pos(8, 7), RY},
+				expected: "△8七飛上成",
+			},
+			testData{
+				move:     &Move{TurnWhite, Pos(6, 5), Pos(7, 7), NK},
+				expected: "△7七桂左成",
+			},
+			testData{
+				move:     &Move{TurnWhite, Pos(8, 5), Pos(7, 7), NK},
+				expected: "△7七桂右成",
+			},
+		}
+		test(t, state, tests)
+	}
 }
 
 func test(t *testing.T, state *State, tests []testData) {

@@ -90,12 +90,13 @@ func (s *State) MoveString(move *Move) (string, error) {
 		}
 	} else {
 		// check movable
+		srcPiece := s.GetBoard(move.Src.File, move.Src.Rank).Piece
 		moves := []*Move{}
 		ok := false
 		for _, m := range s.CandidateMoves(move.Turn) {
 			if m.Dst == move.Dst && m.Piece == move.Piece {
 				ok = true
-				if s.GetBoard(m.Src.File, m.Src.Rank).Piece == move.Piece {
+				if s.GetBoard(m.Src.File, m.Src.Rank).Piece == srcPiece {
 					moves = append(moves, m)
 				}
 			}
