@@ -28,7 +28,8 @@ func (s *Solver) Solve(root *Node) {
 	root.pn = inf - 1
 	root.dn = inf - 1
 	s.mid(root)
-	if root.getPhi() != inf && root.getDelta() != inf {
+
+	if root.getPhi() < inf && root.getDelta() < inf {
 		root.setPhi(inf)
 		root.setDelta(inf)
 		s.mid(root)
@@ -55,6 +56,8 @@ func (s *Solver) mid(n *Node) {
 		}
 	}
 	if len(n.Children) == 0 {
+		n.setPhi(inf)
+		n.setDelta(0)
 		switch n.Move.Turn {
 		case shogi.TurnBlack:
 			n.setResult(ResultT)
@@ -87,10 +90,9 @@ func (s *Solver) mid(n *Node) {
 						n.setResult(ResultT)
 					}
 				}
-			} else {
-				n.setPhi(md)
-				n.setDelta(sp)
 			}
+			n.setPhi(md)
+			n.setDelta(sp)
 			s.putInHash(n)
 			return
 		}

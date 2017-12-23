@@ -70,14 +70,6 @@ func (n *Node) setDelta(v uint32) {
 
 func (n *Node) setResult(result Result) Result {
 	n.Result = result
-	if (n.Move.Turn == shogi.TurnBlack && n.Result == ResultT) ||
-		(n.Move.Turn == shogi.TurnWhite && n.Result == ResultF) {
-		n.setPhi(inf)
-		n.setDelta(0)
-	} else {
-		n.setPhi(0)
-		n.setDelta(inf)
-	}
 	if n.parent == nil {
 		return n.Result
 	}
