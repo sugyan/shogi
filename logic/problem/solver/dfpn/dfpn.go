@@ -4,7 +4,7 @@ import (
 	"github.com/sugyan/shogi"
 )
 
-const inf = uint32(1) << 31
+const inf = uint32(1) << 24
 
 // Solver type
 type Solver struct {
@@ -114,9 +114,6 @@ func (s *Solver) mid(n *Node) {
 				min = p
 			}
 			c.setDelta(min)
-		}
-		if c.getPhi() >= inf || c.getDelta() >= inf {
-			// TODO
 		}
 		s.mid(c)
 		// if n.Result != ResultU {
