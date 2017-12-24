@@ -21,7 +21,7 @@ func NewSolver() *Solver {
 func Solve(state *shogi.State) []*shogi.Move {
 	answers := NewSolver().Answers(state)
 	for _, answer := range answers {
-		ms, _ := state.MoveStrings(answer[1:])
+		ms, _ := state.MoveStrings(answer)
 		log.Printf("%v", ms)
 	}
 
@@ -110,8 +110,12 @@ func collectAnswers(n *dfpn.Node) [][]*shogi.Move {
 	results := [][]*shogi.Move{}
 	for _, child := range n.Children {
 		if child.Result == dfpn.ResultT {
+			a := []*shogi.Move{}
+			if !n.IsRoot() {
+				a = append(a, n.Move)
+			}
 			for _, answer := range collectAnswers(child) {
-				result := append([]*shogi.Move{n.Move}, answer...)
+				result := append(a, answer...)
 				results = append(results, result)
 			}
 		}

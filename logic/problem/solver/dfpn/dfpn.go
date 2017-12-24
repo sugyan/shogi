@@ -73,7 +73,8 @@ func (s *Solver) mid(n *Node) {
 		p, d := n.getPhi(), n.getDelta()
 		sp, md := s.sumPhi(n), s.minDelta(n)
 		if p <= md || d <= sp {
-			if n.Result == ResultU && (sp >= inf || md >= inf) {
+			if n.Result == ResultU &&
+				((md == 0 && sp >= inf) || (sp == 0 && md >= inf)) {
 				switch n.Move.Turn {
 				case shogi.TurnBlack:
 					if md >= inf {
@@ -82,7 +83,7 @@ func (s *Solver) mid(n *Node) {
 						n.setResult(ResultF)
 					}
 				case shogi.TurnWhite:
-					if sp >= inf {
+					if md >= inf {
 						n.setResult(ResultF)
 					} else {
 						n.setResult(ResultT)
