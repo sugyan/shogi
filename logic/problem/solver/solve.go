@@ -1,9 +1,11 @@
 package solver
 
 import (
+	"log"
 	"math"
 
 	"github.com/sugyan/shogi"
+	"github.com/sugyan/shogi/logic/problem/solver/dfpn"
 )
 
 // Solver type
@@ -18,7 +20,14 @@ func NewSolver() *Solver {
 // Solve function
 func Solve(state *shogi.State) []*shogi.Move {
 	answers := NewSolver().Answers(state)
-	return selectBestAnswer(state, answers)[1:]
+	for _, answer := range answers {
+		ms, _ := state.MoveStrings(answer[1:])
+		log.Printf("%v", ms)
+	}
+
+	// TODO
+	// return selectBestAnswer(state, answers)[1:]
+	return []*shogi.Move{}
 }
 
 func selectBestAnswer(state *shogi.State, answers [][]*shogi.Move) []*shogi.Move {
@@ -70,159 +79,42 @@ func selectBestAnswer(state *shogi.State, answers [][]*shogi.Move) []*shogi.Move
 
 // Answers method
 func (s *Solver) Answers(state *shogi.State) [][]*shogi.Move {
-	tree := newTree(state)
+	root := &dfpn.Node{
+		Move: &shogi.Move{
+			Turn: shogi.TurnWhite,
+		},
+		State: state,
+	}
+	dfpn.NewSolver().Solve(root)
+	searchMoreAnswers(root)
 
-	solved := s.do(state, tree.root)
-	if solved {
-		return tree.answers()
-	}
-	for _, node := range tree.root.leaves() {
-		solved = solved || s.do(node.moveState.state, node)
-	}
-	if solved {
-		return tree.answers()
-	}
-	return [][]*shogi.Move{}
+	return collectAnswers(root)
 }
 
-func (s *Solver) do(state *shogi.State, node *node) bool {
-	for _, ms := range candidates(state, shogi.TurnBlack) {
-		node.addChildNode(ms)
-	}
-
-	solved := false
-	for _, child := range node.childNodes {
-		candidates := candidates(child.moveState.state, shogi.TurnWhite)
-		if len(candidates) == 0 {
-			result := child.setResult(resultTrue)
-			if result == resultTrue {
-				solved = true
-			}
-		}
-		for _, ms := range candidates {
-			child.addChildNode(ms)
+func searchMoreAnswers(n *dfpn.Node) {
+	for _, child := range n.Children {
+		switch child.Result {
+		case dfpn.ResultU:
+			dfpn.NewSolver().Solve(child)
+		case dfpn.ResultT:
+			searchMoreAnswers(child)
 		}
 	}
-	return solved
 }
 
-func searchTarget(state *shogi.State) *shogi.Position {
-	for i := 0; i < 9; i++ {
-		for j := 0; j < 9; j++ {
-			bp := state.Board[i][j]
-			if bp != nil && bp.Piece == shogi.OU && bp.Turn == shogi.TurnWhite {
-				return &shogi.Position{File: 9 - j, Rank: i + 1}
-			}
-		}
+func collectAnswers(n *dfpn.Node) [][]*shogi.Move {
+	if len(n.Children) == 0 {
+		return [][]*shogi.Move{[]*shogi.Move{n.Move}}
 	}
-	return nil
-}
 
-func candidates(state *shogi.State, turn shogi.Turn) []*moveState {
-	results := []*moveState{}
-	target := *searchTarget(state)
-	// by moving pieces
-	for _, m := range state.CandidateMoves(turn) {
-		s := state.Clone()
-		s.Apply(m)
-		check := s.Check(shogi.TurnBlack) != nil
-		if (turn == shogi.TurnBlack && check) || (turn == shogi.TurnWhite && !check) {
-			results = append(results, &moveState{m, s})
-		}
-	}
-	switch turn {
-	case shogi.TurnBlack:
-		// check by placing captured pieces
-		for _, piece := range state.Captured[shogi.TurnBlack].Available() {
-			d := []shogi.Position{}
-			switch piece {
-			case shogi.FU:
-				d = []shogi.Position{
-					shogi.Pos(0, 1),
-				}
-			case shogi.KY:
-				for i := 1; target.Rank+i < 10; i++ {
-					if state.GetBoard(target.File, target.Rank+i) == nil {
-						d = append(d, shogi.Pos(0, i))
-					} else {
-						break
-					}
-				}
-			case shogi.KE:
-				d = []shogi.Position{
-					shogi.Pos(+1, 2),
-					shogi.Pos(-1, 2),
-				}
-			case shogi.GI:
-				d = []shogi.Position{
-					shogi.Pos(-1, -1),
-					shogi.Pos(+1, -1),
-					shogi.Pos(+0, +1),
-					shogi.Pos(-1, +1),
-					shogi.Pos(+1, +1),
-				}
-			case shogi.KI:
-				d = []shogi.Position{
-					shogi.Pos(+0, -1),
-					shogi.Pos(-1, +0),
-					shogi.Pos(+1, +0),
-					shogi.Pos(-1, +1),
-					shogi.Pos(+0, +1),
-					shogi.Pos(+1, +1),
-				}
-			case shogi.KA:
-				for _, direction := range []shogi.Position{
-					shogi.Pos(-1, -1),
-					shogi.Pos(-1, +1),
-					shogi.Pos(+1, -1),
-					shogi.Pos(+1, +1),
-				} {
-					for i := 1; ; i++ {
-						file, rank := target.File+direction.File*i, target.Rank+direction.Rank*i
-						if file > 0 && file < 10 && rank > 0 && rank < 10 &&
-							state.GetBoard(file, rank) == nil {
-							d = append(d, shogi.Pos(direction.File*i, direction.Rank*i))
-						} else {
-							break
-						}
-					}
-				}
-			case shogi.HI:
-				for _, direction := range []shogi.Position{
-					shogi.Pos(-1, +0),
-					shogi.Pos(+1, +0),
-					shogi.Pos(+0, -1),
-					shogi.Pos(+0, +1),
-				} {
-					for i := 1; ; i++ {
-						file, rank := target.File+direction.File*i, target.Rank+direction.Rank*i
-						if file > 0 && file < 10 && rank > 0 && rank < 10 &&
-							state.GetBoard(file, rank) == nil {
-							d = append(d, shogi.Pos(direction.File*i, direction.Rank*i))
-						} else {
-							break
-						}
-					}
-				}
-			}
-			for _, pos := range d {
-				file, rank := target.File+pos.File, target.Rank+pos.Rank
-				if file > 0 && file < 10 && rank > 0 && rank < 10 &&
-					state.GetBoard(file, rank) == nil {
-					m := &shogi.Move{
-						Turn:  shogi.TurnBlack,
-						Src:   shogi.Pos(0, 0),
-						Dst:   shogi.Pos(file, rank),
-						Piece: piece,
-					}
-					s := state.Clone()
-					s.Apply(m)
-					results = append(results, &moveState{m, s})
-				}
+	results := [][]*shogi.Move{}
+	for _, child := range n.Children {
+		if child.Result == dfpn.ResultT {
+			for _, answer := range collectAnswers(child) {
+				result := append([]*shogi.Move{n.Move}, answer...)
+				results = append(results, result)
 			}
 		}
-	case shogi.TurnWhite:
-		// TODO
 	}
 	return results
 }

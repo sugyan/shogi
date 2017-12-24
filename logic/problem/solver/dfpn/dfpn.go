@@ -28,7 +28,6 @@ func (s *Solver) Solve(root *Node) {
 	root.pn = inf - 1
 	root.dn = inf - 1
 	s.mid(root)
-
 	if root.getPhi() < inf && root.getDelta() < inf {
 		root.setPhi(inf)
 		root.setDelta(inf)
@@ -74,17 +73,16 @@ func (s *Solver) mid(n *Node) {
 		p, d := n.getPhi(), n.getDelta()
 		sp, md := s.sumPhi(n), s.minDelta(n)
 		if p <= md || d <= sp {
-			if n.Result == ResultU &&
-				((md == 0 && sp >= inf) || (sp == 0 && md >= inf)) {
+			if n.Result == ResultU && (sp >= inf || md >= inf) {
 				switch n.Move.Turn {
 				case shogi.TurnBlack:
-					if sp == 0 {
+					if md >= inf {
 						n.setResult(ResultT)
 					} else {
 						n.setResult(ResultF)
 					}
 				case shogi.TurnWhite:
-					if sp == 0 {
+					if sp >= inf {
 						n.setResult(ResultF)
 					} else {
 						n.setResult(ResultT)
@@ -117,7 +115,13 @@ func (s *Solver) mid(n *Node) {
 			}
 			c.setDelta(min)
 		}
+		if c.getPhi() >= inf || c.getDelta() >= inf {
+			// TODO
+		}
 		s.mid(c)
+		// if n.Result != ResultU {
+		// 	return
+		// }
 	}
 }
 
