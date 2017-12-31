@@ -1,8 +1,6 @@
 package dfpn
 
-import (
-	"github.com/sugyan/shogi"
-)
+import "github.com/sugyan/shogi"
 
 // Result type
 type Result int
@@ -20,17 +18,11 @@ type Node struct {
 	Move     *shogi.Move
 	State    *shogi.State
 	Children []*Node
-	pn       uint32
-	dn       uint32
-	parent   *Node
+	expanded bool
+	pn, dn   uint32
 }
 
-// IsRoot method
-func (n *Node) IsRoot() bool {
-	return n.parent == nil
-}
-
-func (n *Node) getPhi() uint32 {
+func (n *Node) getP() uint32 {
 	switch n.Move.Turn {
 	case shogi.TurnBlack:
 		return n.dn
@@ -40,7 +32,7 @@ func (n *Node) getPhi() uint32 {
 	return 0
 }
 
-func (n *Node) setPhi(v uint32) {
+func (n *Node) setP(v uint32) {
 	switch n.Move.Turn {
 	case shogi.TurnBlack:
 		n.dn = v
@@ -49,7 +41,7 @@ func (n *Node) setPhi(v uint32) {
 	}
 }
 
-func (n *Node) getDelta() uint32 {
+func (n *Node) getD() uint32 {
 	switch n.Move.Turn {
 	case shogi.TurnBlack:
 		return n.pn
@@ -59,39 +51,11 @@ func (n *Node) getDelta() uint32 {
 	return 0
 }
 
-func (n *Node) setDelta(v uint32) {
+func (n *Node) setD(v uint32) {
 	switch n.Move.Turn {
 	case shogi.TurnBlack:
 		n.pn = v
 	case shogi.TurnWhite:
 		n.dn = v
 	}
-}
-
-func (n *Node) setResult(result Result) Result {
-	n.Result = result
-	if n.parent == nil {
-		return n.Result
-	}
-
-	checkSibling := false
-	if (result == ResultT && n.Move.Turn == shogi.TurnWhite) ||
-		(result == ResultF && n.Move.Turn == shogi.TurnBlack) {
-		checkSibling = true
-	}
-	if checkSibling {
-		ok := true
-		for _, sibling := range n.parent.Children {
-			if sibling.Result != result {
-				ok = false
-				break
-			}
-		}
-		if ok {
-			n.parent.setResult(result)
-		}
-	} else {
-		n.parent.setResult(result)
-	}
-	return ResultU
 }

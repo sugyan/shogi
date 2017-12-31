@@ -4,16 +4,36 @@ import (
 	"github.com/sugyan/shogi"
 )
 
-const inf = uint32(1) << 24
+const inf = uint32(1) << 16
+
+type hash struct {
+	turn   shogi.Turn
+	pn, dn uint32
+}
+
+func (h *hash) p() uint32 {
+	switch h.turn {
+	case shogi.TurnBlack:
+		return h.dn
+	case shogi.TurnWhite:
+		return h.pn
+	}
+	return 0
+}
+
+func (h *hash) d() uint32 {
+	switch h.turn {
+	case shogi.TurnBlack:
+		return h.pn
+	case shogi.TurnWhite:
+		return h.dn
+	}
+	return 0
+}
 
 // Solver type
 type Solver struct {
 	hash map[string]*hash
-}
-
-type hash struct {
-	pn uint32
-	dn uint32
 }
 
 // NewSolver function
@@ -28,154 +48,131 @@ func (s *Solver) Solve(root *Node) {
 	root.pn = inf - 1
 	root.dn = inf - 1
 	s.mid(root)
-	if root.getPhi() < inf && root.getDelta() < inf {
-		root.setPhi(inf)
-		root.setDelta(inf)
+	if root.getP() < inf && root.getD() < inf {
+		root.pn = inf
+		root.dn = inf
 		s.mid(root)
 	}
 }
 
 func (s *Solver) mid(n *Node) {
-	// 1. look up hash
 	h := s.lookUpHash(n)
-	if n.getPhi() <= h.pn || n.getDelta() <= h.dn {
-		n.setPhi(h.pn)
-		n.setDelta(h.dn)
+	if n.pn <= h.pn || n.dn <= h.dn {
+		n.pn = h.pn
+		n.dn = h.dn
 		return
 	}
-	// 2. generate legal moves
-	if len(n.Children) == 0 {
+	if n.expanded {
+		if len(n.Children) == 0 {
+			n.setP(inf)
+			n.setD(0)
+			s.putInHash(n, n.pn, n.dn)
+			return
+		}
+	} else {
 		for _, ms := range candidates(n.State, !n.Move.Turn) {
 			n.Children = append(n.Children, &Node{
 				Move:  ms.move,
 				State: ms.state,
-				pn:    1, dn: 1,
-				parent: n,
 			})
 		}
+		n.expanded = true
 	}
-	if len(n.Children) == 0 {
-		n.setPhi(inf)
-		n.setDelta(0)
-		switch n.Move.Turn {
-		case shogi.TurnBlack:
-			n.setResult(ResultT)
-		case shogi.TurnWhite:
-			n.setResult(ResultF)
-		}
-		s.putInHash(n)
-		return
+	switch n.Move.Turn {
+	case shogi.TurnBlack:
+		s.putInHash(n, inf, 0)
+	case shogi.TurnWhite:
+		s.putInHash(n, 0, inf)
 	}
-	// 3. put in hash
-	s.putInHash(n)
-	// 4. multiple-iterative deepening
 	for {
-		p, d := n.getPhi(), n.getDelta()
-		sp, md := s.sumPhi(n), s.minDelta(n)
-		if p <= md || d <= sp {
-			if n.Result == ResultU &&
-				((md == 0 && sp >= inf) || (sp == 0 && md >= inf)) {
-				switch n.Move.Turn {
-				case shogi.TurnBlack:
-					if md >= inf {
-						n.setResult(ResultT)
-					} else {
-						n.setResult(ResultF)
-					}
-				case shogi.TurnWhite:
-					if md >= inf {
-						n.setResult(ResultF)
-					} else {
-						n.setResult(ResultT)
-					}
-				}
+		minD := s.minDelta(n)
+		sumP := s.sumPhi(n)
+		if n.getP() <= minD || n.getD() <= sumP {
+			n.setP(minD)
+			n.setD(sumP)
+			s.putInHash(n, n.pn, n.dn)
+			if n.pn == 0 {
+				n.Result = ResultT
 			}
-			n.setPhi(md)
-			n.setDelta(sp)
-			s.putInHash(n)
+			if n.dn == 0 {
+				n.Result = ResultF
+			}
 			return
 		}
-
-		c, h, d2 := s.selectChild(n)
-		if h.pn == inf-1 {
-			c.setPhi(inf)
-		} else if d >= inf-1 {
-			c.setPhi(inf - 1)
+		best, cp, cd, d2 := s.selectChild(n)
+		c := n.Children[best]
+		if cp == inf-1 {
+			c.setP(inf)
+		} else if n.getD() >= inf-1 {
+			c.setP(inf - 1)
 		} else {
-			c.setPhi(d + h.pn - sp)
+			c.setP(n.getD() + cp - sumP)
 		}
-		if h.dn == inf-1 {
-			c.setDelta(inf)
+		if cd == inf-1 {
+			c.setD(inf)
 		} else {
-			if d2 < inf {
-				d2++
+			_dn := d2 + 1
+			if n.getP() < _dn {
+				_dn = n.getP()
 			}
-			min := d2
-			if p < min {
-				min = p
-			}
-			c.setDelta(min)
+			c.setD(_dn)
 		}
 		s.mid(c)
-		// if n.Result != ResultU {
-		// 	return
-		// }
-	}
-}
-
-func (s *Solver) selectChild(n *Node) (*Node, *hash, uint32) {
-	h := &hash{pn: inf, dn: inf}
-	delta2 := inf
-	var best *Node
-	for _, child := range n.Children {
-		hash := s.lookUpHash(child)
-		if hash.dn < h.dn {
-			best = child
-			delta2 = h.dn
-			h.pn = hash.pn
-			h.dn = hash.dn
-		} else if hash.dn < delta2 {
-			delta2 = hash.dn
-		}
-		if hash.pn >= inf {
-			return best, h, delta2
-		}
-	}
-	return best, h, delta2
-}
-
-func (s *Solver) putInHash(n *Node) {
-	key := n.State.Hash()
-	s.hash[key] = &hash{
-		pn: n.getPhi(),
-		dn: n.getDelta(),
 	}
 }
 
 func (s *Solver) lookUpHash(n *Node) *hash {
-	key := n.State.Hash()
-	if v, exist := s.hash[key]; exist {
-		return v
+	if h, ok := s.hash[n.State.Hash()]; ok {
+		return h
 	}
-	return &hash{pn: 1, dn: 1}
+	return &hash{n.Move.Turn, 1, 1}
 }
 
-func (s *Solver) sumPhi(n *Node) uint32 {
-	sum := uint32(0)
-	for _, child := range n.Children {
-		h := s.lookUpHash(child)
-		sum += h.pn
+func (s *Solver) putInHash(n *Node, pn, dn uint32) {
+	s.hash[n.State.Hash()] = &hash{
+		turn: n.Move.Turn,
+		pn:   pn, dn: dn,
 	}
-	return sum
 }
 
 func (s *Solver) minDelta(n *Node) uint32 {
 	min := inf
-	for _, child := range n.Children {
-		h := s.lookUpHash(child)
-		if h.dn < min {
-			min = h.dn
+	for _, c := range n.Children {
+		h := s.lookUpHash(c)
+		d := h.d()
+		if d < min {
+			min = d
 		}
 	}
 	return min
+}
+
+func (s *Solver) sumPhi(n *Node) uint32 {
+	sum := uint32(0)
+	for _, c := range n.Children {
+		h := s.lookUpHash(c)
+		sum += h.p()
+	}
+	return sum
+}
+
+func (s *Solver) selectChild(n *Node) (int, uint32, uint32, uint32) {
+	d2 := inf
+	pn, dn := inf, inf
+	best := 0
+	for i, c := range n.Children {
+		h := s.lookUpHash(c)
+		if h.d() < dn {
+			best = i
+			d2 = dn
+			pn = h.p()
+			dn = h.d()
+		} else if h.pn < d2 {
+			d2 = h.d()
+		}
+		if h.p() == inf {
+			return best, pn, dn, d2
+		}
+	}
+	return best, pn, dn, d2
 }
