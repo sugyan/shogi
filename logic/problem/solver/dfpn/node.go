@@ -20,6 +20,7 @@ type Node struct {
 	Children []*Node
 	expanded bool
 	pn, dn   uint32
+	depth    int
 }
 
 func (n *Node) getP() uint32 {

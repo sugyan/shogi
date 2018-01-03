@@ -4,7 +4,7 @@ import (
 	"github.com/sugyan/shogi"
 )
 
-const inf = uint32(1) << 16
+const inf = uint32(1) << 12
 
 type hash struct {
 	turn   shogi.Turn
@@ -33,7 +33,8 @@ func (h *hash) d() uint32 {
 
 // Solver type
 type Solver struct {
-	hash map[string]*hash
+	hash     map[string]*hash
+	maxDepth int
 }
 
 // NewSolver function
@@ -55,11 +56,22 @@ func (s *Solver) Solve(root *Node) {
 	}
 }
 
+// SetMaxDepth method
+func (s *Solver) SetMaxDepth(d int) {
+	s.maxDepth = d
+}
+
 func (s *Solver) mid(n *Node) {
 	h := s.lookUpHash(n)
 	if n.pn <= h.pn || n.dn <= h.dn {
 		n.pn = h.pn
 		n.dn = h.dn
+		if n.pn == 0 {
+			n.Result = ResultT
+		}
+		if n.dn == 0 {
+			n.Result = ResultF
+		}
 		return
 	}
 	if n.expanded {
@@ -70,11 +82,14 @@ func (s *Solver) mid(n *Node) {
 			return
 		}
 	} else {
-		for _, ms := range candidates(n.State, !n.Move.Turn) {
-			n.Children = append(n.Children, &Node{
-				Move:  ms.move,
-				State: ms.state,
-			})
+		if !(s.maxDepth != 0 && n.depth > s.maxDepth && n.Move.Turn == shogi.TurnWhite) {
+			for _, ms := range candidates(n.State, !n.Move.Turn) {
+				n.Children = append(n.Children, &Node{
+					Move:  ms.move,
+					State: ms.state,
+					depth: n.depth + 1,
+				})
+			}
 		}
 		n.expanded = true
 	}
