@@ -1,124 +1,118 @@
 package solver
 
 import (
-	"log"
-	"math"
-
 	"github.com/sugyan/shogi"
 	"github.com/sugyan/shogi/logic/problem/solver/dfpn"
 )
 
 // Solver type
 type Solver struct {
+	dfpn *dfpn.Solver
 }
 
 // NewSolver function
 func NewSolver() *Solver {
-	return &Solver{}
+	return &Solver{
+		dfpn: dfpn.NewSolver(),
+	}
 }
 
 // Solve function
 func Solve(state *shogi.State) []*shogi.Move {
-	answers := NewSolver().Answers(state)
-	for _, answer := range answers {
-		ms, _ := state.MoveStrings(answer)
-		log.Printf("%v", ms)
-	}
-
-	// TODO
-	// return selectBestAnswer(state, answers)[1:]
-	return []*shogi.Move{}
+	root := NewSolver().Search(state)
+	return searchBestAnswer(root)
 }
 
-func selectBestAnswer(state *shogi.State, answers [][]*shogi.Move) []*shogi.Move {
-	pointMap := map[int]float64{}
-	for i, answer := range answers {
-		pointMap[i] = 0.0
-		s := state.Clone()
-		for j := 1; j < len(answer); j++ {
-			move := answer[j]
-			s.Apply(move)
-			if j > 0 {
-				prev := answer[j-1]
-				if move.Turn == shogi.TurnWhite && move.Dst == prev.Dst {
-					pointMap[i] += 1.0
-				}
-			}
-			if move.Turn == shogi.TurnWhite && move.Src == shogi.Pos(0, 0) {
-				switch move.Piece {
-				case shogi.FU:
-					pointMap[i] -= 0.1
-				case shogi.KY:
-					pointMap[i] -= 0.2
-				case shogi.KE:
-					pointMap[i] -= 0.3
-				case shogi.GI:
-					pointMap[i] -= 0.4
-				case shogi.KI:
-					pointMap[i] -= 0.5
-				case shogi.KA:
-					pointMap[i] -= 0.6
-				case shogi.HI:
-					pointMap[i] -= 0.7
-				}
-			}
-		}
-		if s.Captured[shogi.TurnBlack].Num() > 0 {
-			pointMap[i] -= 10
-		}
-	}
-	maxIndex, point := 0, math.Inf(-1)
-	for k, v := range pointMap {
-		if v > point {
-			point = v
-			maxIndex = k
-		}
-	}
-	return answers[maxIndex]
-}
-
-// Answers method
-func (s *Solver) Answers(state *shogi.State) [][]*shogi.Move {
+// Search method
+func (s *Solver) Search(state *shogi.State) *dfpn.Node {
 	root := &dfpn.Node{
 		Move: &shogi.Move{
 			Turn: shogi.TurnWhite,
 		},
 		State: state,
 	}
-	dfpn.NewSolver().Solve(root)
-	searchMoreAnswers(root)
+	s.dfpn.Solve(root)
 
-	return collectAnswers(root)
+	for {
+		l := len(searchBestAnswer(root))
+		n, depth := searchUnknownNode(root, 0)
+		if n == nil || depth >= l {
+			break
+		}
+		s.dfpn.SetMaxDepth(l - depth)
+		s.dfpn.Solve(n)
+	}
+	return root
 }
 
-func searchMoreAnswers(n *dfpn.Node) {
-	for _, child := range n.Children {
-		switch child.Result {
-		case dfpn.ResultU:
-			dfpn.NewSolver().Solve(child)
-		case dfpn.ResultT:
-			searchMoreAnswers(child)
+func searchUnknownNode(n *dfpn.Node, d int) (*dfpn.Node, int) {
+	for _, c := range n.Children {
+		if c.Result == dfpn.ResultU {
+			return c, d + 1
 		}
 	}
+	for _, c := range n.Children {
+		if c.Result == dfpn.ResultT {
+			return searchUnknownNode(c, d+1)
+		}
+	}
+	return nil, 0
 }
 
-func collectAnswers(n *dfpn.Node) [][]*shogi.Move {
+func searchBestAnswer(n *dfpn.Node) []*shogi.Move {
 	if len(n.Children) == 0 {
-		return [][]*shogi.Move{[]*shogi.Move{n.Move}}
+		return []*shogi.Move{}
 	}
-
-	results := [][]*shogi.Move{}
-	for _, child := range n.Children {
-		if child.Result == dfpn.ResultT {
-			a := []*shogi.Move{}
-			if !n.IsRoot() {
-				a = append(a, n.Move)
+	answers := [][]*shogi.Move{}
+	for _, c := range n.Children {
+		if c.Result != dfpn.ResultT {
+			continue
+		}
+		answer := append([]*shogi.Move{c.Move}, searchBestAnswer(c)...)
+		ok := true
+		if len(answer) > 1 {
+			if answer[0].Src.IsCaptured() && answer[1].Dst == answer[0].Dst {
+				s := n.State.Clone()
+				for _, m := range answer {
+					s.Apply(m)
+				}
+				for _, piece := range s.Captured[shogi.TurnBlack].Available() {
+					if piece == answer[0].Piece {
+						ok = false
+					}
+				}
 			}
-			for _, answer := range collectAnswers(child) {
-				result := append(a, answer...)
-				results = append(results, result)
+		}
+		if ok {
+			answers = append(answers, answer)
+		}
+	}
+	if len(answers) == 0 {
+		return []*shogi.Move{}
+	}
+	min, max := int(^uint(0)>>1), 0
+	for _, answer := range answers {
+		l := len(answer)
+		if l < min {
+			min = l
+		}
+		if l > max {
+			max = l
+		}
+	}
+	candidates := [][]*shogi.Move{}
+	for _, answer := range answers {
+		switch n.Move.Turn {
+		case shogi.TurnBlack:
+			if len(answer) == max {
+				candidates = append(candidates, answer)
+			}
+		case shogi.TurnWhite:
+			if len(answer) == min {
+				candidates = append(candidates, answer)
 			}
 		}
 	}
-	return results
+	// TODO: select from candidates
+	return candidates[0]
 }
