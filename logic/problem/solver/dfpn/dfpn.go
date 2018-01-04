@@ -7,21 +7,21 @@ import (
 
 const inf = uint32(1) << 12
 
-// Solver type
-type Solver struct {
+// Searcher type
+type Searcher struct {
 	hash     map[string]*hash
 	maxDepth int
 }
 
-// NewSolver function
-func NewSolver() *Solver {
-	return &Solver{
+// NewSearcher function
+func NewSearcher() *Searcher {
+	return &Searcher{
 		hash: map[string]*hash{},
 	}
 }
 
-// Solve method
-func (s *Solver) Solve(root *Node) {
+// Search method
+func (s *Searcher) Search(root *Node) {
 	root.pn = inf - 1
 	root.dn = inf - 1
 	s.mid(root)
@@ -33,11 +33,11 @@ func (s *Solver) Solve(root *Node) {
 }
 
 // SetMaxDepth method
-func (s *Solver) SetMaxDepth(d int) {
+func (s *Searcher) SetMaxDepth(d int) {
 	s.maxDepth = d
 }
 
-func (s *Solver) mid(n *Node) {
+func (s *Searcher) mid(n *Node) {
 	h := s.lookUpHash(n)
 	if n.pn <= h.pn || n.dn <= h.dn {
 		n.pn = h.pn
@@ -113,21 +113,21 @@ func (s *Solver) mid(n *Node) {
 	}
 }
 
-func (s *Solver) lookUpHash(n *Node) *hash {
+func (s *Searcher) lookUpHash(n *Node) *hash {
 	if h, ok := s.hash[n.hash]; ok {
 		return h
 	}
 	return &hash{n.move.Turn, 1, 1}
 }
 
-func (s *Solver) putInHash(n *Node, pn, dn uint32) {
+func (s *Searcher) putInHash(n *Node, pn, dn uint32) {
 	s.hash[n.hash] = &hash{
 		turn: n.move.Turn,
 		pn:   pn, dn: dn,
 	}
 }
 
-func (s *Solver) minDelta(n *Node) uint32 {
+func (s *Searcher) minDelta(n *Node) uint32 {
 	min := inf
 	for _, c := range n.children {
 		h := s.lookUpHash(c)
@@ -139,7 +139,7 @@ func (s *Solver) minDelta(n *Node) uint32 {
 	return min
 }
 
-func (s *Solver) sumPhi(n *Node) uint32 {
+func (s *Searcher) sumPhi(n *Node) uint32 {
 	sum := uint32(0)
 	for _, c := range n.children {
 		h := s.lookUpHash(c)
@@ -148,7 +148,7 @@ func (s *Solver) sumPhi(n *Node) uint32 {
 	return sum
 }
 
-func (s *Solver) selectChild(n *Node) (int, uint32, uint32, uint32) {
+func (s *Searcher) selectChild(n *Node) (int, uint32, uint32, uint32) {
 	d2 := inf
 	pn, dn := inf, inf
 	best := 0

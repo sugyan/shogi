@@ -18,22 +18,22 @@ func NewSolver() *Solver {
 // Solve function
 func Solve(state *shogi.State) []*shogi.Move {
 	root := NewSolver().Search(state)
-	return searchBestAnswer(root)
+	return SearchBestAnswer(root)
 }
 
 // Search method
 func (s *Solver) Search(state *shogi.State) node.Node {
-	solver := dfpn.NewSolver()
+	searcher := dfpn.NewSearcher()
 	root := dfpn.NewNode(state, shogi.TurnBlack)
-	solver.Solve(root)
+	searcher.Search(root)
 	for {
-		l := len(searchBestAnswer(root))
+		l := len(SearchBestAnswer(root))
 		n, depth := searchUnknownNode(root, 0)
 		if n == nil || depth >= l {
 			break
 		}
-		solver.SetMaxDepth(l - depth)
-		solver.Solve(n.(*dfpn.Node))
+		searcher.SetMaxDepth(l - depth)
+		searcher.Search(n.(*dfpn.Node))
 	}
 	return root
 }
@@ -52,7 +52,8 @@ func searchUnknownNode(n node.Node, d int) (node.Node, int) {
 	return nil, 0
 }
 
-func searchBestAnswer(n node.Node) []*shogi.Move {
+// SearchBestAnswer function
+func SearchBestAnswer(n node.Node) []*shogi.Move {
 	if len(n.Children()) == 0 {
 		return []*shogi.Move{}
 	}
@@ -61,7 +62,7 @@ func searchBestAnswer(n node.Node) []*shogi.Move {
 		if c.Result() != node.ResultT {
 			continue
 		}
-		answer := append([]*shogi.Move{c.Move()}, searchBestAnswer(c)...)
+		answer := append([]*shogi.Move{c.Move()}, SearchBestAnswer(c)...)
 		ok := true
 		if len(answer) > 1 {
 			if answer[0].Src.IsCaptured() && answer[1].Dst == answer[0].Dst {
