@@ -2,34 +2,10 @@ package dfpn
 
 import (
 	"github.com/sugyan/shogi"
+	"github.com/sugyan/shogi/logic/problem/solver/node"
 )
 
 const inf = uint32(1) << 12
-
-type hash struct {
-	turn   shogi.Turn
-	pn, dn uint32
-}
-
-func (h *hash) p() uint32 {
-	switch h.turn {
-	case shogi.TurnBlack:
-		return h.dn
-	case shogi.TurnWhite:
-		return h.pn
-	}
-	return 0
-}
-
-func (h *hash) d() uint32 {
-	switch h.turn {
-	case shogi.TurnBlack:
-		return h.pn
-	case shogi.TurnWhite:
-		return h.dn
-	}
-	return 0
-}
 
 // Solver type
 type Solver struct {
@@ -67,33 +43,33 @@ func (s *Solver) mid(n *Node) {
 		n.pn = h.pn
 		n.dn = h.dn
 		if n.pn == 0 {
-			n.Result = ResultT
+			n.result = node.ResultT
 		}
 		if n.dn == 0 {
-			n.Result = ResultF
+			n.result = node.ResultF
 		}
 		return
 	}
 	if n.expanded {
-		if len(n.Children) == 0 {
+		if len(n.children) == 0 {
 			n.setP(inf)
 			n.setD(0)
 			s.putInHash(n, n.pn, n.dn)
 			return
 		}
 	} else {
-		if !(s.maxDepth != 0 && n.depth > s.maxDepth && n.Move.Turn == shogi.TurnWhite) {
-			for _, ms := range candidates(n.State, !n.Move.Turn) {
-				n.Children = append(n.Children, &Node{
-					Move:  ms.move,
-					State: ms.state,
+		if !(s.maxDepth != 0 && n.depth > s.maxDepth && n.move.Turn == shogi.TurnWhite) {
+			for _, ms := range candidates(n.state, !n.move.Turn) {
+				n.children = append(n.children, &Node{
+					move:  ms.move,
+					state: ms.state,
 					depth: n.depth + 1,
 				})
 			}
 		}
 		n.expanded = true
 	}
-	switch n.Move.Turn {
+	switch n.move.Turn {
 	case shogi.TurnBlack:
 		s.putInHash(n, inf, 0)
 	case shogi.TurnWhite:
@@ -107,15 +83,15 @@ func (s *Solver) mid(n *Node) {
 			n.setD(sumP)
 			s.putInHash(n, n.pn, n.dn)
 			if n.pn == 0 {
-				n.Result = ResultT
+				n.result = node.ResultT
 			}
 			if n.dn == 0 {
-				n.Result = ResultF
+				n.result = node.ResultF
 			}
 			return
 		}
 		best, cp, cd, d2 := s.selectChild(n)
-		c := n.Children[best]
+		c := n.children[best]
 		if cp == inf-1 {
 			c.setP(inf)
 		} else if n.getD() >= inf-1 {
@@ -137,22 +113,22 @@ func (s *Solver) mid(n *Node) {
 }
 
 func (s *Solver) lookUpHash(n *Node) *hash {
-	if h, ok := s.hash[n.State.Hash()]; ok {
+	if h, ok := s.hash[n.state.Hash()]; ok {
 		return h
 	}
-	return &hash{n.Move.Turn, 1, 1}
+	return &hash{n.move.Turn, 1, 1}
 }
 
 func (s *Solver) putInHash(n *Node, pn, dn uint32) {
-	s.hash[n.State.Hash()] = &hash{
-		turn: n.Move.Turn,
+	s.hash[n.state.Hash()] = &hash{
+		turn: n.move.Turn,
 		pn:   pn, dn: dn,
 	}
 }
 
 func (s *Solver) minDelta(n *Node) uint32 {
 	min := inf
-	for _, c := range n.Children {
+	for _, c := range n.children {
 		h := s.lookUpHash(c)
 		d := h.d()
 		if d < min {
@@ -164,7 +140,7 @@ func (s *Solver) minDelta(n *Node) uint32 {
 
 func (s *Solver) sumPhi(n *Node) uint32 {
 	sum := uint32(0)
-	for _, c := range n.Children {
+	for _, c := range n.children {
 		h := s.lookUpHash(c)
 		sum += h.p()
 	}
@@ -175,7 +151,7 @@ func (s *Solver) selectChild(n *Node) (int, uint32, uint32, uint32) {
 	d2 := inf
 	pn, dn := inf, inf
 	best := 0
-	for i, c := range n.Children {
+	for i, c := range n.children {
 		h := s.lookUpHash(c)
 		if h.d() < dn {
 			best = i

@@ -3,18 +3,16 @@ package solver
 import (
 	"github.com/sugyan/shogi"
 	"github.com/sugyan/shogi/logic/problem/solver/dfpn"
+	"github.com/sugyan/shogi/logic/problem/solver/node"
 )
 
 // Solver type
 type Solver struct {
-	dfpn *dfpn.Solver
 }
 
 // NewSolver function
 func NewSolver() *Solver {
-	return &Solver{
-		dfpn: dfpn.NewSolver(),
-	}
+	return &Solver{}
 }
 
 // Solve function
@@ -24,55 +22,50 @@ func Solve(state *shogi.State) []*shogi.Move {
 }
 
 // Search method
-func (s *Solver) Search(state *shogi.State) *dfpn.Node {
-	root := &dfpn.Node{
-		Move: &shogi.Move{
-			Turn: shogi.TurnWhite,
-		},
-		State: state,
-	}
-	s.dfpn.Solve(root)
-
+func (s *Solver) Search(state *shogi.State) node.Node {
+	solver := dfpn.NewSolver()
+	root := dfpn.NewNode(state, shogi.TurnBlack)
+	solver.Solve(root)
 	for {
 		l := len(searchBestAnswer(root))
 		n, depth := searchUnknownNode(root, 0)
 		if n == nil || depth >= l {
 			break
 		}
-		s.dfpn.SetMaxDepth(l - depth)
-		s.dfpn.Solve(n)
+		solver.SetMaxDepth(l - depth)
+		solver.Solve(n.(*dfpn.Node))
 	}
 	return root
 }
 
-func searchUnknownNode(n *dfpn.Node, d int) (*dfpn.Node, int) {
-	for _, c := range n.Children {
-		if c.Result == dfpn.ResultU {
+func searchUnknownNode(n node.Node, d int) (node.Node, int) {
+	for _, c := range n.Children() {
+		if c.Result() == node.ResultU {
 			return c, d + 1
 		}
 	}
-	for _, c := range n.Children {
-		if c.Result == dfpn.ResultT {
+	for _, c := range n.Children() {
+		if c.Result() == node.ResultT {
 			return searchUnknownNode(c, d+1)
 		}
 	}
 	return nil, 0
 }
 
-func searchBestAnswer(n *dfpn.Node) []*shogi.Move {
-	if len(n.Children) == 0 {
+func searchBestAnswer(n node.Node) []*shogi.Move {
+	if len(n.Children()) == 0 {
 		return []*shogi.Move{}
 	}
 	answers := [][]*shogi.Move{}
-	for _, c := range n.Children {
-		if c.Result != dfpn.ResultT {
+	for _, c := range n.Children() {
+		if c.Result() != node.ResultT {
 			continue
 		}
-		answer := append([]*shogi.Move{c.Move}, searchBestAnswer(c)...)
+		answer := append([]*shogi.Move{c.Move()}, searchBestAnswer(c)...)
 		ok := true
 		if len(answer) > 1 {
 			if answer[0].Src.IsCaptured() && answer[1].Dst == answer[0].Dst {
-				s := n.State.Clone()
+				s := n.State().Clone()
 				for _, m := range answer {
 					s.Apply(m)
 				}
@@ -102,7 +95,7 @@ func searchBestAnswer(n *dfpn.Node) []*shogi.Move {
 	}
 	candidates := [][]*shogi.Move{}
 	for _, answer := range answers {
-		switch n.Move.Turn {
+		switch n.Move().Turn {
 		case shogi.TurnBlack:
 			if len(answer) == max {
 				candidates = append(candidates, answer)
