@@ -6,6 +6,8 @@ import (
 
 	"github.com/sugyan/shogi"
 	"github.com/sugyan/shogi/logic/problem/solver"
+	"github.com/sugyan/shogi/logic/problem/solver/dfpn"
+	"github.com/sugyan/shogi/logic/problem/solver/node"
 )
 
 // Problem interface
@@ -45,8 +47,7 @@ type generator struct {
 func Generate(pType Problem) *shogi.State {
 	// TODO: timeout?
 	generator := &generator{
-		steps:  pType.Steps(),
-		solver: solver.NewSolver(3),
+		steps: pType.Steps(),
 	}
 	return generator.generate()
 }
@@ -57,7 +58,7 @@ func (g *generator) generate() *shogi.State {
 		// random generate
 		for {
 			state = random()
-			if g.solver.IsCheckmate(state) {
+			if isCheckmate(state) {
 				break
 			}
 		}
@@ -91,6 +92,20 @@ func (g *generator) generate() *shogi.State {
 			}
 		}
 	}
+}
+
+func isCheckmate(state *shogi.State) bool {
+	if state.Check(shogi.TurnBlack) == nil {
+		return false
+	}
+	root := dfpn.NewNode(state, shogi.TurnWhite)
+	dfpn.NewSearcher().Search(root)
+	answer := solver.SearchBestAnswer(root)
+
+	if root.Result() == node.ResultT && len(answer) == 0 {
+		return true
+	}
+	return false
 }
 
 func (g *generator) rewind(state *shogi.State, turn shogi.Turn) []*shogi.State {
@@ -277,7 +292,7 @@ func (g *generator) cut(state *shogi.State) {
 		p := positions[i]
 		s := state.Clone()
 		s.SetBoard(p.File, p.Rank, nil)
-		if g.solver.IsCheckmate(s) {
+		if isCheckmate(s) {
 			b := state.GetBoard(p.File, p.Rank)
 			state.SetBoard(p.File, p.Rank, nil)
 			state.Captured[shogi.TurnWhite].Add(b.Piece)
@@ -760,40 +775,18 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos shogi.Posi
 }
 
 func (g *generator) checkSolvable(state *shogi.State) bool {
-	answers, length := g.solver.ValidAnswers(state)
-	if len(answers) == 0 {
+	// TODO
+	root := solver.NewSolver().Search(state)
+	bestAnswer := solver.SearchBestAnswer(root)
+	if len(bestAnswer) != g.steps {
 		return false
 	}
-	if length != g.steps {
-		return false
+	s := state.Clone()
+	for _, move := range bestAnswer {
+		s.Apply(move)
 	}
-	// check uniqueness
-	switch g.steps {
-	case 1:
-		return len(answers) == 1
-	case 3:
-		a := answers[0][0]
-		// check "first move is unique" and "there is no catured pieces"
-		capturedCountMap := map[string]int{}
-		for _, answer := range answers {
-			if *a != *answer[0] {
-				return false
-			}
-			s := state.Clone()
-			mss := []string{}
-			for _, move := range answer {
-				ms, _ := s.MoveString(move)
-				mss = append(mss, ms)
-				s.Apply(move)
-			}
-			capturedCountMap[mss[1]] += s.Captured[shogi.TurnBlack].Num()
-		}
-		for _, v := range capturedCountMap {
-			if v == 0 {
-				return true
-			}
-		}
-		return false
+	if s.Captured[shogi.TurnBlack].Num() == 0 {
+		return true
 	}
 	return false
 }

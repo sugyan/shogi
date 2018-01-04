@@ -5,14 +5,95 @@ import (
 	"testing"
 
 	"github.com/sugyan/shogi/format/csa"
-	"github.com/sugyan/shogi/logic/problem/solver"
 )
+
+type data struct {
+	input    string
+	expected bool
+}
+
+var isCheckmateData = []*data{
+	&data{
+		input: `
+P1 *  *  *  *  *  * +TO * -KI
+P2 *  *  *  *  *  *  * -OU * 
+P3 *  *  *  * +RY *  * +UM-GI
+P4 *  *  *  *  *  * -FU-KI * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P-00AL
+`,
+		expected: false,
+	},
+	&data{
+		input: `
+P1 *  *  *  *  *  * +TO * -KI
+P2 *  *  *  *  *  *  * -OU * 
+P3 *  *  *  * +RY *  * -KI-GI
+P4 *  *  *  *  *  * -FU *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P-00AL
+`,
+		expected: false,
+	},
+	&data{
+		input: `
+P1 *  *  *  *  *  * +TO * -KI
+P2 *  *  *  *  * +RY * -OU * 
+P3 *  *  *  *  *  *  * -KI-GI
+P4 *  *  *  *  *  * -FU *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P-00AL
+`,
+		expected: true,
+	},
+	&data{
+		input: `
+P1 *  *  *  *  *  *  *  * -KI
+P2 *  *  *  *  * +RY * -OU * 
+P3 *  *  *  *  *  *  * -KI-GI
+P4 *  *  *  *  *  * -FU *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P-00AL
+`,
+		expected: false,
+	},
+}
+
+func TestIsCheckmate(t *testing.T) {
+	for i, data := range isCheckmateData {
+		record, err := csa.Parse(bytes.NewBufferString(data.input))
+		if err != nil {
+			t.Fatal(err)
+		}
+		result := isCheckmate(record.State)
+		if result != data.expected {
+			t.Errorf("error: (result: %v, expected: %v)", result, data.expected)
+			continue
+		}
+		t.Logf("%d: OK", i+1)
+	}
+}
 
 func TestCheckSolvable(t *testing.T) {
 	problemType := ProblemType3
 	g := &generator{
-		steps:  problemType.Steps(),
-		solver: solver.NewSolver(3),
+		steps: problemType.Steps(),
 	}
 	for i, data := range checkSolvableTestData {
 		record, err := csa.Parse(bytes.NewBufferString(data.input))
@@ -21,19 +102,15 @@ func TestCheckSolvable(t *testing.T) {
 		}
 		result := g.checkSolvable(record.State)
 		if result != data.expected {
-			t.Fatalf("error: (result: %v, expected: %v)", result, data.expected)
+			t.Errorf("error: (result: %v, expected: %v)", result, data.expected)
+			continue
 		}
 		t.Logf("%d: OK", i+1)
 	}
 }
 
-type checkSolvableData struct {
-	input    string
-	expected bool
-}
-
-var checkSolvableTestData = []*checkSolvableData{
-	&checkSolvableData{
+var checkSolvableTestData = []*data{
+	&data{
 		input: `
 P1 *  *  *  *  *  *  * -OU-KY
 P2 *  *  *  *  *  *  *  *  * 
@@ -49,7 +126,7 @@ P-00AL
 `,
 		expected: true,
 	},
-	&checkSolvableData{
+	&data{
 		input: `
 P1 *  *  *  *  *  *  * -GI-OU
 P2 *  *  *  *  *  *  *  *  * 
@@ -65,7 +142,7 @@ P-00AL
 `,
 		expected: false,
 	},
-	&checkSolvableData{
+	&data{
 		input: `
 P1 *  *  *  * -KE-OU *  * +UM
 P2 *  *  *  * -KY-FU *  *  * 
@@ -80,7 +157,7 @@ P-00AL
 `,
 		expected: false,
 	},
-	&checkSolvableData{
+	&data{
 		input: `
 P1 *  * +GI *  * -OU * -HI * 
 P2 *  * +HI * -FU *  *  *  * 
