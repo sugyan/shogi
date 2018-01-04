@@ -64,6 +64,7 @@ func (s *Solver) mid(n *Node) {
 					move:  ms.move,
 					state: ms.state,
 					depth: n.depth + 1,
+					hash:  ms.state.Hash(),
 				})
 			}
 		}
@@ -113,14 +114,14 @@ func (s *Solver) mid(n *Node) {
 }
 
 func (s *Solver) lookUpHash(n *Node) *hash {
-	if h, ok := s.hash[n.state.Hash()]; ok {
+	if h, ok := s.hash[n.hash]; ok {
 		return h
 	}
 	return &hash{n.move.Turn, 1, 1}
 }
 
 func (s *Solver) putInHash(n *Node, pn, dn uint32) {
-	s.hash[n.state.Hash()] = &hash{
+	s.hash[n.hash] = &hash{
 		turn: n.move.Turn,
 		pn:   pn, dn: dn,
 	}

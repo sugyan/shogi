@@ -14,6 +14,7 @@ type Node struct {
 	expanded bool
 	pn, dn   uint32
 	depth    int
+	hash     string
 }
 
 // NewNode function
@@ -23,6 +24,7 @@ func NewNode(state *shogi.State, turn shogi.Turn) *Node {
 		move: &shogi.Move{
 			Turn: !turn,
 		},
+		hash: state.Hash(),
 	}
 }
 
