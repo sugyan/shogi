@@ -28,8 +28,8 @@ func (s *Solver) Search(state *shogi.State) node.Node {
 	searcher.Search(root)
 	for {
 		l := len(SearchBestAnswer(root))
-		n, depth := searchUnknownNode(root, 0)
-		if n == nil || depth >= l {
+		n, depth := searchUnknownNode(root, l)
+		if n == nil {
 			break
 		}
 		searcher.SetMaxDepth(l - depth)
@@ -38,16 +38,31 @@ func (s *Solver) Search(state *shogi.State) node.Node {
 	return root
 }
 
-func searchUnknownNode(n node.Node, d int) (node.Node, int) {
-	for _, c := range n.Children() {
-		if c.Result() == node.ResultU {
-			return c, d + 1
-		}
+func searchUnknownNode(n node.Node, maxDepth int) (node.Node, int) {
+	type entry struct {
+		node  node.Node
+		depth int
 	}
-	for _, c := range n.Children() {
-		if c.Result() == node.ResultT {
-			return searchUnknownNode(c, d+1)
+	q := []*entry{&entry{node: n, depth: 0}}
+	for {
+		if len(q) == 0 {
+			break
 		}
+		e := q[0]
+		switch e.node.Result() {
+		case node.ResultU:
+			return e.node, e.depth
+		case node.ResultT:
+			if e.depth < maxDepth {
+				for _, c := range e.node.Children() {
+					q = append(q, &entry{
+						node:  c,
+						depth: e.depth + 1,
+					})
+				}
+			}
+		}
+		q = q[1:]
 	}
 	return nil, 0
 }
