@@ -32,7 +32,7 @@ func (s *Solver) Search(state *shogi.State) node.Node {
 		if n == nil {
 			break
 		}
-		searcher.SetMaxDepth(l - depth)
+		searcher.SetMaxDepth(depth)
 		searcher.Search(n.(*dfpn.Node))
 	}
 	return root

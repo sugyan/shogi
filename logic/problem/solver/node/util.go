@@ -8,11 +8,11 @@ import (
 )
 
 // TreeString function
-func TreeString(n Node) string {
-	return archy(n, "")[1:]
+func TreeString(n Node, expandAll bool) string {
+	return archy(n, "", expandAll)[1:]
 }
 
-func archy(n Node, prefix string) string {
+func archy(n Node, prefix string, expandAll bool) string {
 	var (
 		line   string
 		result rune
@@ -49,13 +49,16 @@ func archy(n Node, prefix string) string {
 			l = "├"
 		}
 		m := "─"
-		if len(c.Children()) > 0 {
+		if len(c.Children()) > 0 && !(!expandAll && c.Result() == ResultU) {
 			m = "┬"
 		}
 		line := prefix +
 			l + "─" +
 			m + " " +
-			string([]rune(archy(c, _prefix))[len([]rune(prefix))+2:])
+			string([]rune(archy(c, _prefix, expandAll))[len([]rune(prefix))+2:])
+		if !expandAll && n.Result() == ResultU {
+			line = ""
+		}
 		nodeLines = append(nodeLines, line)
 	}
 	return prefix +
