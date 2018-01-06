@@ -58,7 +58,7 @@ func (s *Searcher) mid(n *Node) {
 			return
 		}
 	} else {
-		if !(s.maxDepth != 0 && n.depth > s.maxDepth) {
+		if !(s.maxDepth != 0 && n.move.Turn == shogi.TurnWhite && n.depth > s.maxDepth) {
 			for _, ms := range candidates(n.state, !n.move.Turn) {
 				n.children = append(n.children, &Node{
 					move:  ms.move,

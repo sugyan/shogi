@@ -1,6 +1,8 @@
 package solver
 
 import (
+	"math"
+
 	"github.com/sugyan/shogi"
 	"github.com/sugyan/shogi/logic/problem/solver/dfpn"
 	"github.com/sugyan/shogi/logic/problem/solver/node"
@@ -23,22 +25,23 @@ func Solve(state *shogi.State) []*shogi.Move {
 
 // Search method
 func (s *Solver) Search(state *shogi.State) node.Node {
-	searcher := dfpn.NewSearcher()
 	root := dfpn.NewNode(state, shogi.TurnBlack)
-	searcher.Search(root)
+	dfpn.NewSearcher().Search(root)
 	for {
 		l := len(SearchBestAnswer(root))
-		n, depth := searchUnknownNode(root, l)
+		// TODO: improve
+		n := searchUnknownNode(root, l)
 		if n == nil {
 			break
 		}
-		searcher.SetMaxDepth(depth)
+		searcher := dfpn.NewSearcher()
+		searcher.SetMaxDepth(l)
 		searcher.Search(n.(*dfpn.Node))
 	}
 	return root
 }
 
-func searchUnknownNode(n node.Node, maxDepth int) (node.Node, int) {
+func searchUnknownNode(n node.Node, maxDepth int) node.Node {
 	type entry struct {
 		node  node.Node
 		depth int
@@ -51,7 +54,7 @@ func searchUnknownNode(n node.Node, maxDepth int) (node.Node, int) {
 		e := q[0]
 		switch e.node.Result() {
 		case node.ResultU:
-			return e.node, e.depth
+			return e.node
 		case node.ResultT:
 			if e.depth < maxDepth {
 				for _, c := range e.node.Children() {
@@ -64,7 +67,7 @@ func searchUnknownNode(n node.Node, maxDepth int) (node.Node, int) {
 		}
 		q = q[1:]
 	}
-	return nil, 0
+	return nil
 }
 
 // SearchBestAnswer function
@@ -122,6 +125,42 @@ func SearchBestAnswer(n node.Node) []*shogi.Move {
 			}
 		}
 	}
-	// TODO: select from candidates
+	if len(candidates) > 1 {
+		best := 0
+		switch n.Move().Turn {
+		case shogi.TurnBlack:
+			points := map[int]int{}
+			for i, answer := range candidates {
+				points[i] = 0
+				s := n.State().Clone()
+				for _, move := range answer {
+					s.Apply(move)
+				}
+				captured := s.Captured[shogi.TurnBlack].Num()
+				points[i] -= captured * 10
+			}
+			max := math.MinInt32
+			for k, v := range points {
+				if v > max {
+					max = v
+					best = k
+				}
+			}
+		case shogi.TurnWhite:
+			max := 0
+			for i, answer := range candidates {
+				s := n.State().Clone()
+				for _, move := range answer {
+					s.Apply(move)
+				}
+				captured := s.Captured[shogi.TurnBlack].Num()
+				if captured > max {
+					best = i
+					max = captured
+				}
+			}
+		}
+		return candidates[best]
+	}
 	return candidates[0]
 }
