@@ -60,6 +60,12 @@ func (s *Searcher) mid(n *Node) {
 	} else {
 		if !(s.maxDepth != 0 && n.move.Turn == shogi.TurnWhite && n.depth > s.maxDepth) {
 			for _, ms := range candidates(n.state, !n.move.Turn) {
+				// checkmating with dropping FU
+				if ms.move.Turn == shogi.TurnBlack && ms.move.Src.IsCaptured() && ms.move.Piece == shogi.FU {
+					if len(candidates(ms.state, shogi.TurnWhite)) == 0 {
+						continue
+					}
+				}
 				n.children = append(n.children, &Node{
 					move:  ms.move,
 					state: ms.state,
