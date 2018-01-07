@@ -58,7 +58,7 @@ func (s *Searcher) mid(n *Node) {
 			return
 		}
 	} else {
-		if !(s.maxDepth != 0 && n.move.Turn == shogi.TurnWhite && n.depth > s.maxDepth) {
+		if !(s.maxDepth != 0 && n.move.Turn == shogi.TurnWhite && n.depth+1 > s.maxDepth) {
 			for _, ms := range candidates(n.state, !n.move.Turn) {
 				// checkmating with dropping FU
 				if ms.move.Turn == shogi.TurnBlack && ms.move.Src.IsCaptured() && ms.move.Piece == shogi.FU {

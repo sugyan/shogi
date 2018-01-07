@@ -54,7 +54,7 @@ func searchUnknownNode(n node.Node, maxDepth int, answer []*shogi.Move) node.Nod
 		}
 	}
 	// depth-first search
-	if maxDepth > 1 {
+	if maxDepth > 0 {
 		for _, c := range n.Children() {
 			if c.Result() == node.ResultT {
 				result := searchUnknownNode(c, maxDepth-1, nil)
