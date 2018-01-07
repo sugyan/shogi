@@ -14,9 +14,10 @@ type Searcher struct {
 }
 
 // NewSearcher function
-func NewSearcher() *Searcher {
+func NewSearcher(maxDepth int) *Searcher {
 	return &Searcher{
-		hash: map[string]*hash{},
+		hash:     map[string]*hash{},
+		maxDepth: maxDepth,
 	}
 }
 
@@ -30,11 +31,6 @@ func (s *Searcher) Search(root *Node) {
 		root.dn = inf
 		s.mid(root)
 	}
-}
-
-// SetMaxDepth method
-func (s *Searcher) SetMaxDepth(d int) {
-	s.maxDepth = d
 }
 
 func (s *Searcher) mid(n *Node) {

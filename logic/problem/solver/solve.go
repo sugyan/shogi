@@ -26,7 +26,7 @@ func Solve(state *shogi.State) []*shogi.Move {
 // Search method
 func (s *Solver) Search(state *shogi.State) node.Node {
 	root := dfpn.NewNode(state, shogi.TurnBlack)
-	dfpn.NewSearcher().Search(root)
+	dfpn.NewSearcher(0).Search(root)
 	for {
 		answer := SearchBestAnswer(root)
 		l := len(answer)
@@ -34,9 +34,7 @@ func (s *Solver) Search(state *shogi.State) node.Node {
 		if n == nil {
 			break
 		}
-		searcher := dfpn.NewSearcher()
-		searcher.SetMaxDepth(l)
-		searcher.Search(n.(*dfpn.Node))
+		dfpn.NewSearcher(l).Search(n.(*dfpn.Node))
 	}
 	return root
 }
@@ -74,15 +72,28 @@ func searchUnknownNode(n node.Node, maxDepth int, answer []*shogi.Move) node.Nod
 
 // SearchBestAnswer function
 func SearchBestAnswer(n node.Node) []*shogi.Move {
+	return searchBestAnswer(n, &shogi.CapturedPieces{})
+}
+
+func searchBestAnswer(n node.Node, captured *shogi.CapturedPieces) []*shogi.Move {
 	if len(n.Children()) == 0 {
 		return []*shogi.Move{}
 	}
+
 	answers := [][]*shogi.Move{}
 	for _, c := range n.Children() {
 		if c.Result() != node.ResultT {
 			continue
 		}
-		answer := append([]*shogi.Move{c.Move()}, SearchBestAnswer(c)...)
+		cap := *captured
+		if c.Move().Turn == shogi.TurnBlack {
+			dst := c.Move().Dst
+			bp := n.State().GetBoard(dst.File, dst.Rank)
+			if bp != nil && bp.Turn == shogi.TurnWhite {
+				cap.Add(bp.Piece)
+			}
+		}
+		answer := append([]*shogi.Move{c.Move()}, searchBestAnswer(c, &cap)...)
 		ok := true
 		if len(answer) > 1 {
 			if answer[0].Turn == shogi.TurnWhite && answer[0].Src.IsCaptured() && answer[1].Dst == answer[0].Dst {
@@ -138,8 +149,29 @@ func SearchBestAnswer(n node.Node) []*shogi.Move {
 				for _, move := range answer {
 					s.Apply(move)
 				}
-				captured := s.Captured[shogi.TurnBlack].Num()
-				points[i] -= captured * 10
+				cap := s.Captured[shogi.TurnBlack]
+				points[i] -= cap.Num()
+				if captured.FU > 0 && cap.FU > 0 {
+					points[i]++
+				}
+				if captured.KY > 0 && cap.KY > 0 {
+					points[i]++
+				}
+				if captured.KE > 0 && cap.KE > 0 {
+					points[i]++
+				}
+				if captured.GI > 0 && cap.GI > 0 {
+					points[i]++
+				}
+				if captured.KI > 0 && cap.KI > 0 {
+					points[i]++
+				}
+				if captured.KA > 0 && cap.KA > 0 {
+					points[i]++
+				}
+				if captured.HI > 0 && cap.HI > 0 {
+					points[i]++
+				}
 			}
 			max := math.MinInt32
 			for k, v := range points {
