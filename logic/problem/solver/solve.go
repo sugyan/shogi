@@ -28,9 +28,9 @@ func (s *Solver) Search(state *shogi.State) node.Node {
 	root := dfpn.NewNode(state, shogi.TurnBlack)
 	dfpn.NewSearcher().Search(root)
 	for {
-		l := len(SearchBestAnswer(root))
-		// TODO: improve
-		n := searchUnknownNode(root, l)
+		answer := SearchBestAnswer(root)
+		l := len(answer)
+		n := searchUnknownNode(root, l, answer)
 		if n == nil {
 			break
 		}
@@ -41,31 +41,33 @@ func (s *Solver) Search(state *shogi.State) node.Node {
 	return root
 }
 
-func searchUnknownNode(n node.Node, maxDepth int) node.Node {
-	type entry struct {
-		node  node.Node
-		depth int
-	}
-	q := []*entry{&entry{node: n, depth: 0}}
-	for {
-		if len(q) == 0 {
-			break
-		}
-		e := q[0]
-		switch e.node.Result() {
-		case node.ResultU:
-			return e.node
-		case node.ResultT:
-			if e.depth < maxDepth {
-				for _, c := range e.node.Children() {
-					q = append(q, &entry{
-						node:  c,
-						depth: e.depth + 1,
-					})
+func searchUnknownNode(n node.Node, maxDepth int, answer []*shogi.Move) node.Node {
+	// search around the provisional best answer.
+	if answer != nil && len(answer) > 0 {
+		for _, c := range n.Children() {
+			if *c.Move() == *answer[0] {
+				result := searchUnknownNode(c, maxDepth-1, answer[1:])
+				if result != nil {
+					return result
 				}
 			}
 		}
-		q = q[1:]
+	}
+	// depth-first search
+	if maxDepth > 1 {
+		for _, c := range n.Children() {
+			if c.Result() == node.ResultT {
+				result := searchUnknownNode(c, maxDepth-1, nil)
+				if result != nil {
+					return result
+				}
+			}
+		}
+	}
+	for _, c := range n.Children() {
+		if c.Result() == node.ResultU {
+			return c
+		}
 	}
 	return nil
 }
@@ -83,7 +85,7 @@ func SearchBestAnswer(n node.Node) []*shogi.Move {
 		answer := append([]*shogi.Move{c.Move()}, SearchBestAnswer(c)...)
 		ok := true
 		if len(answer) > 1 {
-			if answer[0].Src.IsCaptured() && answer[1].Dst == answer[0].Dst {
+			if answer[0].Turn == shogi.TurnWhite && answer[0].Src.IsCaptured() && answer[1].Dst == answer[0].Dst {
 				s := n.State().Clone()
 				for _, m := range answer {
 					s.Apply(m)
