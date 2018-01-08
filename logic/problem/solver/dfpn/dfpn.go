@@ -2,6 +2,7 @@ package dfpn
 
 import (
 	"github.com/sugyan/shogi"
+	"github.com/sugyan/shogi/logic/problem"
 	"github.com/sugyan/shogi/logic/problem/solver/node"
 )
 
@@ -59,18 +60,18 @@ func (s *Searcher) mid(n *Node) {
 		}
 	} else {
 		if !(s.maxDepth != 0 && n.move.Turn == shogi.TurnWhite && n.depth+1 > s.maxDepth) {
-			for _, ms := range candidates(n.state, !n.move.Turn) {
+			for _, ms := range problem.Candidates(n.state, !n.move.Turn) {
 				// checkmating with dropping FU
-				if ms.move.Turn == shogi.TurnBlack && ms.move.Src.IsCaptured() && ms.move.Piece == shogi.FU {
-					if len(candidates(ms.state, shogi.TurnWhite)) == 0 {
+				if ms.Move.Turn == shogi.TurnBlack && ms.Move.Src.IsCaptured() && ms.Move.Piece == shogi.FU {
+					if len(problem.Candidates(ms.State, shogi.TurnWhite)) == 0 {
 						continue
 					}
 				}
 				n.children = append(n.children, &Node{
-					move:  ms.move,
-					state: ms.state,
+					move:  ms.Move,
+					state: ms.State,
 					depth: n.depth + 1,
-					hash:  ms.state.Hash(),
+					hash:  ms.State.Hash(),
 				})
 			}
 		}

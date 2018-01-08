@@ -1,26 +1,16 @@
-package dfpn
+package problem
 
 import "github.com/sugyan/shogi"
 
-type moveState struct {
-	move  *shogi.Move
-	state *shogi.State
+// MoveState type
+type MoveState struct {
+	Move  *shogi.Move
+	State *shogi.State
 }
 
-func searchTarget(state *shogi.State) shogi.Position {
-	for i := 0; i < 9; i++ {
-		for j := 0; j < 9; j++ {
-			bp := state.Board[i][j]
-			if bp != nil && bp.Piece == shogi.OU && bp.Turn == shogi.TurnWhite {
-				return shogi.Pos(9-j, i+1)
-			}
-		}
-	}
-	return shogi.Pos(0, 0)
-}
-
-func candidates(state *shogi.State, turn shogi.Turn) []*moveState {
-	results := []*moveState{}
+// Candidates function
+func Candidates(state *shogi.State, turn shogi.Turn) []*MoveState {
+	results := []*MoveState{}
 	target := searchTarget(state)
 	// by moving pieces
 	for _, m := range state.CandidateMoves(turn) {
@@ -28,7 +18,7 @@ func candidates(state *shogi.State, turn shogi.Turn) []*moveState {
 		s.Apply(m)
 		check := s.Check(shogi.TurnBlack) != nil
 		if (turn == shogi.TurnBlack && check) || (turn == shogi.TurnWhite && !check) {
-			results = append(results, &moveState{m, s})
+			results = append(results, &MoveState{m, s})
 		}
 	}
 	// by dropping captured pieces
@@ -118,7 +108,7 @@ func candidates(state *shogi.State, turn shogi.Turn) []*moveState {
 					}
 					s := state.Clone()
 					s.Apply(m)
-					results = append(results, &moveState{m, s})
+					results = append(results, &MoveState{m, s})
 				}
 			}
 		}
@@ -184,11 +174,23 @@ func candidates(state *shogi.State, turn shogi.Turn) []*moveState {
 					s.Apply(m)
 					check := s.Check(shogi.TurnBlack)
 					if check == nil {
-						results = append(results, &moveState{m, s})
+						results = append(results, &MoveState{m, s})
 					}
 				}
 			}
 		}
 	}
 	return results
+}
+
+func searchTarget(state *shogi.State) shogi.Position {
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			bp := state.Board[i][j]
+			if bp != nil && bp.Piece == shogi.OU && bp.Turn == shogi.TurnWhite {
+				return shogi.Pos(9-j, i+1)
+			}
+		}
+	}
+	return shogi.Pos(0, 0)
 }

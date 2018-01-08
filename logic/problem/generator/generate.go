@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"github.com/sugyan/shogi"
+	"github.com/sugyan/shogi/logic/problem"
 	"github.com/sugyan/shogi/logic/problem/solver"
-	"github.com/sugyan/shogi/logic/problem/solver/dfpn"
-	"github.com/sugyan/shogi/logic/problem/solver/node"
 )
 
 // Problem interface
@@ -23,10 +22,10 @@ func (p *problemType) Steps() int {
 	return p.n
 }
 
-// ProblemType variables
+// Type variables
 var (
-	ProblemType1 = &problemType{1}
-	ProblemType3 = &problemType{3}
+	Type1 = &problemType{1}
+	Type3 = &problemType{3}
 )
 
 type posPiece struct {
@@ -68,11 +67,10 @@ func (g *generator) generate() *shogi.State {
 		for _, s := range g.rewind(state, shogi.TurnBlack) {
 			switch g.steps {
 			case 1:
-				if g.checkSolvable(s) {
+				if g.isValidProblem(s) {
+					// TODO: evaluate
 					g.cleanup(s)
-					if countPieces(s)[shogi.TurnWhite] > 2 {
-						return s
-					}
+					return s
 				}
 			case 3:
 				states := g.rewind(s, shogi.TurnWhite)
@@ -81,12 +79,9 @@ func (g *generator) generate() *shogi.State {
 						break
 					}
 					s := states[i]
-					if g.checkSolvable(s) {
+					if g.isValidProblem(s) {
 						g.cleanup(s)
-						if countPieces(s)[shogi.TurnWhite] > 1 {
-							return s
-						}
-						break
+						return s
 					}
 				}
 			}
@@ -98,13 +93,10 @@ func isCheckmate(state *shogi.State) bool {
 	if state.Check(shogi.TurnBlack) == nil {
 		return false
 	}
-	root := dfpn.NewNode(state, shogi.TurnWhite)
-	dfpn.NewSearcher().Search(root)
-	answer := solver.SearchBestAnswer(root)
-
-	if root.Result() == node.ResultT && len(answer) == 0 {
+	if len(problem.Candidates(state, shogi.TurnWhite)) == 0 {
 		return true
 	}
+	// TODO: check wasted placing
 	return false
 }
 
@@ -774,10 +766,11 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos shogi.Posi
 	return states
 }
 
-func (g *generator) checkSolvable(state *shogi.State) bool {
-	// TODO
-	root := solver.NewSolver().Search(state)
+func (g *generator) isValidProblem(state *shogi.State) bool {
+	// TODO: check if there are multiple answers
+	root := solver.NewSolver().Search(state, g.steps+2)
 	bestAnswer := solver.SearchBestAnswer(root)
+
 	if len(bestAnswer) != g.steps {
 		return false
 	}
@@ -814,7 +807,7 @@ func (g *generator) cleanup(state *shogi.State) *shogi.State {
 			s := state.Clone()
 			s.SetBoard(pp.pos.File, pp.pos.Rank, nil)
 			s.Captured[shogi.TurnWhite].Add(pp.piece)
-			if s.Check(shogi.TurnBlack) == nil && g.checkSolvable(s) {
+			if s.Check(shogi.TurnBlack) == nil && g.isValidProblem(s) {
 				state.SetBoard(pp.pos.File, pp.pos.Rank, nil)
 				state.Captured[shogi.TurnWhite].Add(pp.piece)
 			}
@@ -879,18 +872,4 @@ func (g *generator) cleanup(state *shogi.State) *shogi.State {
 		}
 	}
 	return state
-}
-
-func countPieces(state *shogi.State) map[shogi.Turn]int {
-	result := map[shogi.Turn]int{}
-	for i := 0; i < 9; i++ {
-		for j := 0; j < 9; j++ {
-			file, rank := 9-j, i+1
-			b := state.GetBoard(file, rank)
-			if b != nil {
-				result[b.Turn]++
-			}
-		}
-	}
-	return result
 }

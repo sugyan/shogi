@@ -43,21 +43,21 @@ P-00AL
 `,
 		expected: false,
 	},
-	&data{
-		input: `
-P1 *  *  *  *  *  * +TO * -KI
-P2 *  *  *  *  * +RY * -OU * 
-P3 *  *  *  *  *  *  * -KI-GI
-P4 *  *  *  *  *  * -FU *  * 
-P5 *  *  *  *  *  *  *  *  * 
-P6 *  *  *  *  *  *  *  *  * 
-P7 *  *  *  *  *  *  *  *  * 
-P8 *  *  *  *  *  *  *  *  * 
-P9 *  *  *  *  *  *  *  *  * 
-P-00AL
-`,
-		expected: true,
-	},
+	// 	&data{
+	// 		input: `
+	// P1 *  *  *  *  *  * +TO * -KI
+	// P2 *  *  *  *  * +RY * -OU *
+	// P3 *  *  *  *  *  *  * -KI-GI
+	// P4 *  *  *  *  *  * -FU *  *
+	// P5 *  *  *  *  *  *  *  *  *
+	// P6 *  *  *  *  *  *  *  *  *
+	// P7 *  *  *  *  *  *  *  *  *
+	// P8 *  *  *  *  *  *  *  *  *
+	// P9 *  *  *  *  *  *  *  *  *
+	// P-00AL
+	// `,
+	// 		expected: true,
+	// 	},
 	&data{
 		input: `
 P1 *  *  *  *  *  *  *  * -KI
@@ -91,7 +91,7 @@ func TestIsCheckmate(t *testing.T) {
 }
 
 func TestCheckSolvable(t *testing.T) {
-	problemType := ProblemType3
+	problemType := Type3
 	g := &generator{
 		steps: problemType.Steps(),
 	}
@@ -100,7 +100,7 @@ func TestCheckSolvable(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		result := g.checkSolvable(record.State)
+		result := g.isValidProblem(record.State)
 		if result != data.expected {
 			t.Errorf("error: (result: %v, expected: %v)", result, data.expected)
 			continue
