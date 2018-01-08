@@ -7,6 +7,7 @@ import (
 	"github.com/sugyan/shogi"
 	"github.com/sugyan/shogi/logic/problem"
 	"github.com/sugyan/shogi/logic/problem/solver"
+	"github.com/sugyan/shogi/logic/problem/solver/node"
 )
 
 // Problem interface
@@ -93,10 +94,48 @@ func isCheckmate(state *shogi.State) bool {
 	if state.Check(shogi.TurnBlack) == nil {
 		return false
 	}
-	if len(problem.Candidates(state, shogi.TurnWhite)) == 0 {
+	candidates := problem.Candidates(state, shogi.TurnWhite)
+	if len(candidates) == 0 {
 		return true
 	}
-	// TODO: check wasted placing
+	// check wasted
+	isCaptured := true
+	for _, ms := range candidates {
+		if !ms.Move.Src.IsCaptured() {
+			isCaptured = false
+			break
+		}
+	}
+	if isCaptured {
+		dst := map[shogi.Position]*shogi.Move{}
+		for _, ms := range candidates {
+			if _, exist := dst[ms.Move.Dst]; !exist {
+				dst[ms.Move.Dst] = ms.Move
+			}
+		}
+		result := true
+		for _, move := range dst {
+			s := state.Clone()
+			s.Apply(move)
+			// TODO: reduce maxDepth
+			root := solver.NewSolver().Search(s, 0)
+			answer := solver.SearchBestAnswer(root)
+			ok := false
+			if len(answer) == 1 {
+				for _, c := range root.Children() {
+					if c.Move().Dst == move.Dst && c.Result() == node.ResultT {
+						ok = true
+						break
+					}
+				}
+			}
+			if !ok {
+				result = false
+				break
+			}
+		}
+		return result
+	}
 	return false
 }
 
