@@ -26,7 +26,8 @@ func Solve(state *shogi.State) []*shogi.Move {
 // Search method
 func (s *Solver) Search(state *shogi.State) node.Node {
 	root := dfpn.NewNode(state, shogi.TurnBlack)
-	dfpn.NewSearcher(0).Search(root)
+	searcher := dfpn.NewSearcher()
+	searcher.Search(root)
 	for {
 		answer := SearchBestAnswer(root)
 		l := len(answer)
@@ -34,7 +35,8 @@ func (s *Solver) Search(state *shogi.State) node.Node {
 		if n == nil {
 			break
 		}
-		dfpn.NewSearcher(l).Search(n.(*dfpn.Node))
+		searcher.SetMaxDepth(l)
+		searcher.Search(n.(*dfpn.Node))
 	}
 	return root
 }

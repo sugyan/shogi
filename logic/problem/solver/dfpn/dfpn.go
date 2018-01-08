@@ -14,11 +14,15 @@ type Searcher struct {
 }
 
 // NewSearcher function
-func NewSearcher(maxDepth int) *Searcher {
+func NewSearcher() *Searcher {
 	return &Searcher{
-		hash:     map[string]*hash{},
-		maxDepth: maxDepth,
+		hash: map[string]*hash{},
 	}
+}
+
+// SetMaxDepth method
+func (s *Searcher) SetMaxDepth(maxDepth int) {
+	s.maxDepth = maxDepth
 }
 
 // Search method
