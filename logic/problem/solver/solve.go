@@ -99,21 +99,26 @@ func searchBestAnswer(n node.Node, captured *shogi.CapturedPieces) []*shogi.Move
 			}
 		}
 		answer := append([]*shogi.Move{c.Move()}, searchBestAnswer(c, &cap)...)
-		ok := true
+		omit := false
 		if len(answer) > 1 {
 			if answer[0].Turn == shogi.TurnWhite && answer[0].Src.IsCaptured() && answer[1].Dst == answer[0].Dst {
 				s := n.State().Clone()
 				for _, m := range answer {
 					s.Apply(m)
 				}
-				for _, piece := range s.Captured[shogi.TurnBlack].Available() {
-					if piece == answer[0].Piece {
-						ok = false
-					}
+				if false ||
+					answer[0].Piece == shogi.FU && s.Captured[shogi.TurnBlack].FU > 0 ||
+					answer[0].Piece == shogi.KY && s.Captured[shogi.TurnBlack].KY > 0 ||
+					answer[0].Piece == shogi.KE && s.Captured[shogi.TurnBlack].KE > 0 ||
+					answer[0].Piece == shogi.GI && s.Captured[shogi.TurnBlack].GI > 0 ||
+					answer[0].Piece == shogi.KI && s.Captured[shogi.TurnBlack].KI > 0 ||
+					answer[0].Piece == shogi.KA && s.Captured[shogi.TurnBlack].KA > 0 ||
+					answer[0].Piece == shogi.HI && s.Captured[shogi.TurnBlack].HI > 0 {
+					omit = true
 				}
 			}
 		}
-		if ok {
+		if !omit {
 			answers = append(answers, answer)
 		}
 	}

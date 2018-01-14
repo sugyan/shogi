@@ -3,6 +3,7 @@ package generator
 import (
 	"bytes"
 	"testing"
+	"time"
 
 	"github.com/sugyan/shogi/format/csa"
 )
@@ -60,6 +61,21 @@ P-00AL
 	},
 	&data{
 		input: `
+P1 *  *  *  *  *  * +TO * -KI
+P2 *  * +RY *  *  *  * -OU * 
+P3 *  *  *  * +KA *  * -KI-GI
+P4 *  *  *  *  *  * +FU *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P-00AL
+	`,
+		expected: true,
+	},
+	&data{
+		input: `
 P1 *  *  *  *  *  *  *  * -KI
 P2 *  *  *  *  * +RY * -OU * 
 P3 *  *  *  *  *  *  * -KI-GI
@@ -81,12 +97,14 @@ func TestIsCheckmate(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		start := time.Now()
 		result := isCheckmate(record.State)
+		elapsed := time.Since(start)
 		if result != data.expected {
 			t.Errorf("error: (result: %v, expected: %v)", result, data.expected)
 			continue
 		}
-		t.Logf("%d: OK", i+1)
+		t.Logf("%d: OK (elapsed time: %v)", i+1, elapsed)
 	}
 }
 

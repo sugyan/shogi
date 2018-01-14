@@ -117,7 +117,6 @@ func isCheckmate(state *shogi.State) bool {
 		for _, move := range dst {
 			s := state.Clone()
 			s.Apply(move)
-			// TODO: reduce maxDepth
 			root := solver.NewSolver().Search(s, 0)
 			answer := solver.SearchBestAnswer(root)
 			ok := false
