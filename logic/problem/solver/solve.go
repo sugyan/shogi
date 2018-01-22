@@ -18,7 +18,7 @@ func NewSolver() *Solver {
 // Solve function
 func Solve(state *shogi.State) []*shogi.Move {
 	root := NewSolver().Search(state, 0)
-	return searchBestAnswer(root)
+	return SearchBestAnswer(root)
 }
 
 // Search method
@@ -26,7 +26,7 @@ func (s *Solver) Search(state *shogi.State, maxDepth int) node.Node {
 	root := dfpn.NewNode(state, shogi.TurnBlack)
 	dfpn.NewSolver().Solve(root, maxDepth)
 	for {
-		answer := searchBestAnswer(root)
+		answer := SearchBestAnswer(root)
 		l := len(answer)
 		n := searchUnknownNode(root, l, answer)
 		if n == nil {

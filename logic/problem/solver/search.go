@@ -11,7 +11,8 @@ type searcher struct {
 	solved map[string]node.Node
 }
 
-func searchBestAnswer(n node.Node) []*shogi.Move {
+// SearchBestAnswer function
+func SearchBestAnswer(n node.Node) []*shogi.Move {
 	s := &searcher{
 		solved: map[string]node.Node{},
 	}
