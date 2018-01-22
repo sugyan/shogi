@@ -8,26 +8,22 @@ import (
 
 const inf = uint32(1) << 12
 
-// Searcher type
-type Searcher struct {
+// Solver type
+type Solver struct {
 	hash     map[string]*hash
 	maxDepth int
 }
 
-// NewSearcher function
-func NewSearcher() *Searcher {
-	return &Searcher{
+// NewSolver function
+func NewSolver() *Solver {
+	return &Solver{
 		hash: map[string]*hash{},
 	}
 }
 
-// SetMaxDepth method
-func (s *Searcher) SetMaxDepth(maxDepth int) {
+// Solve method
+func (s *Solver) Solve(root *Node, maxDepth int) {
 	s.maxDepth = maxDepth
-}
-
-// Search method
-func (s *Searcher) Search(root *Node) {
 	root.pn = inf - 1
 	root.dn = inf - 1
 	s.mid(root)
@@ -38,7 +34,7 @@ func (s *Searcher) Search(root *Node) {
 	}
 }
 
-func (s *Searcher) mid(n *Node) {
+func (s *Solver) mid(n *Node) {
 	h := s.lookUpHash(n)
 	if n.pn <= h.pn || n.dn <= h.dn {
 		n.pn = h.pn
@@ -90,10 +86,10 @@ func (s *Searcher) mid(n *Node) {
 			n.setP(minD)
 			n.setD(sumP)
 			s.putInHash(n, n.pn, n.dn)
-			if n.pn == 0 {
+			if n.dn >= inf {
 				n.result = node.ResultT
 			}
-			if n.dn == 0 {
+			if n.pn >= inf {
 				n.result = node.ResultF
 			}
 			return
@@ -120,21 +116,21 @@ func (s *Searcher) mid(n *Node) {
 	}
 }
 
-func (s *Searcher) lookUpHash(n *Node) *hash {
+func (s *Solver) lookUpHash(n *Node) *hash {
 	if h, ok := s.hash[n.hash]; ok {
 		return h
 	}
 	return &hash{n.move.Turn, 1, 1}
 }
 
-func (s *Searcher) putInHash(n *Node, pn, dn uint32) {
+func (s *Solver) putInHash(n *Node, pn, dn uint32) {
 	s.hash[n.hash] = &hash{
 		turn: n.move.Turn,
 		pn:   pn, dn: dn,
 	}
 }
 
-func (s *Searcher) minDelta(n *Node) uint32 {
+func (s *Solver) minDelta(n *Node) uint32 {
 	min := inf
 	for _, c := range n.children {
 		h := s.lookUpHash(c)
@@ -146,7 +142,7 @@ func (s *Searcher) minDelta(n *Node) uint32 {
 	return min
 }
 
-func (s *Searcher) sumPhi(n *Node) uint32 {
+func (s *Solver) sumPhi(n *Node) uint32 {
 	sum := uint32(0)
 	for _, c := range n.children {
 		h := s.lookUpHash(c)
@@ -155,7 +151,7 @@ func (s *Searcher) sumPhi(n *Node) uint32 {
 	return sum
 }
 
-func (s *Searcher) selectChild(n *Node) (int, uint32, uint32, uint32) {
+func (s *Solver) selectChild(n *Node) (int, uint32, uint32, uint32) {
 	d2 := inf
 	pn, dn := inf, inf
 	best := 0
