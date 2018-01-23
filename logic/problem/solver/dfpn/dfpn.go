@@ -73,12 +73,7 @@ func (s *Solver) mid(n *Node) {
 		}
 		n.expanded = true
 	}
-	switch n.move.Turn {
-	case shogi.TurnBlack:
-		s.putInHash(n, inf, 0)
-	case shogi.TurnWhite:
-		s.putInHash(n, 0, inf)
-	}
+	s.putInHash(n, n.dn, n.pn)
 	for {
 		minD := s.minDelta(n)
 		sumP := s.sumPhi(n)
@@ -86,10 +81,10 @@ func (s *Solver) mid(n *Node) {
 			n.setP(minD)
 			n.setD(sumP)
 			s.putInHash(n, n.pn, n.dn)
-			if n.dn >= inf {
+			if n.dn != 0 {
 				n.result = node.ResultT
 			}
-			if n.pn >= inf {
+			if n.pn != 0 {
 				n.result = node.ResultF
 			}
 			return
