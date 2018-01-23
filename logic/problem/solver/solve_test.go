@@ -34,14 +34,19 @@ func TestSolver(t *testing.T) {
 			t.Errorf("error answer length: %d (expected: %d)", len(answer), len(record.Moves))
 			continue
 		}
+		ok := true
 		for i, move := range answer {
 			if len(answer) >= 3 && i >= len(answer)-2 {
 				continue
 			}
 			if *move != *record.Moves[i] {
-				t.Fatalf("error A[%d]: %v != %v", i+1, *move, *record.Moves[i])
+				t.Errorf("error A[%d]: %v != %v", i+1, *move, *record.Moves[i])
+				ok = false
+				break
 			}
 		}
-		t.Logf("%15s: OK (elapsed time: %v)", filepath.Base(filename), elapsed)
+		if ok {
+			t.Logf("%15s: OK (elapsed time: %v)", filepath.Base(filename), elapsed)
+		}
 	}
 }
