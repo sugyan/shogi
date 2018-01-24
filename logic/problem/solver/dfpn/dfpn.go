@@ -73,7 +73,7 @@ func (s *Solver) mid(n *Node) {
 		}
 		n.expanded = true
 	}
-	s.putInHash(n, n.dn, n.pn)
+	s.putInHash(n, n.getP(), n.getD())
 	for {
 		minD := s.minDelta(n)
 		sumP := s.sumPhi(n)
