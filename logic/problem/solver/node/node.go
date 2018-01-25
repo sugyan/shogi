@@ -20,4 +20,5 @@ type Node interface {
 	Result() Result
 	Move() *shogi.Move
 	State() *shogi.State
+	Hash() string
 }

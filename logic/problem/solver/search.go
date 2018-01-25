@@ -22,7 +22,7 @@ func SearchBestAnswer(n node.Node) []*shogi.Move {
 
 func (s *searcher) searchSolved(n node.Node) {
 	if n.Result() == node.ResultT {
-		s.solved[n.State().Hash()] = n
+		s.solved[n.Hash()] = n
 	}
 	for _, c := range n.Children() {
 		s.searchSolved(c)
@@ -33,7 +33,7 @@ func (s *searcher) searchAnswers(n node.Node, captured *shogi.CapturedPieces, an
 	if len(n.Children()) == 0 {
 		return []*shogi.Move{}
 	}
-	hash := n.State().Hash()
+	hash := n.Hash()
 	for _, ancestor := range ancestors {
 		if ancestor == hash {
 			return []*shogi.Move{}
@@ -44,7 +44,7 @@ func (s *searcher) searchAnswers(n node.Node, captured *shogi.CapturedPieces, an
 	answers := [][]*shogi.Move{}
 	for _, c := range n.Children() {
 		move := c.Move()
-		if solved, exist := s.solved[c.State().Hash()]; exist {
+		if solved, exist := s.solved[c.Hash()]; exist {
 			c = solved
 		}
 		if c.Result() != node.ResultT {

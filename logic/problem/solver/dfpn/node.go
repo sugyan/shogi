@@ -52,6 +52,11 @@ func (n *Node) State() *shogi.State {
 	return n.state
 }
 
+// Hash method
+func (n *Node) Hash() string {
+	return n.hash
+}
+
 func (n *Node) getP() uint32 {
 	switch n.move.Turn {
 	case shogi.TurnBlack:

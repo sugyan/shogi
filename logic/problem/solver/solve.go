@@ -24,7 +24,7 @@ func Solve(state *shogi.State) []*shogi.Move {
 // Search method
 func (s *Solver) Search(state *shogi.State, maxDepth int) node.Node {
 	root := dfpn.NewNode(state, shogi.TurnBlack)
-	dfpn.NewSolver().Solve(root, maxDepth)
+	dfpn.Solve(root, maxDepth)
 	searcher := &searcher{
 		solved: map[string]node.Node{},
 	}
@@ -36,9 +36,9 @@ func (s *Solver) Search(state *shogi.State, maxDepth int) node.Node {
 		if n == nil {
 			break
 		}
-		dfpn.NewSolver().Solve(n.(*dfpn.Node), l)
+		dfpn.Solve(n.(*dfpn.Node), l)
 		if n.Result() == node.ResultT {
-			searcher.solved[n.State().Hash()] = n
+			searcher.solved[n.Hash()] = n
 		}
 	}
 	return root
