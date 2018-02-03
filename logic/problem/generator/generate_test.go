@@ -108,28 +108,42 @@ func TestIsCheckmate(t *testing.T) {
 	}
 }
 
-func TestCheckSolvable(t *testing.T) {
-	problemType := Type3
-	g := &generator{
-		steps: problemType.Steps(),
-	}
-	for i, data := range checkSolvableTestData {
-		record, err := csa.Parse(bytes.NewBufferString(data.input))
-		if err != nil {
-			t.Fatal(err)
-		}
-		result := g.isValidProblem(record.State)
-		if result != data.expected {
-			t.Errorf("error: (result: %v, expected: %v)", result, data.expected)
-			continue
-		}
-		t.Logf("%d: OK", i+1)
-	}
-}
-
-var checkSolvableTestData = []*data{
-	&data{
-		input: `
+var isValidProblemTestData = map[int][]*data{
+	1: []*data{
+		&data{
+			input: `
+P1 *  *  *  *  *  *  * -OU-KE
+P2 *  *  *  *  * +KI *  *  * 
+P3 *  *  *  *  *  *  * +KI * 
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P-00AL
+`,
+			expected: true,
+		},
+		&data{
+			input: `
+P1 *  *  *  *  *  * +KI * -OU
+P2 *  *  *  *  *  *  * +FU-KE
+P3 *  *  *  *  *  *  *  *  * 
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P-00AL
+`,
+			expected: false,
+		},
+	},
+	3: []*data{
+		&data{
+			input: `
 P1 *  *  *  *  *  *  * -OU-KY
 P2 *  *  *  *  *  *  *  *  * 
 P3 *  *  *  *  *  * +TO * -FU
@@ -142,10 +156,10 @@ P9 *  *  *  *  *  *  *  *  *
 P+00GI
 P-00AL
 `,
-		expected: true,
-	},
-	&data{
-		input: `
+			expected: true,
+		},
+		&data{
+			input: `
 P1 *  *  *  *  *  *  * -GI-OU
 P2 *  *  *  *  *  *  *  *  * 
 P3 *  *  *  *  *  *  * +KI * 
@@ -158,10 +172,10 @@ P9 *  *  *  *  *  *  *  *  *
 P+00KI
 P-00AL
 `,
-		expected: false,
-	},
-	&data{
-		input: `
+			expected: false,
+		},
+		&data{
+			input: `
 P1 *  *  *  * -KE-OU *  * +UM
 P2 *  *  *  * -KY-FU *  *  * 
 P3 *  *  *  *  * -KY-KI *  * 
@@ -173,10 +187,10 @@ P8 *  *  *  *  *  *  *  *  *
 P9 *  *  *  *  *  *  *  *  * 
 P-00AL
 `,
-		expected: false,
-	},
-	&data{
-		input: `
+			expected: false,
+		},
+		&data{
+			input: `
 P1 *  * +GI *  * -OU * -HI * 
 P2 *  * +HI * -FU *  *  *  * 
 P3 *  *  *  *  * +KI+FU *  * 
@@ -189,6 +203,85 @@ P9 *  *  *  *  *  *  *  *  *
 P+00KE
 P-00AL
 `,
-		expected: false,
+			expected: false,
+		},
+		&data{
+			input: `
+P1 *  *  *  *  * +KI *  *  * 
+P2 *  *  *  *  *  * -OU *  * 
+P3 *  *  *  * +KA * -KY *  * 
+P4 *  *  *  *  *  *  *  * +HI
+P5 *  *  *  *  *  *  *  * +KE
+P6 *  *  *  *  *  *  *  *  * 
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P-00AL
+`,
+			expected: false,
+		},
+		&data{
+			input: `
+P1 *  *  *  *  *  *  *  *  * 
+P2 *  *  *  * +HI *  * +FU-OU
+P3 *  *  *  *  *  *  *  * -HI
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  * +KY * 
+P6 *  *  *  *  *  *  *  *  * 
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P-00AL
+`,
+			expected: false,
+		},
+		&data{
+			input: `
+P1 *  *  *  *  *  *  *  * -OU
+P2 *  *  *  *  *  * +HI *  * 
+P3 *  *  *  * -KA *  *  *  * 
+P4 *  *  *  *  *  *  *  * +KI
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  * +RY
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P-00AL
+`,
+			expected: false,
+		},
+		&data{
+			input: `
+P1 *  *  *  *  *  *  *  * -OU
+P2 *  *  *  *  *  * +HI *  * 
+P3 *  *  *  *  * -KA *  *  * 
+P4 *  *  *  *  *  *  *  * +KI
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  * +RY
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P-00AL
+`,
+			expected: true,
+		},
 	},
+}
+
+func TestIsValidProblem(t *testing.T) {
+	for steps, cases := range isValidProblemTestData {
+		t.Logf("--- %d steps:", steps)
+		for i, data := range cases {
+			record, err := csa.Parse(bytes.NewBufferString(data.input))
+			if err != nil {
+				t.Fatal(err)
+			}
+			result := isValidProblem(record.State, steps)
+			if result != data.expected {
+				t.Errorf("error: (result: %v, expected: %v)", result, data.expected)
+				continue
+			}
+			t.Logf("%d: OK", i+1)
+		}
+	}
 }
