@@ -60,7 +60,11 @@ func searchUnknownNode(n node.Node, maxDepth int, answer []*shogi.Move) node.Nod
 	if maxDepth > 0 {
 		for _, c := range n.Children() {
 			if c.Result() == node.ResultT {
-				result := searchUnknownNode(c, maxDepth-1, nil)
+				depth := maxDepth - 1
+				if n.Move().Turn == shogi.TurnWhite && n.Move().Src.IsCaptured() && c.Move().Dst == n.Move().Dst {
+					depth += 2
+				}
+				result := searchUnknownNode(c, depth, nil)
 				if result != nil {
 					return result
 				}

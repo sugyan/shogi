@@ -58,10 +58,14 @@ func (s *solver) mid(n *Node) {
 						continue
 					}
 				}
+				depth := n.depth + 1
+				if n.move.Turn == shogi.TurnWhite && n.move.Src.IsCaptured() && ms.Move.Dst == n.move.Dst {
+					depth -= 2
+				}
 				n.children = append(n.children, &Node{
 					move:  ms.Move,
 					state: ms.State,
-					depth: n.depth + 1,
+					depth: depth,
 					hash:  ms.State.Hash(),
 				})
 			}

@@ -33,6 +33,7 @@ func (s *searcher) searchAnswers(n node.Node, captured *shogi.CapturedPieces, an
 	if len(n.Children()) == 0 {
 		return []*shogi.Move{}
 	}
+	// prevent cycle
 	hash := n.Hash()
 	for _, ancestor := range ancestors {
 		if ancestor == hash {
@@ -42,6 +43,7 @@ func (s *searcher) searchAnswers(n node.Node, captured *shogi.CapturedPieces, an
 	ancestors = append(ancestors, hash)
 
 	answers := [][]*shogi.Move{}
+	omitted2 := false
 	for _, c := range n.Children() {
 		move := c.Move()
 		if solved, exist := s.solved[c.Hash()]; exist {
@@ -76,17 +78,34 @@ func (s *searcher) searchAnswers(n node.Node, captured *shogi.CapturedPieces, an
 					answer[0].Piece == shogi.KA && state.Captured[shogi.TurnBlack].KA > 0 ||
 					answer[0].Piece == shogi.HI && state.Captured[shogi.TurnBlack].HI > 0 {
 					omit = true
+					if len(answer) == 2 {
+						omitted2 = true
+					}
 				}
 			}
 		}
-		if !omit {
-			if answer[len(answer)-1].Turn == shogi.TurnBlack {
-				answers = append(answers, answer)
-			}
+		if omit {
+			continue
+		}
+		if answer[len(answer)-1].Turn == shogi.TurnBlack {
+			answers = append(answers, answer)
 		}
 	}
 	if len(answers) == 0 {
 		return []*shogi.Move{}
+	}
+	// check if already checkmated
+	if omitted2 {
+		allSame := true
+		for _, answer := range answers {
+			if answer[0].Dst != answers[0][0].Dst {
+				allSame = false
+				break
+			}
+		}
+		if allSame {
+			return []*shogi.Move{}
+		}
 	}
 	min, max := math.MaxInt32, 0
 	for _, answer := range answers {
