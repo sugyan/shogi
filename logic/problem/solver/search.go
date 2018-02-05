@@ -64,19 +64,19 @@ func (s *searcher) searchAnswers(n node.Node, captured *shogi.CapturedPieces, an
 
 		omit := false
 		if len(answer) > 1 {
-			if answer[0].Turn == shogi.TurnWhite && answer[0].Src.IsCaptured() && answer[1].Dst == answer[0].Dst {
+			if move.Turn == shogi.TurnWhite && move.Src.IsCaptured() && answer[1].Dst == move.Dst {
 				state := n.State().Clone()
 				for _, m := range answer {
 					state.Apply(m)
 				}
 				if false ||
-					answer[0].Piece == shogi.FU && state.Captured[shogi.TurnBlack].FU > 0 ||
-					answer[0].Piece == shogi.KY && state.Captured[shogi.TurnBlack].KY > 0 ||
-					answer[0].Piece == shogi.KE && state.Captured[shogi.TurnBlack].KE > 0 ||
-					answer[0].Piece == shogi.GI && state.Captured[shogi.TurnBlack].GI > 0 ||
-					answer[0].Piece == shogi.KI && state.Captured[shogi.TurnBlack].KI > 0 ||
-					answer[0].Piece == shogi.KA && state.Captured[shogi.TurnBlack].KA > 0 ||
-					answer[0].Piece == shogi.HI && state.Captured[shogi.TurnBlack].HI > 0 {
+					move.Piece == shogi.FU && state.Captured[shogi.TurnBlack].FU > 0 ||
+					move.Piece == shogi.KY && state.Captured[shogi.TurnBlack].KY > 0 ||
+					move.Piece == shogi.KE && state.Captured[shogi.TurnBlack].KE > 0 ||
+					move.Piece == shogi.GI && state.Captured[shogi.TurnBlack].GI > 0 ||
+					move.Piece == shogi.KI && state.Captured[shogi.TurnBlack].KI > 0 ||
+					move.Piece == shogi.KA && state.Captured[shogi.TurnBlack].KA > 0 ||
+					move.Piece == shogi.HI && state.Captured[shogi.TurnBlack].HI > 0 {
 					omit = true
 					if len(answer) == 2 {
 						omitted2 = true
@@ -96,14 +96,11 @@ func (s *searcher) searchAnswers(n node.Node, captured *shogi.CapturedPieces, an
 	}
 	// check if already checkmated
 	if omitted2 {
-		allSame := true
-		for _, answer := range answers {
-			if answer[0].Dst != answers[0][0].Dst {
-				allSame = false
-				break
-			}
+		dst := map[shogi.Position]struct{}{}
+		for _, c := range n.Children() {
+			dst[c.Move().Dst] = struct{}{}
 		}
-		if allSame {
+		if len(dst) == 1 {
 			return []*shogi.Move{}
 		}
 	}

@@ -1,6 +1,8 @@
 package problem
 
-import "github.com/sugyan/shogi"
+import (
+	"github.com/sugyan/shogi"
+)
 
 // MoveState type
 type MoveState struct {
@@ -148,6 +150,10 @@ func Candidates(state *shogi.State, turn shogi.Turn) []*MoveState {
 		}
 		if len(positions) > 0 {
 			available := state.Captured[shogi.TurnWhite].Available()
+			reachable := map[shogi.Position]struct{}{}
+			for _, m := range state.CandidateMoves(shogi.TurnWhite) {
+				reachable[m.Dst] = struct{}{}
+			}
 			for _, p := range positions {
 				for _, piece := range available {
 					// check duplicated FU
@@ -175,6 +181,10 @@ func Candidates(state *shogi.State, turn shogi.Turn) []*MoveState {
 					check := s.Check(shogi.TurnBlack)
 					if check == nil {
 						results = append(results, &MoveState{m, s})
+					}
+					// FIXME: temporary improvement...
+					if _, ok := reachable[p]; !ok {
+						break
 					}
 				}
 			}
