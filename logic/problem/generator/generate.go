@@ -68,7 +68,7 @@ func (g *generator) generate() *shogi.State {
 		for _, s := range g.rewind(state, shogi.TurnBlack) {
 			switch g.steps {
 			case 1:
-				if g.isValidProblem(s) {
+				if isValidProblem(s, g.steps) {
 					// TODO: evaluate
 					g.cleanup(s)
 					return s
@@ -80,7 +80,7 @@ func (g *generator) generate() *shogi.State {
 						break
 					}
 					s := states[i]
-					if g.isValidProblem(s) {
+					if isValidProblem(s, g.steps) {
 						g.cleanup(s)
 						return s
 					}
@@ -804,20 +804,26 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos shogi.Posi
 	return states
 }
 
-func (g *generator) isValidProblem(state *shogi.State) bool {
+func isValidProblem(state *shogi.State, steps int) bool {
 	// TODO: check if there are multiple answers
-	root := solver.NewSolver().Search(state, g.steps+2)
+	root := solver.NewSolver().Search(state, steps+1)
 	bestAnswer := solver.SearchBestAnswer(root)
 
-	if len(bestAnswer) != g.steps {
+	if len(bestAnswer) != steps {
 		return false
 	}
-	s := state.Clone()
-	for _, move := range bestAnswer {
-		s.Apply(move)
-	}
-	if s.Captured[shogi.TurnBlack].Num() == 0 {
-		return true
+	switch steps {
+	case 1:
+		num := 0
+		for _, c := range root.Children() {
+			if c.Result() == node.ResultT {
+				num++
+			}
+		}
+		if num == 1 {
+			return true
+		}
+	default:
 	}
 	return false
 }
@@ -845,7 +851,7 @@ func (g *generator) cleanup(state *shogi.State) *shogi.State {
 			s := state.Clone()
 			s.SetBoard(pp.pos.File, pp.pos.Rank, nil)
 			s.Captured[shogi.TurnWhite].Add(pp.piece)
-			if s.Check(shogi.TurnBlack) == nil && g.isValidProblem(s) {
+			if s.Check(shogi.TurnBlack) == nil && isValidProblem(s, g.steps) {
 				state.SetBoard(pp.pos.File, pp.pos.Rank, nil)
 				state.Captured[shogi.TurnWhite].Add(pp.piece)
 			}
