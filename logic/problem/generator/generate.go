@@ -804,14 +804,33 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos shogi.Posi
 	return states
 }
 
+func hasMultipleAnswers(n node.Node, depth int) bool {
+	if depth == 0 {
+		return false
+	}
+	num := 0
+	for _, c := range n.Children() {
+		if c.Result() == node.ResultT {
+			num++
+			if hasMultipleAnswers(c, depth-1) {
+				return true
+			}
+		}
+	}
+	if num == 1 {
+		return false
+	}
+	return true
+}
+
 func isValidProblem(state *shogi.State, steps int) bool {
-	// TODO: check if there are multiple answers
 	root := solver.NewSolver().Search(state, steps+1)
 	bestAnswer := solver.SearchBestAnswer(root)
 
 	if len(bestAnswer) != steps {
 		return false
 	}
+	// TODO: check number of captured pieces
 	switch steps {
 	case 1:
 		num := 0
@@ -824,6 +843,10 @@ func isValidProblem(state *shogi.State, steps int) bool {
 			return true
 		}
 	default:
+		// check if there are multiple answers
+		if !hasMultipleAnswers(root, steps-2) {
+			return true
+		}
 	}
 	return false
 }
