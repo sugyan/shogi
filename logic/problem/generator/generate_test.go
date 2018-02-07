@@ -140,6 +140,22 @@ P-00AL
 `,
 			expected: false,
 		},
+		&data{
+			input: `
+P1 *  *  *  *  *  *  *  *  * 
+P2 *  *  *  * -FU-FU-GI *  * 
+P3 *  *  * +GI * -OU-HI *  * 
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  * +HI *  * +KI * 
+P6 *  *  *  *  *  *  *  *  * 
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P+00KY
+P-00AL
+`,
+			expected: false,
+		},
 	},
 	3: []*data{
 		&data{

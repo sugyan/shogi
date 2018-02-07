@@ -827,10 +827,19 @@ func isValidProblem(state *shogi.State, steps int) bool {
 	root := solver.NewSolver().Search(state, steps+1)
 	bestAnswer := solver.SearchBestAnswer(root)
 
+	// check answer length
 	if len(bestAnswer) != steps {
 		return false
 	}
-	// TODO: check number of captured pieces
+	// check captured pieces
+	s := state.Clone()
+	for _, m := range bestAnswer {
+		s.Apply(m)
+	}
+	if s.Captured[shogi.TurnBlack].Num() > 0 {
+		return false
+	}
+	// check if there are multiple answers
 	switch steps {
 	case 1:
 		num := 0
@@ -843,7 +852,6 @@ func isValidProblem(state *shogi.State, steps int) bool {
 			return true
 		}
 	default:
-		// check if there are multiple answers
 		if !hasMultipleAnswers(root, steps-2) {
 			return true
 		}
