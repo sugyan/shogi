@@ -17,7 +17,7 @@ func SearchBestAnswer(n node.Node) []*shogi.Move {
 		solved: map[string]node.Node{},
 	}
 	s.searchSolved(n)
-	return s.searchAnswers(n, &shogi.CapturedPieces{}, []string{})
+	return s.searchAnswers(n, []string{})
 }
 
 func (s *searcher) searchSolved(n node.Node) {
@@ -29,7 +29,7 @@ func (s *searcher) searchSolved(n node.Node) {
 	}
 }
 
-func (s *searcher) searchAnswers(n node.Node, captured *shogi.CapturedPieces, ancestors []string) []*shogi.Move {
+func (s *searcher) searchAnswers(n node.Node, ancestors []string) []*shogi.Move {
 	if len(n.Children()) == 0 {
 		return []*shogi.Move{}
 	}
@@ -52,15 +52,7 @@ func (s *searcher) searchAnswers(n node.Node, captured *shogi.CapturedPieces, an
 		if c.Result() != node.ResultT {
 			continue
 		}
-		cap := *captured
-		if move.Turn == shogi.TurnBlack {
-			dst := move.Dst
-			bp := n.State().GetBoard(dst.File, dst.Rank)
-			if bp != nil && bp.Turn == shogi.TurnWhite {
-				cap.Add(bp.Piece)
-			}
-		}
-		answer := append([]*shogi.Move{move}, s.searchAnswers(c, &cap, ancestors)...)
+		answer := append([]*shogi.Move{move}, s.searchAnswers(c, ancestors)...)
 
 		omit := false
 		if len(answer) > 1 {
@@ -141,29 +133,7 @@ func (s *searcher) searchAnswers(n node.Node, captured *shogi.CapturedPieces, an
 			for _, move := range answer {
 				state.Apply(move)
 			}
-			cap := state.Captured[shogi.TurnBlack]
-			points[i] -= cap.Num()
-			if captured.FU > 0 && cap.FU > 0 {
-				points[i]++
-			}
-			if captured.KY > 0 && cap.KY > 0 {
-				points[i]++
-			}
-			if captured.KE > 0 && cap.KE > 0 {
-				points[i]++
-			}
-			if captured.GI > 0 && cap.GI > 0 {
-				points[i]++
-			}
-			if captured.KI > 0 && cap.KI > 0 {
-				points[i]++
-			}
-			if captured.KA > 0 && cap.KA > 0 {
-				points[i]++
-			}
-			if captured.HI > 0 && cap.HI > 0 {
-				points[i]++
-			}
+			points[i] -= state.Captured[shogi.TurnBlack].Num()
 		}
 		max := math.MinInt32
 		for k, v := range points {

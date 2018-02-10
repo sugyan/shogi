@@ -29,8 +29,9 @@ func (s *Solver) Search(state *shogi.State, maxDepth int) node.Node {
 		solved: map[string]node.Node{},
 	}
 	searcher.searchSolved(root)
+
 	for {
-		answer := searcher.searchAnswers(root, &shogi.CapturedPieces{}, []string{})
+		answer := searcher.searchAnswers(root, []string{})
 		l := len(answer)
 		n := searchUnknownNode(root, l, answer)
 		if n == nil {
