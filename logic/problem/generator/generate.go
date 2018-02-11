@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"github.com/sugyan/shogi"
+	"github.com/sugyan/shogi/logic/problem"
 	"github.com/sugyan/shogi/logic/problem/solver"
+	"github.com/sugyan/shogi/logic/problem/solver/node"
 )
 
 // Problem interface
@@ -21,10 +23,10 @@ func (p *problemType) Steps() int {
 	return p.n
 }
 
-// ProblemType variables
+// Type variables
 var (
-	ProblemType1 = &problemType{1}
-	ProblemType3 = &problemType{3}
+	Type1 = &problemType{1}
+	Type3 = &problemType{3}
 )
 
 type posPiece struct {
@@ -37,16 +39,15 @@ func init() {
 }
 
 type generator struct {
-	steps  int
-	solver *solver.Solver
+	steps   int
+	timeout time.Duration
 }
 
 // Generate function
 func Generate(pType Problem) *shogi.State {
-	// TODO: timeout?
 	generator := &generator{
-		steps:  pType.Steps(),
-		solver: solver.NewSolver(3),
+		steps:   pType.Steps(),
+		timeout: time.Second,
 	}
 	return generator.generate()
 }
@@ -57,7 +58,7 @@ func (g *generator) generate() *shogi.State {
 		// random generate
 		for {
 			state = random()
-			if g.solver.IsCheckmate(state) {
+			if g.isCheckmate(state) {
 				break
 			}
 		}
@@ -67,11 +68,10 @@ func (g *generator) generate() *shogi.State {
 		for _, s := range g.rewind(state, shogi.TurnBlack) {
 			switch g.steps {
 			case 1:
-				if g.checkSolvable(s) {
+				if g.isValidProblem(s) {
+					// TODO: evaluate
 					g.cleanup(s)
-					if countPieces(s)[shogi.TurnWhite] > 2 {
-						return s
-					}
+					return s
 				}
 			case 3:
 				states := g.rewind(s, shogi.TurnWhite)
@@ -80,17 +80,66 @@ func (g *generator) generate() *shogi.State {
 						break
 					}
 					s := states[i]
-					if g.checkSolvable(s) {
+					if g.isValidProblem(s) {
 						g.cleanup(s)
-						if countPieces(s)[shogi.TurnWhite] > 1 {
-							return s
-						}
-						break
+						return s
 					}
 				}
 			}
 		}
 	}
+}
+
+func (g *generator) isCheckmate(state *shogi.State) bool {
+	if state.Check(shogi.TurnBlack) == nil {
+		return false
+	}
+	candidates := problem.Candidates(state, shogi.TurnWhite)
+	if len(candidates) == 0 {
+		return true
+	}
+	// check wasted
+	isCaptured := true
+	for _, ms := range candidates {
+		if !ms.Move.Src.IsCaptured() {
+			isCaptured = false
+			break
+		}
+	}
+	if isCaptured {
+		dst := map[shogi.Position]*shogi.Move{}
+		for _, ms := range candidates {
+			if _, exist := dst[ms.Move.Dst]; !exist {
+				dst[ms.Move.Dst] = ms.Move
+			}
+		}
+		result := true
+		for _, move := range dst {
+			s := state.Clone()
+			s.Apply(move)
+			root, err := solver.NewSolver(s).SolveWithTimeout(0, g.timeout)
+			if err != nil {
+				// timed out
+				return false
+			}
+			answer := solver.SearchBestAnswer(root)
+			ok := false
+			if len(answer) == 1 {
+				for _, c := range root.Children() {
+					if c.Move().Dst == move.Dst && c.Result() == node.ResultT {
+						ok = true
+						break
+					}
+				}
+			}
+			if !ok {
+				result = false
+				break
+			}
+		}
+		return result
+	}
+	return false
 }
 
 func (g *generator) rewind(state *shogi.State, turn shogi.Turn) []*shogi.State {
@@ -277,7 +326,7 @@ func (g *generator) cut(state *shogi.State) {
 		p := positions[i]
 		s := state.Clone()
 		s.SetBoard(p.File, p.Rank, nil)
-		if g.solver.IsCheckmate(s) {
+		if g.isCheckmate(s) {
 			b := state.GetBoard(p.File, p.Rank)
 			state.SetBoard(p.File, p.Rank, nil)
 			state.Captured[shogi.TurnWhite].Add(b.Piece)
@@ -759,41 +808,61 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos shogi.Posi
 	return states
 }
 
-func (g *generator) checkSolvable(state *shogi.State) bool {
-	answers, length := g.solver.ValidAnswers(state)
-	if len(answers) == 0 {
+func hasMultipleAnswers(n node.Node, depth int) bool {
+	if depth == 0 {
 		return false
 	}
-	if length != g.steps {
-		return false
-	}
-	// check uniqueness
-	switch g.steps {
-	case 1:
-		return len(answers) == 1
-	case 3:
-		a := answers[0][0]
-		// check "first move is unique" and "there is no catured pieces"
-		capturedCountMap := map[string]int{}
-		for _, answer := range answers {
-			if *a != *answer[0] {
-				return false
-			}
-			s := state.Clone()
-			mss := []string{}
-			for _, move := range answer {
-				ms, _ := s.MoveString(move)
-				mss = append(mss, ms)
-				s.Apply(move)
-			}
-			capturedCountMap[mss[1]] += s.Captured[shogi.TurnBlack].Num()
-		}
-		for _, v := range capturedCountMap {
-			if v == 0 {
+	num := 0
+	for _, c := range n.Children() {
+		if c.Result() == node.ResultT {
+			num++
+			if hasMultipleAnswers(c, depth-1) {
 				return true
 			}
 		}
+	}
+	if num == 1 {
 		return false
+	}
+	return true
+}
+
+func (g *generator) isValidProblem(state *shogi.State) bool {
+	root, err := solver.NewSolver(state).SolveWithTimeout(g.steps+1, g.timeout)
+	if err != nil {
+		// timed out
+		return false
+	}
+	bestAnswer := solver.SearchBestAnswer(root)
+
+	// check answer length
+	if len(bestAnswer) != g.steps {
+		return false
+	}
+	// check captured pieces
+	s := state.Clone()
+	for _, m := range bestAnswer {
+		s.Apply(m)
+	}
+	if s.Captured[shogi.TurnBlack].Num() > 0 {
+		return false
+	}
+	// check if there are multiple answers
+	switch g.steps {
+	case 1:
+		num := 0
+		for _, c := range root.Children() {
+			if c.Result() == node.ResultT {
+				num++
+			}
+		}
+		if num == 1 {
+			return true
+		}
+	default:
+		if !hasMultipleAnswers(root, g.steps-2) {
+			return true
+		}
 	}
 	return false
 }
@@ -821,7 +890,7 @@ func (g *generator) cleanup(state *shogi.State) *shogi.State {
 			s := state.Clone()
 			s.SetBoard(pp.pos.File, pp.pos.Rank, nil)
 			s.Captured[shogi.TurnWhite].Add(pp.piece)
-			if s.Check(shogi.TurnBlack) == nil && g.checkSolvable(s) {
+			if s.Check(shogi.TurnBlack) == nil && g.isValidProblem(s) {
 				state.SetBoard(pp.pos.File, pp.pos.Rank, nil)
 				state.Captured[shogi.TurnWhite].Add(pp.piece)
 			}
@@ -886,18 +955,4 @@ func (g *generator) cleanup(state *shogi.State) *shogi.State {
 		}
 	}
 	return state
-}
-
-func countPieces(state *shogi.State) map[shogi.Turn]int {
-	result := map[shogi.Turn]int{}
-	for i := 0; i < 9; i++ {
-		for j := 0; j < 9; j++ {
-			file, rank := 9-j, i+1
-			b := state.GetBoard(file, rank)
-			if b != nil {
-				result[b.Turn]++
-			}
-		}
-	}
-	return result
 }

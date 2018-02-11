@@ -53,46 +53,44 @@ func NewState() *State {
 	}
 }
 
+var pieceMap = map[string]byte{
+	"FU": 0x01, "TO": 0x02,
+	"KY": 0x03, "NY": 0x04,
+	"KE": 0x05, "NK": 0x06,
+	"GI": 0x07, "NG": 0x08,
+	"KI": 0x09, "OU": 0x0A,
+	"KA": 0x0B, "UM": 0x0C,
+	"HI": 0x0D, "RY": 0x0E,
+}
+
 // Hash method
 func (s *State) Hash() string {
 	// TODO
-	pieceByteMap := map[Piece]byte{
-		FU: 1, TO: 2,
-		KY: 3, NY: 4,
-		KE: 5, NK: 6,
-		GI: 7, NG: 8,
-		KI: 9, OU: 10,
-		KA: 11, UM: 12,
-		HI: 13, RY: 14,
-	}
-	turnByteMap := map[Turn]byte{
-		TurnBlack: 1,
-		TurnWhite: 0,
-	}
-	hash := sha1.New()
+	bytes := make([]byte, 9*9+2*7)
 	for i := 0; i < 9; i++ {
-		bytes := make([]byte, 0, 18)
 		for j := 0; j < 9; j++ {
 			b := s.Board[i][j]
 			if b != nil {
-				bytes = append(bytes, []byte{pieceByteMap[b.Piece], turnByteMap[b.Turn]}...)
-			} else {
-				bytes = append(bytes, []byte{0, 0}...)
+				v := pieceMap[b.Piece.String()]
+				if b.Turn == TurnWhite {
+					v += 0x10
+				}
+				bytes[i*9+j] = v
 			}
 		}
-		hash.Write(bytes)
 	}
-	for _, turn := range []Turn{TurnBlack, TurnWhite} {
-		bytes := make([]byte, 7)
-		bytes[0] = byte(s.Captured[turn].FU)
-		bytes[1] = byte(s.Captured[turn].KY)
-		bytes[2] = byte(s.Captured[turn].KE)
-		bytes[3] = byte(s.Captured[turn].GI)
-		bytes[4] = byte(s.Captured[turn].KI)
-		bytes[5] = byte(s.Captured[turn].KA)
-		bytes[6] = byte(s.Captured[turn].HI)
-		hash.Write(bytes)
+	for i, turn := range []Turn{TurnBlack, TurnWhite} {
+		j := 9*9 + i*7
+		bytes[j+0] = byte(s.Captured[turn].FU)
+		bytes[j+1] = byte(s.Captured[turn].KY)
+		bytes[j+2] = byte(s.Captured[turn].KE)
+		bytes[j+3] = byte(s.Captured[turn].GI)
+		bytes[j+4] = byte(s.Captured[turn].KI)
+		bytes[j+5] = byte(s.Captured[turn].KA)
+		bytes[j+6] = byte(s.Captured[turn].HI)
 	}
+	hash := sha1.New()
+	hash.Write(bytes)
 	return hex.EncodeToString(hash.Sum(nil))
 }
 

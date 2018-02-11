@@ -16,7 +16,13 @@ type Move struct {
 func (s *State) Apply(move *Move) {
 	// update state
 	s.latestMove = move
-	if move.Src.File > 0 && move.Src.Rank > 0 {
+	if move.Src.IsCaptured() {
+		s.SetBoard(move.Dst.File, move.Dst.Rank, &BoardPiece{
+			Turn:  move.Turn,
+			Piece: move.Piece,
+		})
+		s.Captured[move.Turn].Sub(move.Piece)
+	} else {
 		b := s.GetBoard(move.Dst.File, move.Dst.Rank)
 		if b != nil {
 			s.Captured[move.Turn].Add(b.Piece)
@@ -26,12 +32,6 @@ func (s *State) Apply(move *Move) {
 			Turn:  move.Turn,
 			Piece: move.Piece,
 		})
-	} else {
-		s.SetBoard(move.Dst.File, move.Dst.Rank, &BoardPiece{
-			Turn:  move.Turn,
-			Piece: move.Piece,
-		})
-		s.Captured[move.Turn].Sub(move.Piece)
 	}
 }
 

@@ -1,7 +1,8 @@
 package solver
 
 import (
-	"bytes"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -9,169 +10,43 @@ import (
 )
 
 func TestSolver(t *testing.T) {
-	for i, data := range testData {
-		record, err := csa.Parse(bytes.NewBufferString(data.q))
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	matches, err := filepath.Glob(filepath.Join(dir, "testdata", "*.csa"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, filename := range matches {
+		file, err := os.Open(filename)
+		if err != nil {
+			t.Fatal(err)
+		}
+		record, err := csa.Parse(file)
 		if err != nil {
 			t.Fatal(err)
 		}
 		start := time.Now()
-		answer, err := Solve(record.State)
+		answer := Solve(record.State)
 		elapsed := time.Since(start)
-		if err != nil {
-			t.Error(err)
+		if len(answer) != len(record.Moves) {
+			t.Errorf("error answer length: %d (expected: %d)", len(answer), len(record.Moves))
 			continue
 		}
-		if len(answer) != len(data.a) {
-			t.Errorf("answer length mismatch: %d (expected: %d)", len(answer), len(data.a))
-			continue
-		}
-		results, err := record.State.MoveStrings(answer)
-		if err != nil {
-			t.Error(err)
-			continue
-		}
-		for j, str := range results {
-			if len(answer) >= 3 && j >= len(answer)-2 {
+		ok := true
+		for i, move := range answer {
+			if len(answer) >= 3 && i >= len(answer)-2 {
 				continue
 			}
-			if str != data.a[j] {
-				t.Fatalf("error Q%d - A%d: %s != %s", i+1, j+1, str, data.a[j])
+			if *move != *record.Moves[i] {
+				t.Errorf("error A[%d]: %v != %v", i+1, *move, *record.Moves[i])
+				ok = false
+				break
 			}
 		}
-		t.Logf("Q%d: OK (elapsed time: %v)", i+1, elapsed)
+		if ok {
+			t.Logf("%15s: OK (elapsed time: %v)", filepath.Base(filename), elapsed)
+		}
 	}
-}
-
-type data struct {
-	q string
-	a []string
-}
-
-var testData = []*data{
-	&data{
-		q: `
-P1 *  *  *  *  *  *  *  *  * 
-P2 *  *  *  *  *  * +HI *  * 
-P3 *  *  *  *  *  * -KE-OU-GI
-P4 *  *  *  *  *  * +KE * -FU
-P5 *  *  *  *  * +KA * +FU * 
-P6 *  *  *  *  *  *  *  *  * 
-P7 *  *  *  *  *  *  *  *  * 
-P8 *  *  *  *  *  *  *  *  * 
-P9 *  *  *  *  *  *  *  *  * 
-P-00AL
-`,
-		a: []string{"▲2二桂成"},
-	},
-	&data{
-		q: `
-P1 *  *  *  * -HI *  *  *  * 
-P2 *  *  *  *  * -OU+GI *  * 
-P3 *  *  *  * -KI *  *  *  * 
-P4 *  *  *  *  * +GI *  *  * 
-P5 *  * +KA *  *  *  *  *  * 
-P6 *  *  *  *  *  *  *  *  * 
-P7 *  *  *  *  *  *  *  *  * 
-P8 *  *  *  *  *  *  *  *  * 
-P9 *  *  *  *  *  *  *  *  * 
-P-00AL
-`,
-		a: []string{"▲4三銀上成"},
-	},
-	&data{
-		q: `
-P1 *  *  *  *  *  *  * -OU-KY
-P2 *  *  *  *  *  *  *  *  * 
-P3 *  *  *  *  *  * +TO * -FU
-P4 *  *  *  *  *  *  *  *  * 
-P5 *  *  *  *  *  *  *  *  * 
-P6 *  *  *  *  *  *  *  *  * 
-P7 *  *  *  *  *  *  *  *  * 
-P8 *  *  *  *  *  *  *  *  * 
-P9 *  *  *  *  *  *  *  *  * 
-P+00GI
-P-00AL
-`,
-		a: []string{"▲3二銀", "△1二玉", "▲2三と"},
-	},
-	&data{
-		q: `
-P1 *  *  *  *  *  *  * -OU-KY
-P2 *  *  *  *  *  *  * -KI * 
-P3 *  *  *  *  *  *  * +TO * 
-P4 *  *  *  *  *  *  *  *  * 
-P5 *  *  *  *  *  *  *  *  * 
-P6 *  *  *  *  *  *  *  *  * 
-P7 *  *  *  *  *  *  *  *  * 
-P8 *  *  *  *  *  *  *  *  * 
-P9 *  *  *  *  *  *  *  *  * 
-P+00KI00KE
-P-00AL
-`,
-		a: []string{"▲3三桂", "△同金", "▲2二金"},
-	},
-	&data{
-		q: `
-P1 *  *  *  *  *  * -GI-OU-KY
-P2 *  *  *  *  *  *  *  *  * 
-P3 *  *  *  *  * -FU * +TO * 
-P4 *  *  *  *  *  *  *  *  * 
-P5 *  *  *  *  *  *  *  *  * 
-P6 *  *  *  *  *  *  *  *  * 
-P7 *  *  *  *  *  *  *  *  * 
-P8 *  *  *  *  *  *  *  *  * 
-P9 *  *  *  *  *  *  *  *  * 
-P+00KA00GI
-P-00AL
-`,
-		a: []string{"▲3二角", "△同銀", "▲2二銀"},
-	},
-	&data{
-		q: `
-P1 *  *  *  *  * +KA+TO * -KY
-P2 *  *  *  *  * -FU * -OU-KA
-P3 *  *  *  *  *  * -KI *  * 
-P4 *  *  *  *  *  * -FU-FU+KY
-P5 *  *  *  *  *  *  *  *  * 
-P6 *  *  *  *  *  *  *  *  * 
-P7 *  *  *  *  *  *  *  *  * 
-P8 *  *  *  *  *  *  *  *  * 
-P9 *  *  *  *  *  *  *  *  * 
-P+00KI
-P-00AL
-`,
-		a: []string{"▲2三角成", "△同角", "▲2一金打"},
-	},
-	&data{
-		q: `
-P1 *  *  *  *  *  *  *  *  * 
-P2 *  *  *  *  *  *  *  *  * 
-P3 *  *  *  *  *  *  *  * -KE
-P4 *  *  *  *  *  * +KI-GI * 
-P5 *  *  *  *  *  *  *  * -OU
-P6 *  *  *  *  *  *  * +HI-FU
-P7 *  *  *  *  * -UM+UM * -HI
-P8 *  *  *  *  *  *  *  *  * 
-P9 *  *  *  *  *  *  *  *  * 
-P+00KI
-P-00AL
-`,
-		a: []string{"▲1四金", "△同馬", "▲2七飛"},
-	},
-	&data{
-		q: `
-P1 *  *  *  *  *  *  * +TO * 
-P2 *  *  *  *  *  *  *  * -KY
-P3 *  *  *  *  * +UM-KI-OU * 
-P4 *  *  *  *  * +HI *  *  * 
-P5 *  *  *  *  *  *  * -KA * 
-P6 *  *  *  *  *  *  *  *  * 
-P7 *  *  *  *  *  *  *  *  * 
-P8 *  *  *  *  *  *  *  *  * 
-P9 *  *  *  *  *  *  *  *  * 
-P+00KI
-P-00AL
-`,
-		a: []string{"▲3二馬", "△同玉", "▲2二金"},
-	},
 }
