@@ -92,13 +92,16 @@ P-00AL
 }
 
 func TestIsCheckmate(t *testing.T) {
+	g := &generator{
+		timeout: time.Second,
+	}
 	for i, data := range isCheckmateData {
 		record, err := csa.Parse(bytes.NewBufferString(data.input))
 		if err != nil {
 			t.Fatal(err)
 		}
 		start := time.Now()
-		result := isCheckmate(record.State)
+		result := g.isCheckmate(record.State)
 		elapsed := time.Since(start)
 		if result != data.expected {
 			t.Errorf("error: (result: %v, expected: %v)", result, data.expected)
@@ -287,17 +290,23 @@ P-00AL
 func TestIsValidProblem(t *testing.T) {
 	for steps, cases := range isValidProblemTestData {
 		t.Logf("--- %d steps:", steps)
+		g := &generator{
+			steps:   steps,
+			timeout: time.Second * 10,
+		}
 		for i, data := range cases {
 			record, err := csa.Parse(bytes.NewBufferString(data.input))
 			if err != nil {
 				t.Fatal(err)
 			}
-			result := isValidProblem(record.State, steps)
+			start := time.Now()
+			result := g.isValidProblem(record.State)
+			elapsed := time.Since(start)
 			if result != data.expected {
 				t.Errorf("error: (result: %v, expected: %v)", result, data.expected)
 				continue
 			}
-			t.Logf("%d: OK", i+1)
+			t.Logf("%d: OK (elapsed time: %v)", i+1, elapsed)
 		}
 	}
 }

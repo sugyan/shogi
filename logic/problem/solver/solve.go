@@ -1,6 +1,9 @@
 package solver
 
 import (
+	"context"
+	"time"
+
 	"github.com/sugyan/shogi"
 	"github.com/sugyan/shogi/logic/problem/solver/dfpn"
 	"github.com/sugyan/shogi/logic/problem/solver/node"
@@ -8,22 +11,43 @@ import (
 
 // Solver type
 type Solver struct {
+	state *shogi.State
 }
 
 // NewSolver function
-func NewSolver() *Solver {
-	return &Solver{}
+func NewSolver(state *shogi.State) *Solver {
+	return &Solver{
+		state: state,
+	}
 }
 
 // Solve function
 func Solve(state *shogi.State) []*shogi.Move {
-	root := NewSolver().Search(state, 0)
+	root := NewSolver(state).solve(0)
 	return SearchBestAnswer(root)
 }
 
-// Search method
-func (s *Solver) Search(state *shogi.State, maxDepth int) node.Node {
-	root := dfpn.NewNode(state, shogi.TurnBlack)
+// SolveWithTimeout method
+func (s *Solver) SolveWithTimeout(maxDepth int, timeout time.Duration) (node.Node, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	c := make(chan node.Node)
+	go func() {
+		c <- s.solve(maxDepth)
+	}()
+	select {
+	case <-ctx.Done():
+		// TODO: cancel
+		return nil, ctx.Err()
+	case ret := <-c:
+		return ret, nil
+	}
+}
+
+// solve method
+func (s *Solver) solve(maxDepth int) node.Node {
+	root := dfpn.NewNode(s.state, shogi.TurnBlack)
 	dfpn.Solve(root, maxDepth)
 	searcher := &searcher{
 		solved: map[string]node.Node{},

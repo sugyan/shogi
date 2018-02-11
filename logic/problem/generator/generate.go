@@ -39,15 +39,15 @@ func init() {
 }
 
 type generator struct {
-	steps  int
-	solver *solver.Solver
+	steps   int
+	timeout time.Duration
 }
 
 // Generate function
 func Generate(pType Problem) *shogi.State {
-	// TODO: timeout?
 	generator := &generator{
-		steps: pType.Steps(),
+		steps:   pType.Steps(),
+		timeout: time.Second,
 	}
 	return generator.generate()
 }
@@ -58,7 +58,7 @@ func (g *generator) generate() *shogi.State {
 		// random generate
 		for {
 			state = random()
-			if isCheckmate(state) {
+			if g.isCheckmate(state) {
 				break
 			}
 		}
@@ -68,7 +68,7 @@ func (g *generator) generate() *shogi.State {
 		for _, s := range g.rewind(state, shogi.TurnBlack) {
 			switch g.steps {
 			case 1:
-				if isValidProblem(s, g.steps) {
+				if g.isValidProblem(s) {
 					// TODO: evaluate
 					g.cleanup(s)
 					return s
@@ -80,7 +80,7 @@ func (g *generator) generate() *shogi.State {
 						break
 					}
 					s := states[i]
-					if isValidProblem(s, g.steps) {
+					if g.isValidProblem(s) {
 						g.cleanup(s)
 						return s
 					}
@@ -90,7 +90,7 @@ func (g *generator) generate() *shogi.State {
 	}
 }
 
-func isCheckmate(state *shogi.State) bool {
+func (g *generator) isCheckmate(state *shogi.State) bool {
 	if state.Check(shogi.TurnBlack) == nil {
 		return false
 	}
@@ -117,7 +117,11 @@ func isCheckmate(state *shogi.State) bool {
 		for _, move := range dst {
 			s := state.Clone()
 			s.Apply(move)
-			root := solver.NewSolver().Search(s, 0)
+			root, err := solver.NewSolver(s).SolveWithTimeout(0, g.timeout)
+			if err != nil {
+				// timed out
+				return false
+			}
 			answer := solver.SearchBestAnswer(root)
 			ok := false
 			if len(answer) == 1 {
@@ -322,7 +326,7 @@ func (g *generator) cut(state *shogi.State) {
 		p := positions[i]
 		s := state.Clone()
 		s.SetBoard(p.File, p.Rank, nil)
-		if isCheckmate(s) {
+		if g.isCheckmate(s) {
 			b := state.GetBoard(p.File, p.Rank)
 			state.SetBoard(p.File, p.Rank, nil)
 			state.Captured[shogi.TurnWhite].Add(b.Piece)
@@ -823,12 +827,16 @@ func hasMultipleAnswers(n node.Node, depth int) bool {
 	return true
 }
 
-func isValidProblem(state *shogi.State, steps int) bool {
-	root := solver.NewSolver().Search(state, steps+1)
+func (g *generator) isValidProblem(state *shogi.State) bool {
+	root, err := solver.NewSolver(state).SolveWithTimeout(g.steps+1, g.timeout)
+	if err != nil {
+		// timed out
+		return false
+	}
 	bestAnswer := solver.SearchBestAnswer(root)
 
 	// check answer length
-	if len(bestAnswer) != steps {
+	if len(bestAnswer) != g.steps {
 		return false
 	}
 	// check captured pieces
@@ -840,7 +848,7 @@ func isValidProblem(state *shogi.State, steps int) bool {
 		return false
 	}
 	// check if there are multiple answers
-	switch steps {
+	switch g.steps {
 	case 1:
 		num := 0
 		for _, c := range root.Children() {
@@ -852,7 +860,7 @@ func isValidProblem(state *shogi.State, steps int) bool {
 			return true
 		}
 	default:
-		if !hasMultipleAnswers(root, steps-2) {
+		if !hasMultipleAnswers(root, g.steps-2) {
 			return true
 		}
 	}
@@ -882,7 +890,7 @@ func (g *generator) cleanup(state *shogi.State) *shogi.State {
 			s := state.Clone()
 			s.SetBoard(pp.pos.File, pp.pos.Rank, nil)
 			s.Captured[shogi.TurnWhite].Add(pp.piece)
-			if s.Check(shogi.TurnBlack) == nil && isValidProblem(s, g.steps) {
+			if s.Check(shogi.TurnBlack) == nil && g.isValidProblem(s) {
 				state.SetBoard(pp.pos.File, pp.pos.Rank, nil)
 				state.Captured[shogi.TurnWhite].Add(pp.piece)
 			}
