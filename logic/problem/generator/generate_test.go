@@ -291,8 +291,7 @@ func TestIsValidProblem(t *testing.T) {
 	for steps, cases := range isValidProblemTestData {
 		t.Logf("--- %d steps:", steps)
 		g := &generator{
-			steps:   steps,
-			timeout: time.Second * 10,
+			steps: steps,
 		}
 		for i, data := range cases {
 			record, err := csa.Parse(bytes.NewBufferString(data.input))

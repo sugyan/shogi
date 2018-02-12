@@ -29,7 +29,15 @@ func Solve(state *shogi.State) []*shogi.Move {
 
 // SolveWithTimeout method
 func (s *Solver) SolveWithTimeout(maxDepth int, timeout time.Duration) (node.Node, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	var (
+		ctx    context.Context
+		cancel context.CancelFunc
+	)
+	if timeout == 0 {
+		ctx, cancel = context.WithCancel(context.Background())
+	} else {
+		ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	}
 	defer cancel()
 
 	c := make(chan node.Node)
