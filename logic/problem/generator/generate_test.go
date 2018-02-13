@@ -93,9 +93,7 @@ P-00AL
 }
 
 func TestIsCheckmate(t *testing.T) {
-	g := &generator{
-		timeout: time.Second,
-	}
+	g := &generator{}
 	for i, data := range isCheckmateData {
 		record, err := csa.Parse(bytes.NewBufferString(data.input))
 		if err != nil {
