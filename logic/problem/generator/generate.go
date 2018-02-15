@@ -1,7 +1,9 @@
 package generator
 
 import (
+	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/sugyan/shogi"
@@ -375,15 +377,23 @@ func countChildren(n node.Node, depth int) int {
 	if depth == 0 {
 		return 0
 	}
-	// TODO: improve?
 	sum := 0
+	m := map[string]struct{}{}
 	for _, c := range n.Children() {
-		sum += 1 + countChildren(c, depth-1)
+		s := []string{}
+		for _, cc := range c.Children() {
+			s = append(s, fmt.Sprintf("%v", cc.Move()))
+		}
+		m[strings.Join(s, ",")] = struct{}{}
+	}
+	sum += len(m)
+	for _, c := range n.Children() {
+		sum += countChildren(c, depth-1)
 	}
 	return sum
 }
 
 func (g *generator) calculateScore(state *shogi.State) int {
 	root, _ := solver.NewSolver(state).SolveWithTimeout(g.steps, 0)
-	return countChildren(root, g.steps)
+	return countChildren(root, g.steps+1)
 }
