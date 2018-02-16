@@ -390,17 +390,16 @@ func countChildren(n node.Node, depth int) int {
 		return 0
 	}
 	sum := 0
-	m := map[string]struct{}{}
+	m := map[string]node.Node{}
 	for _, c := range n.Children() {
 		s := []string{}
 		for _, cc := range c.Children() {
 			s = append(s, fmt.Sprintf("%v", cc.Move()))
 		}
-		m[strings.Join(s, ",")] = struct{}{}
+		m[strings.Join(s, ",")] = c
 	}
-	sum += len(m)
-	for _, c := range n.Children() {
-		sum += countChildren(c, depth-1)
+	for _, c := range m {
+		sum += 1 + countChildren(c, depth-1)
 	}
 	return sum
 }
