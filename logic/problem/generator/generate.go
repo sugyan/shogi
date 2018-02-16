@@ -73,27 +73,44 @@ func (g *generator) generate() *shogi.State {
 		for _, s := range g.rewind(state, shogi.TurnBlack) {
 			switch g.steps {
 			case 1:
-				if g.isValidProblem(s) {
+				if g.isValidProblem(s, 1) {
 					// TODO: evaluate
 					g.cleanup(s)
 					return s
 				}
-			default:
-				n := (g.steps - 1) / 2
+			case 3, 5:
+				// TODO
+				var (
+					ok     = false
+					result *shogi.State
+				)
 				states := g.rewind(s, shogi.TurnWhite)
-				if len(states) > 0 {
-					for i := 0; i < n; i++ {
-						states = append(states, g.rewind(states[len(states)-1], shogi.TurnWhite)...)
-					}
-				}
-				for _, j := range rand.Perm(len(states)) {
-					if j > 5 {
+				for _, i := range rand.Perm(len(states)) {
+					if i > 5 {
 						break
 					}
-					s := states[j]
-					if g.isValidProblem(s) {
-						g.cleanup(s)
-						return s
+					result = states[i]
+					if g.isValidProblem(result, 3) {
+						if g.steps == 3 {
+							g.cleanup(result)
+							return result
+						}
+						ok = true
+						break
+					}
+				}
+				if ok && g.steps == 5 {
+					println(csa.InitialState1(result))
+					states := g.rewind(result, shogi.TurnWhite)
+					for _, i := range rand.Perm(len(states)) {
+						if i > 5 {
+							break
+						}
+						result := states[i]
+						if g.isValidProblem(result, 5) {
+							g.cleanup(result)
+							return result
+						}
 					}
 				}
 			}
@@ -261,9 +278,9 @@ func hasMultipleAnswers(n node.Node, depth int) bool {
 	return false
 }
 
-func (g *generator) isValidProblem(state *shogi.State) bool {
+func (g *generator) isValidProblem(state *shogi.State, steps int) bool {
 	// must consider wasted placing pieces
-	root, err := solver.NewSolver(state).SolveWithTimeout(g.steps+2, g.timeout)
+	root, err := solver.NewSolver(state).SolveWithTimeout(steps+2, g.timeout)
 	if err != nil {
 		// timed out
 		return false
@@ -271,7 +288,7 @@ func (g *generator) isValidProblem(state *shogi.State) bool {
 	bestAnswer := solver.SearchBestAnswer(root)
 
 	// check answer length
-	if len(bestAnswer) != g.steps {
+	if len(bestAnswer) != steps {
 		return false
 	}
 	// check captured pieces
@@ -283,7 +300,7 @@ func (g *generator) isValidProblem(state *shogi.State) bool {
 		return false
 	}
 	// check if there are multiple answers
-	switch g.steps {
+	switch steps {
 	case 1:
 		num := 0
 		for _, c := range root.Children() {
@@ -295,7 +312,7 @@ func (g *generator) isValidProblem(state *shogi.State) bool {
 			return true
 		}
 	default:
-		if !hasMultipleAnswers(root, g.steps) {
+		if !hasMultipleAnswers(root, steps) {
 			return true
 		}
 	}
@@ -325,7 +342,7 @@ func (g *generator) cleanup(state *shogi.State) *shogi.State {
 			s := state.Clone()
 			s.SetBoard(pp.pos.File, pp.pos.Rank, nil)
 			s.Captured[shogi.TurnWhite].Add(pp.piece)
-			if s.Check(shogi.TurnBlack) == nil && g.isValidProblem(s) {
+			if s.Check(shogi.TurnBlack) == nil && g.isValidProblem(s, g.steps) {
 				state.SetBoard(pp.pos.File, pp.pos.Rank, nil)
 				state.Captured[shogi.TurnWhite].Add(pp.piece)
 			}

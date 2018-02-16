@@ -356,16 +356,14 @@ P-00AL
 func TestIsValidProblem(t *testing.T) {
 	for steps, cases := range isValidProblemTestData {
 		t.Logf("--- %d steps:", steps)
-		g := &generator{
-			steps: steps,
-		}
+		g := &generator{}
 		for i, data := range cases {
 			record, err := csa.Parse(bytes.NewBufferString(data.input))
 			if err != nil {
 				t.Fatal(err)
 			}
 			start := time.Now()
-			result := g.isValidProblem(record.State)
+			result := g.isValidProblem(record.State, steps)
 			elapsed := time.Since(start)
 			if result != data.expected {
 				t.Errorf("error: (result: %v, expected: %v)", result, data.expected)
