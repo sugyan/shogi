@@ -100,7 +100,6 @@ func (g *generator) generate() *shogi.State {
 					}
 				}
 				if ok && g.steps == 5 {
-					println(csa.InitialState1(result))
 					states := g.rewind(result, shogi.TurnWhite)
 					for _, i := range rand.Perm(len(states)) {
 						if i > 5 {
