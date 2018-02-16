@@ -13,16 +13,15 @@ import (
 	"github.com/sugyan/shogi/format/csa"
 	"github.com/sugyan/shogi/logic/problem/generator"
 	"github.com/sugyan/shogi/logic/problem/solver"
+	"github.com/sugyan/shogi/record"
 )
 
 func main() {
 	// generate
-	state := generator.Generate(generator.ProblemType3)
+	state, _ := generator.Generate(generator.Type3)
 	// solve
-	answer, err := solver.Solve(state)
-	if err != nil {
-		log.Fatal(err)
-	}
+	answer := solver.Solve(state)
+
 	record := &record.Record{
 		State: state,
 		Moves: answer,
