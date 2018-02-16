@@ -29,6 +29,7 @@ func (p *problemType) Steps() int {
 var (
 	Type1 = &problemType{1}
 	Type3 = &problemType{3}
+	Type5 = &problemType{5}
 )
 
 type posPiece struct {
@@ -77,13 +78,19 @@ func (g *generator) generate() *shogi.State {
 					g.cleanup(s)
 					return s
 				}
-			case 3:
+			default:
+				n := (g.steps - 1) / 2
 				states := g.rewind(s, shogi.TurnWhite)
-				for _, i := range rand.Perm(len(states)) {
-					if i > 5 {
+				if len(states) > 0 {
+					for i := 0; i < n; i++ {
+						states = append(states, g.rewind(states[len(states)-1], shogi.TurnWhite)...)
+					}
+				}
+				for _, j := range rand.Perm(len(states)) {
+					if j > 5 {
 						break
 					}
-					s := states[i]
+					s := states[j]
 					if g.isValidProblem(s) {
 						g.cleanup(s)
 						return s
