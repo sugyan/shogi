@@ -225,26 +225,38 @@ func (g *generator) cut(state *shogi.State) {
 }
 
 func hasMultipleAnswers(n node.Node, depth int) bool {
-	if depth == 0 {
+	if depth <= 2 {
 		return false
 	}
-	num := 0
-	for _, c := range n.Children() {
-		if c.Result() == node.ResultT {
-			num++
-			if hasMultipleAnswers(c, depth-1) {
+	switch n.Move().Turn {
+	case shogi.TurnBlack:
+		answer := solver.SearchBestAnswer(n)[0]
+		for _, c := range n.Children() {
+			m := c.Move()
+			if m.Src == answer.Src && m.Dst == answer.Dst && m.Piece == answer.Piece {
+				return hasMultipleAnswers(c, depth-1)
+			}
+		}
+	case shogi.TurnWhite:
+		num := 0
+		for _, c := range n.Children() {
+			if c.Result() == node.ResultT {
+				num++
+				if hasMultipleAnswers(c, depth-1) {
+					return true
+				}
+			}
+			if num > 1 {
 				return true
 			}
 		}
 	}
-	if num == 1 {
-		return false
-	}
-	return true
+	return false
 }
 
 func (g *generator) isValidProblem(state *shogi.State) bool {
-	root, err := solver.NewSolver(state).SolveWithTimeout(g.steps+1, g.timeout)
+	// must consider wasted placing pieces
+	root, err := solver.NewSolver(state).SolveWithTimeout(g.steps+2, g.timeout)
 	if err != nil {
 		// timed out
 		return false
@@ -276,7 +288,7 @@ func (g *generator) isValidProblem(state *shogi.State) bool {
 			return true
 		}
 	default:
-		if !hasMultipleAnswers(root, g.steps-2) {
+		if !hasMultipleAnswers(root, g.steps) {
 			return true
 		}
 	}
