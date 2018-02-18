@@ -17,7 +17,7 @@ func SearchBestAnswer(n node.Node) []*shogi.Move {
 		solved: map[string]node.Node{},
 	}
 	s.searchSolved(n)
-	return s.searchAnswers(n, []string{})
+	return s.searchBestAnswer(n, []string{})
 }
 
 func (s *searcher) searchSolved(n node.Node) {
@@ -29,7 +29,7 @@ func (s *searcher) searchSolved(n node.Node) {
 	}
 }
 
-func (s *searcher) searchAnswers(n node.Node, ancestors []string) []*shogi.Move {
+func (s *searcher) searchBestAnswer(n node.Node, ancestors []string) []*shogi.Move {
 	if len(n.Children()) == 0 {
 		return []*shogi.Move{}
 	}
@@ -52,7 +52,7 @@ func (s *searcher) searchAnswers(n node.Node, ancestors []string) []*shogi.Move 
 		if c.Result() != node.ResultT {
 			continue
 		}
-		answer := append([]*shogi.Move{move}, s.searchAnswers(c, ancestors)...)
+		answer := append([]*shogi.Move{move}, s.searchBestAnswer(c, ancestors)...)
 
 		omit := false
 		if len(answer) > 1 {

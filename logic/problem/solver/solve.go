@@ -62,8 +62,8 @@ func (s *Solver) solve(maxDepth int) node.Node {
 	}
 	searcher.searchSolved(root)
 
+	answer := searcher.searchBestAnswer(root, []string{})
 	for {
-		answer := searcher.searchAnswers(root, []string{})
 		l := len(answer)
 		n := searchUnknownNode(root, l, answer)
 		if n == nil {
@@ -72,6 +72,7 @@ func (s *Solver) solve(maxDepth int) node.Node {
 		dfpn.Solve(n.(*dfpn.Node), l)
 		if n.Result() == node.ResultT {
 			searcher.solved[n.Hash()] = n
+			answer = searcher.searchBestAnswer(root, []string{})
 		}
 	}
 	return root
