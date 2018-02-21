@@ -144,7 +144,7 @@ func (g *generator) isCheckmate(state *shogi.State) bool {
 		for _, move := range dst {
 			s := state.Clone()
 			s.Apply(move)
-			root, err := solver.NewSolver(s).SolveWithTimeout(0, g.timeout)
+			root, err := solver.NewSolver(s).SolveWithTimeout(g.timeout)
 			if err != nil {
 				// timed out
 				return false
@@ -279,7 +279,7 @@ func hasMultipleAnswers(n node.Node, depth int) bool {
 
 func (g *generator) isValidProblem(state *shogi.State, steps int) bool {
 	// must consider wasted placing pieces
-	root, err := solver.NewSolver(state).SolveWithTimeout(steps+2, g.timeout)
+	root, err := solver.NewSolver(state).SolveWithTimeout(g.timeout)
 	if err != nil {
 		// timed out
 		return false
@@ -431,6 +431,6 @@ func countChildren(n node.Node, depth int) int {
 }
 
 func (g *generator) calculateScore(state *shogi.State) int {
-	root, _ := solver.NewSolver(state).SolveWithTimeout(g.steps, 0)
+	root, _ := solver.NewSolver(state).SolveWithTimeout(0)
 	return countChildren(root, g.steps+1)
 }

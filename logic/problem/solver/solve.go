@@ -23,12 +23,12 @@ func NewSolver(state *shogi.State) *Solver {
 
 // Solve function
 func Solve(state *shogi.State) []*shogi.Move {
-	root := NewSolver(state).solve(0)
+	root := NewSolver(state).solve()
 	return SearchBestAnswer(root)
 }
 
 // SolveWithTimeout method
-func (s *Solver) SolveWithTimeout(maxDepth int, timeout time.Duration) (node.Node, error) {
+func (s *Solver) SolveWithTimeout(timeout time.Duration) (node.Node, error) {
 	var (
 		ctx    context.Context
 		cancel context.CancelFunc
@@ -42,7 +42,7 @@ func (s *Solver) SolveWithTimeout(maxDepth int, timeout time.Duration) (node.Nod
 
 	c := make(chan node.Node)
 	go func() {
-		c <- s.solve(maxDepth)
+		c <- s.solve()
 	}()
 	select {
 	case <-ctx.Done():
@@ -54,9 +54,9 @@ func (s *Solver) SolveWithTimeout(maxDepth int, timeout time.Duration) (node.Nod
 }
 
 // solve method
-func (s *Solver) solve(maxDepth int) node.Node {
+func (s *Solver) solve() node.Node {
 	root := dfpn.NewNode(s.state, shogi.TurnBlack)
-	dfpn.Solve(root, maxDepth)
+	dfpn.Solve(root, 0)
 	searcher := &searcher{
 		solved: map[string]node.Node{},
 	}
