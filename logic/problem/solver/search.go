@@ -16,17 +16,7 @@ func SearchBestAnswer(n node.Node) []*shogi.Move {
 	s := &searcher{
 		solved: map[string]node.Node{},
 	}
-	s.searchSolved(n)
 	return s.searchBestAnswer(n, []string{})
-}
-
-func (s *searcher) searchSolved(n node.Node) {
-	if n.Result() == node.ResultT {
-		s.solved[n.Hash()] = n
-	}
-	for _, c := range n.Children() {
-		s.searchSolved(c)
-	}
 }
 
 func (s *searcher) searchBestAnswer(n node.Node, ancestors []string) []*shogi.Move {

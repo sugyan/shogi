@@ -60,7 +60,6 @@ func (s *Solver) solve(maxDepth int) node.Node {
 	searcher := &searcher{
 		solved: map[string]node.Node{},
 	}
-	searcher.searchSolved(root)
 
 	answer := searcher.searchBestAnswer(root, []string{})
 	for {
