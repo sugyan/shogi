@@ -320,19 +320,18 @@ func (g *generator) isValidProblem(state *shogi.State, steps int) bool {
 
 func (g *generator) cleanup(state *shogi.State) *shogi.State {
 	// remove unnecessary pieces
-	{
+	for {
+		removed := false
 		posPieces := []*posPiece{}
 		for i := 0; i < 9; i++ {
 			for j := 0; j < 9; j++ {
 				file, rank := 9-i, j+1
 				b := state.GetBoard(file, rank)
-				if b != nil {
-					if b.Piece != shogi.OU {
-						posPieces = append(posPieces, &posPiece{
-							pos:   shogi.Pos(file, rank),
-							piece: b.Piece,
-						})
-					}
+				if b != nil && b.Piece != shogi.OU {
+					posPieces = append(posPieces, &posPiece{
+						pos:   shogi.Pos(file, rank),
+						piece: b.Piece,
+					})
 				}
 			}
 		}
@@ -344,7 +343,11 @@ func (g *generator) cleanup(state *shogi.State) *shogi.State {
 			if s.Check(shogi.TurnBlack) == nil && g.isValidProblem(s, g.steps) {
 				state.SetBoard(pp.pos.File, pp.pos.Rank, nil)
 				state.Captured[shogi.TurnWhite].Add(pp.piece)
+				removed = true
 			}
+		}
+		if !removed {
+			break
 		}
 	}
 	// reaplace TO, NY, NK, NG to KI or TO
