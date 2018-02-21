@@ -1,9 +1,7 @@
 package generator
 
 import (
-	"fmt"
 	"math/rand"
-	"strings"
 	"time"
 
 	"github.com/sugyan/shogi"
@@ -415,17 +413,13 @@ func countChildren(n node.Node, depth int) int {
 	if depth == 0 {
 		return 0
 	}
-	sum := 0
-	m := map[string]node.Node{}
+
+	sum := 1
 	for _, c := range n.Children() {
-		s := []string{}
-		for _, cc := range c.Children() {
-			s = append(s, fmt.Sprintf("%v", cc.Move()))
+		if c.Result() == node.ResultU {
+			continue
 		}
-		m[strings.Join(s, ",")] = c
-	}
-	for _, c := range m {
-		sum += 1 + countChildren(c, depth-1)
+		sum += countChildren(c, depth-1)
 	}
 	return sum
 }
