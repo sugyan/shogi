@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"math"
 	"math/rand"
 	"time"
 
@@ -409,22 +410,58 @@ func (g *generator) cleanup(state *shogi.State) *shogi.State {
 	return state
 }
 
-func countChildren(n node.Node, depth int) int {
+func countScore(n node.Node, depth int) int {
 	if depth == 0 {
 		return 0
 	}
 
 	sum := 1
+	scoreMap := map[node.Result][]int{}
 	for _, c := range n.Children() {
 		if c.Result() == node.ResultU {
 			continue
 		}
-		sum += countChildren(c, depth-1)
+		cc := countScore(c, depth-1)
+		scoreMap[c.Result()] = append(scoreMap[c.Result()], cc)
+	}
+	type minsum struct {
+		min, sum int
+	}
+	ms := map[node.Result]*minsum{
+		node.ResultT: &minsum{math.MaxInt32, 0},
+		node.ResultF: &minsum{math.MaxInt32, 0},
+	}
+	for _, result := range []node.Result{node.ResultT, node.ResultF} {
+		for _, c := range scoreMap[result] {
+			if c < ms[result].min {
+				ms[result].min = c
+			}
+			ms[result].sum += c
+		}
+		if len(scoreMap[result]) == 0 {
+			ms[result].min = 0
+		}
+	}
+	switch n.Move().Turn {
+	case shogi.TurnBlack:
+		switch n.Result() {
+		case node.ResultT:
+			sum += ms[node.ResultT].sum
+		case node.ResultF:
+			sum += ms[node.ResultF].min + ms[node.ResultT].sum
+		}
+	case shogi.TurnWhite:
+		switch n.Result() {
+		case node.ResultT:
+			sum += ms[node.ResultT].min + ms[node.ResultF].sum
+		case node.ResultF:
+			sum += ms[node.ResultF].min
+		}
 	}
 	return sum
 }
 
 func (g *generator) calculateScore(state *shogi.State) int {
 	root, _ := solver.NewSolver(state).SolveWithTimeout(0)
-	return countChildren(root, g.steps+1)
+	return countScore(root, g.steps+1)
 }
