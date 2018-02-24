@@ -1,8 +1,10 @@
 package generator
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/sugyan/shogi"
@@ -417,12 +419,23 @@ func countScore(n node.Node, depth int) int {
 
 	sum := 1
 	scoreMap := map[node.Result][]int{}
+	dup := map[string]struct{}{}
 	for _, c := range n.Children() {
 		if c.Result() == node.ResultU {
 			continue
 		}
-		cc := countScore(c, depth-1)
-		scoreMap[c.Result()] = append(scoreMap[c.Result()], cc)
+		dupKeys := []string{}
+		for _, cc := range c.Children() {
+			dupKeys = append(dupKeys, fmt.Sprintf("%v", cc.Move()))
+		}
+		dupKey := strings.Join(dupKeys, ":")
+		if _, exist := dup[dupKey]; exist {
+			continue
+		} else {
+			dup[dupKey] = struct{}{}
+		}
+		score := countScore(c, depth-1)
+		scoreMap[c.Result()] = append(scoreMap[c.Result()], score)
 	}
 	type minsum struct {
 		min, sum int
