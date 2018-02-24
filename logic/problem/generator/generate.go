@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"strings"
 	"time"
@@ -79,37 +80,18 @@ func (g *generator) generate() *shogi.State {
 					return s
 				}
 			case 3, 5:
-				// TODO
-				var (
-					ok     = false
-					result *shogi.State
-				)
 				states := g.rewind(s, shogi.TurnWhite)
-				for _, i := range rand.Perm(len(states)) {
-					if i > 5 {
-						break
-					}
-					result = states[i]
-					if g.isValidProblem(result, 3) {
-						if g.steps == 3 {
-							g.cleanup(result)
-							return result
-						}
-						ok = true
-						break
-					}
+				if g.steps == 5 && len(states) > 0 {
+					states = append(states, g.rewind(states[rand.Intn(len(states))], shogi.TurnWhite)...)
 				}
-				if ok && g.steps == 5 {
-					states := g.rewind(result, shogi.TurnWhite)
-					for _, i := range rand.Perm(len(states)) {
-						if i > 5 {
-							break
-						}
-						result := states[i]
-						if g.isValidProblem(result, 5) {
-							g.cleanup(result)
-							return result
-						}
+				for _, i := range rand.Perm(len(states)) {
+					if i > 5*(g.steps-1)/2 {
+						break
+					}
+					result := states[i]
+					if g.isValidProblem(result, g.steps) {
+						g.cleanup(result)
+						return result
 					}
 				}
 			}
@@ -411,26 +393,69 @@ func (g *generator) cleanup(state *shogi.State) *shogi.State {
 	return state
 }
 
-func countChildren(n node.Node, depth int) int {
+func countScore(n node.Node, depth int) int {
 	if depth == 0 {
 		return 0
 	}
-	sum := 0
-	m := map[string]node.Node{}
+
+	sum := 1
+	scoreMap := map[node.Result][]int{}
+	dup := map[string]struct{}{}
 	for _, c := range n.Children() {
-		s := []string{}
-		for _, cc := range c.Children() {
-			s = append(s, fmt.Sprintf("%v", cc.Move()))
+		if c.Result() == node.ResultU {
+			continue
 		}
-		m[strings.Join(s, ",")] = c
+		dupKeys := []string{}
+		for _, cc := range c.Children() {
+			dupKeys = append(dupKeys, fmt.Sprintf("%v", cc.Move()))
+		}
+		dupKey := strings.Join(dupKeys, ":")
+		if _, exist := dup[dupKey]; exist {
+			continue
+		} else {
+			dup[dupKey] = struct{}{}
+		}
+		score := countScore(c, depth-1)
+		scoreMap[c.Result()] = append(scoreMap[c.Result()], score)
 	}
-	for _, c := range m {
-		sum += 1 + countChildren(c, depth-1)
+	type minsum struct {
+		min, sum int
+	}
+	ms := map[node.Result]*minsum{
+		node.ResultT: &minsum{math.MaxInt32, 0},
+		node.ResultF: &minsum{math.MaxInt32, 0},
+	}
+	for _, result := range []node.Result{node.ResultT, node.ResultF} {
+		for _, c := range scoreMap[result] {
+			if c < ms[result].min {
+				ms[result].min = c
+			}
+			ms[result].sum += c
+		}
+		if len(scoreMap[result]) == 0 {
+			ms[result].min = 0
+		}
+	}
+	switch n.Move().Turn {
+	case shogi.TurnBlack:
+		switch n.Result() {
+		case node.ResultT:
+			sum += ms[node.ResultT].sum
+		case node.ResultF:
+			sum += ms[node.ResultF].min + ms[node.ResultT].sum
+		}
+	case shogi.TurnWhite:
+		switch n.Result() {
+		case node.ResultT:
+			sum += ms[node.ResultT].min + ms[node.ResultF].sum
+		case node.ResultF:
+			sum += ms[node.ResultF].min
+		}
 	}
 	return sum
 }
 
 func (g *generator) calculateScore(state *shogi.State) int {
 	root, _ := solver.NewSolver(state).SolveWithTimeout(0)
-	return countChildren(root, g.steps+1)
+	return countScore(root, g.steps+1)
 }
