@@ -80,37 +80,18 @@ func (g *generator) generate() *shogi.State {
 					return s
 				}
 			case 3, 5:
-				// TODO
-				var (
-					ok     = false
-					result *shogi.State
-				)
 				states := g.rewind(s, shogi.TurnWhite)
-				for _, i := range rand.Perm(len(states)) {
-					if i > 5 {
-						break
-					}
-					result = states[i]
-					if g.isValidProblem(result, 3) {
-						if g.steps == 3 {
-							g.cleanup(result)
-							return result
-						}
-						ok = true
-						break
-					}
+				if g.steps == 5 && len(states) > 0 {
+					states = append(states, g.rewind(states[rand.Intn(len(states))], shogi.TurnWhite)...)
 				}
-				if ok && g.steps == 5 {
-					states := g.rewind(result, shogi.TurnWhite)
-					for _, i := range rand.Perm(len(states)) {
-						if i > 5 {
-							break
-						}
-						result := states[i]
-						if g.isValidProblem(result, 5) {
-							g.cleanup(result)
-							return result
-						}
+				for _, i := range rand.Perm(len(states)) {
+					if i > 5*(g.steps-1)/2 {
+						break
+					}
+					result := states[i]
+					if g.isValidProblem(result, g.steps) {
+						g.cleanup(result)
+						return result
 					}
 				}
 			}
