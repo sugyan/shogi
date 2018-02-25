@@ -235,6 +235,27 @@ func hasMultipleAnswers(n node.Node, depth int) bool {
 	}
 	switch n.Move().Turn {
 	case shogi.TurnBlack:
+		num := 0
+		for _, c := range n.Children() {
+			if c.Result() == node.ResultT {
+				answer := solver.SearchBestAnswer(c)
+				if len(answer) != depth-1 {
+					continue
+				}
+				s := n.State().Clone()
+				s.Apply(c.Move())
+				for _, m := range answer {
+					s.Apply(m)
+				}
+				if s.Captured[shogi.TurnBlack].Num() == 0 {
+					num++
+				}
+			}
+		}
+		if num > 1 {
+			return true
+		}
+
 		answer := solver.SearchBestAnswer(n)[0]
 		for _, c := range n.Children() {
 			m := c.Move()
