@@ -47,18 +47,27 @@ func (s *searcher) searchBestAnswer(n node.Node, ancestors []string) []*shogi.Mo
 		omit := false
 		if len(answer) > 1 {
 			if move.Turn == shogi.TurnWhite && move.Src.IsCaptured() && answer[1].Dst == move.Dst {
+				isLive := true
+				pos := move.Dst
 				state := n.State().Clone()
-				for _, m := range answer {
+				for i, m := range answer {
+					if m.Turn == shogi.TurnBlack && m.Src == pos {
+						pos = m.Dst
+					}
+					if m.Turn == shogi.TurnWhite && m.Dst == pos && i > 0 {
+						isLive = false
+					}
 					state.Apply(m)
 				}
-				if false ||
-					move.Piece == shogi.FU && state.Captured[shogi.TurnBlack].FU > 0 ||
-					move.Piece == shogi.KY && state.Captured[shogi.TurnBlack].KY > 0 ||
-					move.Piece == shogi.KE && state.Captured[shogi.TurnBlack].KE > 0 ||
-					move.Piece == shogi.GI && state.Captured[shogi.TurnBlack].GI > 0 ||
-					move.Piece == shogi.KI && state.Captured[shogi.TurnBlack].KI > 0 ||
-					move.Piece == shogi.KA && state.Captured[shogi.TurnBlack].KA > 0 ||
-					move.Piece == shogi.HI && state.Captured[shogi.TurnBlack].HI > 0 {
+				isLeft := false ||
+					(move.Piece == shogi.FU && state.Captured[shogi.TurnBlack].FU > 0) ||
+					(move.Piece == shogi.KY && state.Captured[shogi.TurnBlack].KY > 0) ||
+					(move.Piece == shogi.KE && state.Captured[shogi.TurnBlack].KE > 0) ||
+					(move.Piece == shogi.GI && state.Captured[shogi.TurnBlack].GI > 0) ||
+					(move.Piece == shogi.KI && state.Captured[shogi.TurnBlack].KI > 0) ||
+					(move.Piece == shogi.KA && state.Captured[shogi.TurnBlack].KA > 0) ||
+					(move.Piece == shogi.HI && state.Captured[shogi.TurnBlack].HI > 0)
+				if isLive && isLeft {
 					omit = true
 					if len(answer) == 2 {
 						omitted2 = true

@@ -267,6 +267,10 @@ func hasMultipleAnswers(n node.Node, depth int) bool {
 		num := 0
 		for _, c := range n.Children() {
 			if c.Result() == node.ResultT {
+				answer := solver.SearchBestAnswer(c)
+				if len(answer) != depth-1 {
+					continue
+				}
 				num++
 				if hasMultipleAnswers(c, depth-1) {
 					return true
