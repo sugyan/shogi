@@ -11,7 +11,8 @@ import (
 
 // Solver type
 type Solver struct {
-	state *shogi.State
+	state  *shogi.State
+	cancel bool
 }
 
 // NewSolver function
@@ -41,12 +42,17 @@ func (s *Solver) SolveWithTimeout(timeout time.Duration) (node.Node, error) {
 	defer cancel()
 
 	c := make(chan node.Node)
-	go func() {
-		c <- s.solve()
-	}()
+	go func(s *Solver) {
+		result := s.solve()
+		if result != nil {
+			c <- result
+		}
+	}(s)
+	defer close(c)
+
 	select {
 	case <-ctx.Done():
-		// TODO: cancel
+		s.cancel = true
 		return nil, ctx.Err()
 	case ret := <-c:
 		return ret, nil
@@ -63,6 +69,9 @@ func (s *Solver) solve() node.Node {
 
 	answer := searcher.searchBestAnswer(root, []string{})
 	for {
+		if s.cancel {
+			return nil
+		}
 		l := len(answer)
 		n := searchUnknownNode(root, l, answer)
 		if n == nil {
