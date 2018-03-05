@@ -1209,6 +1209,58 @@ func TestMoveString(t *testing.T) {
 		}
 		test(t, state, tests)
 	}
+	// 玉
+	{
+		// P1 *  *  *  *  *  *  *  *  *
+		// P2 *  *  *  *  *  *  *  *  *
+		// P3 *  *  *  *  *  * +OU *  *
+		// P4 *  *  *  *  *  *  *  * +OU
+		// P5 *  *  *  *  *  *  *  *  *
+		// P6-OU *  *  *  *  *  *  *  *
+		// P7 *  * -OU *  *  *  *  *  *
+		// P8 *  *  *  *  *  *  *  *  *
+		// P9 *  *  *  *  *  *  *  *  *
+		state := NewState()
+		state.SetBoard(1, 4, &BoardPiece{TurnBlack, OU})
+		state.SetBoard(3, 3, &BoardPiece{TurnBlack, OU})
+		state.SetBoard(9, 6, &BoardPiece{TurnWhite, OU})
+		state.SetBoard(7, 7, &BoardPiece{TurnWhite, OU})
+		tests := []testData{
+			testData{
+				move:     &Move{TurnBlack, Pos(1, 4), Pos(1, 3), OU},
+				expected: "▲1三玉",
+			},
+			testData{
+				move:     &Move{TurnBlack, Pos(1, 4), Pos(1, 5), OU},
+				expected: "▲1五玉",
+			},
+			testData{
+				move:     &Move{TurnBlack, Pos(3, 3), Pos(2, 2), OU},
+				expected: "▲2二玉",
+			},
+			testData{
+				move:     &Move{TurnBlack, Pos(3, 3), Pos(4, 4), OU},
+				expected: "▲4四玉",
+			},
+			testData{
+				move:     &Move{TurnWhite, Pos(9, 6), Pos(9, 7), OU},
+				expected: "△9七玉",
+			},
+			testData{
+				move:     &Move{TurnWhite, Pos(9, 6), Pos(9, 5), OU},
+				expected: "△9五玉",
+			},
+			testData{
+				move:     &Move{TurnWhite, Pos(7, 7), Pos(8, 8), OU},
+				expected: "△8八玉",
+			},
+			testData{
+				move:     &Move{TurnWhite, Pos(7, 7), Pos(6, 6), OU},
+				expected: "△6六玉",
+			},
+		}
+		test(t, state, tests)
+	}
 }
 
 func test(t *testing.T, state *State, tests []testData) {

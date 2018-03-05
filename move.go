@@ -186,10 +186,15 @@ func (s *State) MoveString(move *Move) (string, error) {
 		}
 		if b.Piece != move.Piece {
 			result += "成"
-		} else if !move.Piece.Promoted() && move.Piece != KI {
-			if (move.Turn == TurnBlack && (move.Src.Rank <= 3 || move.Dst.Rank <= 3)) ||
-				(move.Turn == TurnWhite && (move.Src.Rank >= 7 || move.Dst.Rank >= 7)) {
-				result += "不成"
+		} else if !move.Piece.Promoted() {
+			switch move.Piece {
+			case KI, OU:
+			// noop
+			default:
+				if (move.Turn == TurnBlack && (move.Src.Rank <= 3 || move.Dst.Rank <= 3)) ||
+					(move.Turn == TurnWhite && (move.Src.Rank >= 7 || move.Dst.Rank >= 7)) {
+					result += "不成"
+				}
 			}
 		}
 	}
