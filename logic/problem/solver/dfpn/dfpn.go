@@ -59,7 +59,13 @@ func (s *solver) mid(n *Node) {
 			return
 		}
 	} else {
-		if !(s.maxDepth != 0 && n.move.Turn == shogi.TurnWhite && n.depth+1 > s.maxDepth) {
+		cutoff := false
+		if s.maxDepth != 0 && n.depth+1 > s.maxDepth {
+			if n.move.Turn == shogi.TurnWhite && !n.move.Src.IsCaptured() {
+				cutoff = true
+			}
+		}
+		if !cutoff {
 			for _, ms := range problem.Candidates(n.state, !n.move.Turn) {
 				// checkmating with dropping FU
 				if ms.Move.Turn == shogi.TurnBlack && ms.Move.Src.IsCaptured() && ms.Move.Piece == shogi.FU {
