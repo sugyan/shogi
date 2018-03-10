@@ -22,19 +22,24 @@ func Solve(root *Node, maxDepth int) {
 	root.pn = inf - 1
 	root.dn = inf - 1
 	s.mid(root)
-	if root.pn > 0 && root.dn > 0 {
+	if root.pn < inf && root.dn < inf {
 		root.pn = inf
 		root.dn = inf
 		s.mid(root)
 	}
 	// could not solved perfectly...
 	if root.pn > 0 && root.dn > 0 {
-		switch root.move.Turn {
-		case shogi.TurnBlack:
-			root.result = node.ResultF
-		case shogi.TurnWhite:
+		if root.dn == 0 {
 			root.result = node.ResultT
 		}
+		if root.pn == 0 {
+			root.result = node.ResultF
+		}
+	}
+
+	if root.result == node.ResultU {
+		// ??
+		root.result = node.ResultF
 	}
 }
 
@@ -89,10 +94,10 @@ func (s *solver) mid(n *Node) {
 			n.setP(minD)
 			n.setD(sumP)
 			s.putInHash(n, n.pn, n.dn)
-			if n.dn >= inf {
+			if n.pn == 0 {
 				n.result = node.ResultT
 			}
-			if n.pn >= inf {
+			if n.dn == 0 {
 				n.result = node.ResultF
 			}
 			return
@@ -165,7 +170,7 @@ func (s *solver) selectChild(n *Node) (int, uint32, uint32, uint32) {
 			d2 = dn
 			pn = h.p()
 			dn = h.d()
-		} else if h.pn < d2 {
+		} else if h.d() < d2 {
 			d2 = h.d()
 		}
 		if h.p() == inf {
