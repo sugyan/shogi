@@ -158,7 +158,8 @@ func TestIsValidProblem(t *testing.T) {
 }
 
 func TestCandidatePrevStateS(t *testing.T) {
-	record, err := csa.Parse(bytes.NewBufferString(`
+	{
+		record, err := csa.Parse(bytes.NewBufferString(`
 P1 *  *  *  *  *  * +RY *  * 
 P2 *  *  *  *  *  * -KY * -OU
 P3 *  *  *  *  *  *  *  *  * 
@@ -170,53 +171,100 @@ P8 *  *  *  *  *  *  *  *  *
 P9 *  *  *  *  *  *  *  *  * 
 P-00AL
 `))
-	if err != nil {
-		t.Fatal(err)
-	}
-	candidates := candidatePrevStatesS(
-		record.State,
-		&posPiece{
-			pos:   shogi.Pos(1, 2),
-			piece: shogi.OU,
-		},
-		shogi.Pos(1, 2),
-	)
-	for _, state := range candidates {
-		ok := true
-		for i := 0; i < 9; i++ {
-			for j := 0; j < 9; j++ {
-				file, rank := 9-j, i+1
-				b := state.GetBoard(file, rank)
-				if b != nil {
-					switch b.Turn {
-					case shogi.TurnBlack:
-						switch b.Piece {
-						case shogi.FU, shogi.KY:
-							if rank <= 1 {
-								ok = false
+		if err != nil {
+			t.Fatal(err)
+		}
+		candidates := candidatePrevStatesS(
+			record.State,
+			&posPiece{
+				pos:   shogi.Pos(1, 2),
+				piece: shogi.OU,
+			},
+			shogi.Pos(1, 2),
+		)
+		for _, state := range candidates {
+			ok := true
+			for i := 0; i < 9; i++ {
+				for j := 0; j < 9; j++ {
+					file, rank := 9-j, i+1
+					b := state.GetBoard(file, rank)
+					if b != nil {
+						switch b.Turn {
+						case shogi.TurnBlack:
+							switch b.Piece {
+							case shogi.FU, shogi.KY:
+								if rank <= 1 {
+									ok = false
+								}
+							case shogi.KE:
+								if rank <= 2 {
+									ok = false
+								}
 							}
-						case shogi.KE:
-							if rank <= 2 {
-								ok = false
-							}
-						}
-					case shogi.TurnWhite:
-						switch b.Piece {
-						case shogi.FU, shogi.KY:
-							if rank >= 9 {
-								ok = false
-							}
-						case shogi.KE:
-							if rank >= 8 {
-								ok = false
+						case shogi.TurnWhite:
+							switch b.Piece {
+							case shogi.FU, shogi.KY:
+								if rank >= 9 {
+									ok = false
+								}
+							case shogi.KE:
+								if rank >= 8 {
+									ok = false
+								}
 							}
 						}
 					}
 				}
 			}
+			if !ok {
+				t.Errorf("invalid state:\n%v", csa.InitialState1(state))
+			}
 		}
-		if !ok {
-			t.Errorf("invalid state:\n%v", csa.InitialState1(state))
+	}
+	{
+		record, err := csa.Parse(bytes.NewBufferString(`
+P1 *  *  *  *  *  *  *  *  * 
+P2 *  *  *  *  *  *  *  *  * 
+P3 *  *  *  *  *  * -OU *  * 
+P4 *  *  *  *  * +KE+FU-GI+HI
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
+P7 *  *  *  *  *  *  *  *  * 
+P8 *  *  *  *  *  *  *  *  * 
+P9 *  *  *  *  *  *  *  *  * 
+P-00AL
+`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		candidates := candidatePrevStatesS(
+			record.State,
+			&posPiece{
+				pos:   shogi.Pos(3, 3),
+				piece: shogi.OU,
+			},
+			shogi.Pos(3, 3),
+		)
+		for _, state := range candidates {
+			ok := true
+			for i := 0; i < 9; i++ {
+				fu := map[shogi.Turn]int{}
+				file := 9 - i
+				for j := 0; j < 9; j++ {
+					rank := j + 1
+					b := state.GetBoard(file, rank)
+					if b != nil && b.Piece == shogi.FU {
+						fu[b.Turn]++
+					}
+				}
+				if fu[shogi.TurnBlack] > 1 || fu[shogi.TurnWhite] > 1 {
+					ok = false
+					break
+				}
+			}
+			if !ok {
+				t.Errorf("invalid state:\n%v", csa.InitialState1(state))
+			}
 		}
 	}
 }

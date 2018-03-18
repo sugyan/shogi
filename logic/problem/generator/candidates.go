@@ -291,8 +291,8 @@ func candidatePrevStatesS(state *shogi.State, pp *posPiece, targetPos shogi.Posi
 						}
 						if piece == shogi.FU {
 							for i := 0; i < 9; i++ {
-								bpf := state.GetBoard(i+1, pp.pos.Rank)
-								if bpf != nil && bpf.Turn == shogi.TurnWhite && bpf.Piece == shogi.FU {
+								bpf := state.GetBoard(pp.pos.File, i+1)
+								if bpf != nil && bpf.Turn == shogi.TurnBlack && bpf.Piece == shogi.FU {
 									ok = false
 									break
 								}
