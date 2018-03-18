@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/color/palette"
+	"image/gif"
 	"image/png"
 	"math/rand"
 	"time"
@@ -62,6 +64,9 @@ const (
 	PieceRyokoTorafu
 	PieceDirty
 )
+
+// DefaultGifDelay variable
+var DefaultGifDelay = 100
 
 // StyleOptions type
 type StyleOptions struct {
@@ -178,6 +183,40 @@ func Generate(state *shogi.State, options *StyleOptions) (image.Image, error) {
 		}
 	}
 	return dst, nil
+}
+
+// GenerateGIF function
+func GenerateGIF(state *shogi.State, moves []*shogi.Move, options *StyleOptions) (*gif.GIF, error) {
+	options = checkOptions(options)
+
+	// first frame
+	s := state.Clone()
+	img, err := Generate(s, options)
+	if err != nil {
+		return nil, err
+	}
+	p := image.NewPaletted(img.Bounds(), palette.WebSafe)
+	draw.FloydSteinberg.Draw(p, img.Bounds(), img, image.ZP)
+	// moved frames
+	images := []*image.Paletted{p}
+	delays := []int{DefaultGifDelay}
+	for _, move := range moves {
+		s.Apply(move)
+		options.HighLight = &move.Dst
+		img, err := Generate(s, options)
+		if err != nil {
+			return nil, err
+		}
+		p := image.NewPaletted(img.Bounds(), palette.WebSafe)
+		draw.FloydSteinberg.Draw(p, img.Bounds(), img, image.ZP)
+		images = append(images, p)
+		delays = append(delays, DefaultGifDelay)
+	}
+	delays[len(delays)-1] *= 2
+	return &gif.GIF{
+		Image: images,
+		Delay: delays,
+	}, nil
 }
 
 func checkOptions(so *StyleOptions) *StyleOptions {
