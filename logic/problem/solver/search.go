@@ -33,14 +33,7 @@ func (s *searcher) searchBestAnswer(n node.Node, ancestors []string) []*shogi.Mo
 	if len(n.Children()) == 0 {
 		return []*shogi.Move{}
 	}
-	// prevent cycle
-	hash := n.Hash()
-	for _, ancestor := range ancestors {
-		if ancestor == hash {
-			return []*shogi.Move{}
-		}
-	}
-	ancestors = append(ancestors, hash)
+	ancestors = append(ancestors, n.Hash())
 
 	answers := [][]*shogi.Move{}
 	omitted2 := false
@@ -50,6 +43,17 @@ func (s *searcher) searchBestAnswer(n node.Node, ancestors []string) []*shogi.Mo
 			c = solved
 		}
 		if c.Result() != node.ResultT {
+			continue
+		}
+		// prevent cycle
+		ok := true
+		for _, ancestor := range ancestors {
+			if ancestor == c.Hash() {
+				ok = false
+				break
+			}
+		}
+		if !ok {
 			continue
 		}
 		answer := append([]*shogi.Move{move}, s.searchBestAnswer(c, ancestors)...)
