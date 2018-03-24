@@ -75,6 +75,70 @@ func TestParse(t *testing.T) {
 				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(2, 1), Dst: shogi.Pos(1, 2), Piece: shogi.UM},
 			},
 		},
+		"everyday_171001.kif": parsed{
+			moves: []*shogi.Move{
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(2, 4), Dst: shogi.Pos(1, 2), Piece: shogi.NK},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(1, 3), Dst: shogi.Pos(1, 2), Piece: shogi.OU},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(0, 0), Dst: shogi.Pos(1, 3), Piece: shogi.GI},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(1, 2), Dst: shogi.Pos(1, 3), Piece: shogi.OU},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(0, 0), Dst: shogi.Pos(2, 5), Piece: shogi.KE},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(1, 3), Dst: shogi.Pos(1, 2), Piece: shogi.OU},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(3, 4), Dst: shogi.Pos(3, 2), Piece: shogi.RY},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(2, 3), Dst: shogi.Pos(3, 2), Piece: shogi.KA},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(0, 0), Dst: shogi.Pos(1, 3), Piece: shogi.KI},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(1, 2), Dst: shogi.Pos(2, 1), Piece: shogi.OU},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(2, 5), Dst: shogi.Pos(3, 3), Piece: shogi.KE},
+			},
+		},
+		"everyday_171101.kif": parsed{
+			moves: []*shogi.Move{
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(2, 6), Dst: shogi.Pos(3, 4), Piece: shogi.KE},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(2, 2), Dst: shogi.Pos(1, 3), Piece: shogi.OU},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(0, 0), Dst: shogi.Pos(1, 2), Piece: shogi.KI},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(1, 3), Dst: shogi.Pos(1, 2), Piece: shogi.OU},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(3, 1), Dst: shogi.Pos(1, 1), Piece: shogi.RY},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(1, 2), Dst: shogi.Pos(1, 1), Piece: shogi.OU},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(0, 0), Dst: shogi.Pos(2, 2), Piece: shogi.KI},
+			},
+		},
+		"everyday_171201.kif": parsed{
+			moves: []*shogi.Move{
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(0, 0), Dst: shogi.Pos(3, 1), Piece: shogi.KI},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(2, 1), Dst: shogi.Pos(3, 1), Piece: shogi.OU},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(4, 4), Dst: shogi.Pos(5, 3), Piece: shogi.UM},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(2, 3), Dst: shogi.Pos(5, 3), Piece: shogi.RY},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(0, 0), Dst: shogi.Pos(3, 2), Piece: shogi.KI},
+			},
+		},
+		"everyday_180101.kif": parsed{
+			moves: []*shogi.Move{
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(3, 4), Dst: shogi.Pos(2, 2), Piece: shogi.NK},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(2, 3), Dst: shogi.Pos(2, 2), Piece: shogi.OU},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(0, 0), Dst: shogi.Pos(2, 3), Piece: shogi.GI},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(2, 2), Dst: shogi.Pos(2, 3), Piece: shogi.OU},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(0, 0), Dst: shogi.Pos(3, 5), Piece: shogi.KE},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(2, 3), Dst: shogi.Pos(2, 2), Piece: shogi.OU},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(4, 4), Dst: shogi.Pos(4, 2), Piece: shogi.RY},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(1, 5), Dst: shogi.Pos(4, 2), Piece: shogi.KA},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(0, 0), Dst: shogi.Pos(2, 3), Piece: shogi.KI},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(2, 2), Dst: shogi.Pos(3, 1), Piece: shogi.OU},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(3, 5), Dst: shogi.Pos(4, 3), Piece: shogi.KE},
+			},
+		},
+		"everyday_180201.kif": parsed{
+			moves: []*shogi.Move{
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(0, 0), Dst: shogi.Pos(2, 3), Piece: shogi.HI},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(2, 4), Dst: shogi.Pos(2, 3), Piece: shogi.HI},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(3, 1), Dst: shogi.Pos(4, 2), Piece: shogi.UM},
+			},
+		},
+		"everyday_180301.kif": parsed{
+			moves: []*shogi.Move{
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(0, 0), Dst: shogi.Pos(2, 4), Piece: shogi.KA},
+				&shogi.Move{Turn: shogi.TurnWhite, Src: shogi.Pos(3, 3), Dst: shogi.Pos(2, 4), Piece: shogi.OU},
+				&shogi.Move{Turn: shogi.TurnBlack, Src: shogi.Pos(0, 0), Dst: shogi.Pos(3, 4), Piece: shogi.KI},
+			},
+		},
 	}
 
 	dir, err := os.Getwd()

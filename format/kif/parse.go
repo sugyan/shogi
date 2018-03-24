@@ -81,7 +81,7 @@ func Parse(r io.Reader) (*record.Record, error) {
 		boardFlag = false
 		row       = 0
 		handsRE   = regexp.MustCompile(`(先|後)手の持駒：(.*)`)
-		movesRE   = regexp.MustCompile(`(\d)\s([１２３４５６７８９同]\S+)`)
+		movesRE   = regexp.MustCompile(`(\d+)\s([１２３４５６７８９同]\S+)`)
 		pieceRE   = regexp.MustCompile(`(?:[歩と金角馬飛龍玉]|成?[香桂銀])`)
 		mvSrcRE   = regexp.MustCompile(`\(([1-9])([1-9])\)`)
 	)
@@ -147,6 +147,9 @@ func Parse(r io.Reader) (*record.Record, error) {
 		case movesRE.MatchString(line):
 			submatch := movesRE.FindStringSubmatch(line)
 			index, _ := strconv.Atoi(submatch[1])
+			if len(moves) > index-1 {
+				continue
+			}
 			runes := []rune(submatch[2])
 			move := &shogi.Move{}
 			move.Turn = shogi.TurnBlack
