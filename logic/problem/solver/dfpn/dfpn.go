@@ -6,7 +6,7 @@ import (
 	"github.com/sugyan/shogi/logic/problem/solver/node"
 )
 
-const inf = uint32(1) << 12
+const inf = uint32(10000)
 
 type solver struct {
 	hash     map[string]*hash

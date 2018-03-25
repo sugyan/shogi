@@ -63,6 +63,10 @@ func (s *Solver) SolveWithTimeout(timeout time.Duration) (node.Node, error) {
 func (s *Solver) solve() node.Node {
 	root := dfpn.NewNode(s.state, shogi.TurnBlack)
 	dfpn.Solve(root, 0)
+	if root.Result() == node.ResultF {
+		return root
+	}
+
 	searcher := &searcher{
 		solved: map[string]node.Node{},
 	}
