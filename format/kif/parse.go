@@ -16,7 +16,8 @@ import (
 	"golang.org/x/text/transform"
 )
 
-const separator = "+---------------------------+"
+const stateSeparator = "+---------------------------+"
+const movesSeparator = "手数----指手---------消費時間--"
 
 var pieceMap = map[rune]shogi.Piece{
 	'歩': shogi.FU,
@@ -74,11 +75,17 @@ func Parse(r io.Reader) (*record.Record, error) {
 		return nil, err
 	}
 
+	type movesContent struct {
+		index   int
+		move    *shogi.Move
+		comment *string
+	}
 	state := shogi.NewState()
-	moves := []*shogi.Move{}
+	movesContents := []*movesContent{}
 	var (
 		prevMove  *shogi.Move
 		boardFlag = false
+		movesFlag = false
 		row       = 0
 		handsRE   = regexp.MustCompile(`(先|後)手の持駒：(.*)`)
 		movesRE   = regexp.MustCompile(`(\d+)\s([１２３４５６７８９同]\S+)`)
@@ -88,8 +95,12 @@ func Parse(r io.Reader) (*record.Record, error) {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if line == separator {
+		switch line {
+		case stateSeparator:
 			boardFlag = !boardFlag
+			continue
+		case movesSeparator:
+			movesFlag = !movesFlag
 			continue
 		}
 		if boardFlag {
@@ -120,36 +131,15 @@ func Parse(r io.Reader) (*record.Record, error) {
 			}
 			row++
 		}
-		switch {
-		case handsRE.MatchString(line):
-			spacesRE := regexp.MustCompile(`[ 　]+`)
-			submatch := handsRE.FindStringSubmatch(line)
-			for _, s := range spacesRE.Split(submatch[2], -1) {
-				if len(s) == 0 {
-					continue
-				}
-				runes := []rune(s)
-				var turn shogi.Turn
-				switch submatch[1] {
-				case "先":
-					turn = shogi.TurnBlack
-				case "後":
-					turn = shogi.TurnWhite
-				}
-				n := 1
-				if len(runes[1:]) > 0 {
-					n = numberMap[string(runes[1:])]
-				}
-				for i := 0; i < n; i++ {
-					state.Captured[turn].Add(pieceMap[runes[0]])
-				}
-			}
-		case movesRE.MatchString(line):
-			submatch := movesRE.FindStringSubmatch(line)
-			index, _ := strconv.Atoi(submatch[1])
-			if len(moves) > index-1 {
+		if movesFlag {
+			if !movesRE.MatchString(line) {
+				movesContents = append(movesContents, &movesContent{
+					comment: &line,
+				})
 				continue
 			}
+			submatch := movesRE.FindStringSubmatch(line)
+			index, _ := strconv.Atoi(submatch[1])
 			runes := []rune(submatch[2])
 			move := &shogi.Move{}
 			move.Turn = shogi.TurnBlack
@@ -185,10 +175,57 @@ func Parse(r io.Reader) (*record.Record, error) {
 					shogi.HI: shogi.RY,
 				}[move.Piece]
 			}
-			moves = append(moves, move)
+			movesContents = append(movesContents, &movesContent{
+				index: index,
+				move:  move,
+			})
 			prevMove = move
 		}
+		if handsRE.MatchString(line) {
+			spacesRE := regexp.MustCompile(`[ 　]+`)
+			submatch := handsRE.FindStringSubmatch(line)
+			for _, s := range spacesRE.Split(submatch[2], -1) {
+				if len(s) == 0 {
+					continue
+				}
+				runes := []rune(s)
+				var turn shogi.Turn
+				switch submatch[1] {
+				case "先":
+					turn = shogi.TurnBlack
+				case "後":
+					turn = shogi.TurnWhite
+				}
+				n := 1
+				if len(runes[1:]) > 0 {
+					n = numberMap[string(runes[1:])]
+				}
+				for i := 0; i < n; i++ {
+					state.Captured[turn].Add(pieceMap[runes[0]])
+				}
+			}
+		}
 	}
+	moves := []*shogi.Move{}
+	finishCommentRE := regexp.MustCompile(`(?:解説|解答図)`)
+	for _, mc := range movesContents {
+		if mc.index != 0 && mc.move != nil {
+			if mc.index > len(moves) {
+				moves = append(moves, mc.move)
+			} else {
+				if mc.index == 1 {
+					moves = []*shogi.Move{mc.move}
+				} else {
+					moves[mc.index-1] = mc.move
+				}
+			}
+		} else {
+			if finishCommentRE.MatchString(*mc.comment) {
+				break
+			}
+		}
+	}
+
 	return &record.Record{
 		State: state,
 		Moves: moves,
