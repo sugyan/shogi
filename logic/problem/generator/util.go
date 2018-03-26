@@ -68,6 +68,9 @@ func random() *shogi.State {
 						continue
 					}
 				}
+				if turn == shogi.TurnWhite && p.Rank >= 9 {
+					piece = shogi.TO
+				}
 			case shogi.KY:
 				if turn == shogi.TurnBlack {
 					if p.Rank <= 3 && rand.Intn(4) == 0 {
@@ -76,6 +79,9 @@ func random() *shogi.State {
 						turn = shogi.TurnWhite
 					}
 				}
+				if turn == shogi.TurnWhite && p.Rank >= 9 {
+					turn = shogi.TurnBlack
+				}
 			case shogi.KE:
 				if turn == shogi.TurnBlack {
 					if p.Rank <= 3 && rand.Intn(4) == 0 {
@@ -83,6 +89,9 @@ func random() *shogi.State {
 					} else if p.Rank <= 2 {
 						turn = shogi.TurnWhite
 					}
+				}
+				if turn == shogi.TurnWhite && p.Rank >= 8 {
+					turn = shogi.TurnBlack
 				}
 			case shogi.GI:
 				if turn == shogi.TurnBlack {

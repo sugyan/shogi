@@ -18,9 +18,45 @@ type data struct {
 	expected bool
 }
 
-var isCheckmateData = []*data{
-	&data{
-		input: `
+func TestRandom(t *testing.T) {
+	for n := 0; n < 100; n++ {
+		state := random()
+		for i := 0; i < 9; i++ {
+			for j := 0; j < 9; j++ {
+				file, rank := 9-j, i+1
+				b := state.GetBoard(file, rank)
+				if b == nil {
+					continue
+				}
+				switch b.Turn {
+				case shogi.TurnBlack:
+					if rank <= 1 && (b.Piece == shogi.FU || b.Piece == shogi.KY) {
+						t.Errorf("invalid BoardPiece %v in (%d, %d)", b.Piece, file, rank)
+						break
+					}
+					if rank <= 2 && (b.Piece == shogi.KE) {
+						t.Errorf("invalid BoardPiece %v in (%d, %d)", b.Piece, file, rank)
+						break
+					}
+				case shogi.TurnWhite:
+					if rank >= 9 && (b.Piece == shogi.FU || b.Piece == shogi.KY) {
+						t.Errorf("invalid BoardPiece %v in (%d, %d)", b.Piece, file, rank)
+						break
+					}
+					if rank >= 8 && (b.Piece == shogi.KE) {
+						t.Errorf("invalid BoardPiece %v in (%d, %d)", b.Piece, file, rank)
+						break
+					}
+				}
+			}
+		}
+	}
+}
+
+func TestIsCheckmate(t *testing.T) {
+	var isCheckmateData = []*data{
+		&data{
+			input: `
 P1 *  *  *  *  *  * +TO * -KI
 P2 *  *  *  *  *  *  * -OU * 
 P3 *  *  *  * +RY *  * +UM-GI
@@ -32,10 +68,10 @@ P8 *  *  *  *  *  *  *  *  *
 P9 *  *  *  *  *  *  *  *  * 
 P-00AL
 `,
-		expected: false,
-	},
-	&data{
-		input: `
+			expected: false,
+		},
+		&data{
+			input: `
 P1 *  *  *  *  *  * +TO * -KI
 P2 *  *  *  *  *  *  * -OU * 
 P3 *  *  *  * +RY *  * -KI-GI
@@ -47,10 +83,10 @@ P8 *  *  *  *  *  *  *  *  *
 P9 *  *  *  *  *  *  *  *  * 
 P-00AL
 `,
-		expected: false,
-	},
-	&data{
-		input: `
+			expected: false,
+		},
+		&data{
+			input: `
 P1 *  *  *  *  *  * +TO * -KI
 P2 *  *  *  *  * +RY * -OU * 
 P3 *  *  *  *  *  *  * -KI-GI
@@ -62,10 +98,10 @@ P8 *  *  *  *  *  *  *  *  *
 P9 *  *  *  *  *  *  *  *  * 
 P-00AL
 	`,
-		expected: true,
-	},
-	&data{
-		input: `
+			expected: true,
+		},
+		&data{
+			input: `
 P1 *  *  *  *  *  * +TO * -KI
 P2 *  * +RY *  *  *  * -OU * 
 P3 *  *  *  * +KA *  * -KI-GI
@@ -77,10 +113,10 @@ P8 *  *  *  *  *  *  *  *  *
 P9 *  *  *  *  *  *  *  *  * 
 P-00AL
 	`,
-		expected: true,
-	},
-	&data{
-		input: `
+			expected: true,
+		},
+		&data{
+			input: `
 P1 *  *  *  *  *  *  *  * -KI
 P2 *  *  *  *  * +RY * -OU * 
 P3 *  *  *  *  *  *  * -KI-GI
@@ -92,11 +128,10 @@ P8 *  *  *  *  *  *  *  *  *
 P9 *  *  *  *  *  *  *  *  * 
 P-00AL
 `,
-		expected: false,
-	},
-}
+			expected: false,
+		},
+	}
 
-func TestIsCheckmate(t *testing.T) {
 	g := &generator{}
 	for i, data := range isCheckmateData {
 		record, err := csa.Parse(bytes.NewBufferString(data.input))
