@@ -45,7 +45,7 @@ func random() *shogi.State {
 				piece = originalPiece
 				turn  = shogi.TurnBlack
 			)
-			if rand.Intn(3) > 0 {
+			if rand.Intn(4) > 0 {
 				turn = shogi.TurnWhite
 			}
 			switch originalPiece {
