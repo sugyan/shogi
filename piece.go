@@ -1,133 +1,99 @@
 package shogi
 
 // Piece type
-type Piece interface {
-	String() string
-	Promoted() bool
-}
+type Piece uint8
 
-type piece struct {
-	code string
-}
+const w = 0x01 << 4
+const p = 0x01 << 5
 
-// variables
-var (
-	FU = &piece{"FU"} // 歩
-	KY = &piece{"KY"} // 香
-	KE = &piece{"KE"} // 桂
-	GI = &piece{"GI"} // 銀
-	KI = &piece{"KI"} // 金
-	KA = &piece{"KA"} // 角
-	HI = &piece{"HI"} // 飛
-	OU = &piece{"OU"} // 王, 玉
-	TO = &piece{"TO"} // と
-	NY = &piece{"NY"} // 成香
-	NK = &piece{"NK"} // 成桂
-	NG = &piece{"NG"} // 成銀
-	UM = &piece{"UM"} // 馬
-	RY = &piece{"RY"} // 龍
+// Piece constants
+const (
+	BLANK Piece    = 0
+	fu    Piece    = iota // 歩
+	ky                    // 香
+	ke                    // 桂
+	gi                    // 銀
+	ki                    // 金
+	ka                    // 角
+	hi                    // 飛
+	ou                    // 玉
+	to    = fu | p        // と
+	ny    = ky | p        // 成香
+	nk    = ke | p        // 成桂
+	ng    = gi | p        // 成銀
+	um    = ka | p        // 馬
+	ry    = hi | p        // 竜
+	BFU   = fu
+	BKY   = ky
+	BKE   = ke
+	BGI   = gi
+	BKI   = ki
+	BKA   = ka
+	BHI   = hi
+	BOU   = ou
+	BTO   = to
+	BNY   = ny
+	BNK   = nk
+	BNG   = ng
+	BUM   = um
+	BRY   = ry
+	WFU   = BFU | w
+	WKY   = BKY | w
+	WKE   = BKE | w
+	WGI   = BGI | w
+	WKI   = BKI | w
+	WKA   = BKA | w
+	WHI   = BHI | w
+	WOU   = BOU | w
+	WTO   = BTO | w
+	WNY   = BNY | w
+	WNK   = BNK | w
+	WNG   = BNG | w
+	WUM   = BUM | w
+	WRY   = BRY | w
 )
 
-var promoteMap = map[Piece]Piece{
-	FU: TO,
-	KY: NY,
-	KE: NK,
-	GI: NG,
-	KA: UM,
-	HI: RY,
+var pieceStringMap = map[Piece]string{
+	BLANK: " * ",
+	BFU:   "+FU",
+	BKY:   "+KY",
+	BKE:   "+KE",
+	BGI:   "+GI",
+	BKI:   "+KI",
+	BKA:   "+KA",
+	BHI:   "+HI",
+	BOU:   "+OU",
+	BTO:   "+TO",
+	BNY:   "+NY",
+	BNK:   "+NK",
+	BNG:   "+NG",
+	BUM:   "+UM",
+	BRY:   "+RY",
+	WFU:   "-FU",
+	WKY:   "-KY",
+	WKE:   "-KE",
+	WGI:   "-GI",
+	WKI:   "-KI",
+	WKA:   "-KA",
+	WHI:   "-HI",
+	WOU:   "-OU",
+	WTO:   "-TO",
+	WNY:   "-NY",
+	WNK:   "-NK",
+	WNG:   "-NG",
+	WUM:   "-UM",
+	WRY:   "-RY",
 }
 
-func (p *piece) String() string {
-	return p.code
+// String method
+func (piece Piece) String() string {
+	if s, exist := pieceStringMap[piece]; exist {
+		return s
+	}
+	return ""
 }
 
-func (p *piece) Promoted() bool {
-	switch p {
-	case TO, NY, NK, NG, UM, RY:
-		return true
-	}
-	return false
-}
-
-// CapturedPieces type
-type CapturedPieces struct {
-	FU int
-	KY int
-	KE int
-	GI int
-	KI int
-	KA int
-	HI int
-}
-
-// Num method
-func (cp *CapturedPieces) Num() int {
-	return cp.FU + cp.KY + cp.KE + cp.GI + cp.KI + cp.KA + cp.HI
-}
-
-// Add method
-func (cp *CapturedPieces) Add(p Piece) {
-	switch p {
-	case FU, TO:
-		cp.FU++
-	case KY, NY:
-		cp.KY++
-	case KE, NK:
-		cp.KE++
-	case GI, NG:
-		cp.GI++
-	case KI:
-		cp.KI++
-	case KA, UM:
-		cp.KA++
-	case HI, RY:
-		cp.HI++
-	}
-}
-
-// Sub method
-func (cp *CapturedPieces) Sub(p Piece) {
-	switch p {
-	case FU, TO:
-		cp.FU--
-	case KY, NY:
-		cp.KY--
-	case KE, NK:
-		cp.KE--
-	case GI, NG:
-		cp.GI--
-	case KI:
-		cp.KI--
-	case KA, UM:
-		cp.KA--
-	case HI, RY:
-		cp.HI--
-	}
-}
-
-// Available method
-func (cp *CapturedPieces) Available() []Piece {
-	results := []Piece{}
-	if cp.FU > 0 {
-		results = append(results, FU)
-	}
-	if cp.KY > 0 {
-		results = append(results, KY)
-	}
-	if cp.KE > 0 {
-		results = append(results, KE)
-	}
-	if cp.GI > 0 {
-		results = append(results, GI)
-	}
-	if cp.KI > 0 {
-		results = append(results, KI)
-	}
-	if cp.KA > 0 {
-		results = append(results, KA)
-	}
-	if cp.HI > 0 {
-		results = append(results, HI)
-	}
-	return results
+// IsPromoted method
+func (piece Piece) IsPromoted() bool {
+	return piece&p != 0
 }

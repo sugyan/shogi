@@ -1,8 +1,11 @@
-package csa
+package csa_test
 
-import "testing"
-import "bytes"
-import "github.com/sugyan/shogi"
+import (
+	"bytes"
+	"testing"
+
+	"github.com/sugyan/shogi/format/csa"
+)
 
 func TestParse(t *testing.T) {
 	data := `'----------棋譜ファイルの例"example.csa"-----------------
@@ -26,13 +29,13 @@ $TIME_LIMIT:00:25+00
 $OPENING:YAGURA
 '平手の局面
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
-P2 * -HI *  *  *  *  * -KA * 
+P2 * -HI *  *  *  *  * -KA *
 P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
-P4 *  *  *  *  *  *  *  *  * 
-P5 *  *  *  *  *  *  *  *  * 
-P6 *  *  *  *  *  *  *  *  * 
+P4 *  *  *  *  *  *  *  *  *
+P5 *  *  *  *  *  *  *  *  *
+P6 *  *  *  *  *  *  *  *  *
 P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
-P8 * +KA *  *  *  *  * +HI * 
+P8 * +KA *  *  *  *  * +HI *
 P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 '先手番
 +
@@ -44,25 +47,8 @@ T6
 %CHUDAN
 '---------------------------------------------------------`
 
-	record, err := Parse(bytes.NewBufferString(data))
+	record, err := csa.Parse(bytes.NewBufferString(data))
 	if err != nil {
 		t.Fatal(err)
-	}
-	{
-		b := record.State.GetBoard(5, 1)
-		if b != nil && b.Turn == shogi.TurnWhite && b.Piece == shogi.OU {
-		} else {
-			t.Error("5, 1 is not OU")
-		}
-	}
-	{
-		b := record.State.GetBoard(5, 9)
-		if b != nil && b.Turn == shogi.TurnBlack && b.Piece == shogi.OU {
-		} else {
-			t.Error("5, 9 is not OU")
-		}
-	}
-	if len(record.Moves) != 2 {
-		t.Error("moves count is not 2")
 	}
 }
