@@ -1,7 +1,6 @@
 package csa_test
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/sugyan/shogi/format/csa"
@@ -47,8 +46,11 @@ T6
 %CHUDAN
 '---------------------------------------------------------`
 
-	record, err := csa.Parse(bytes.NewBufferString(data))
+	record, err := csa.ParseString(data)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if len(record.Moves) != 2 {
+		t.Errorf("moves count got: %d, expected: 2", len(record.Moves))
 	}
 }
