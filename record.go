@@ -2,7 +2,7 @@ package shogi
 
 // Player type
 type Player struct {
-	Namee string
+	Name string
 }
 
 // Record type

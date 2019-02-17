@@ -1,8 +1,10 @@
 package csa_test
 
 import (
+	"reflect"
 	"testing"
 
+	"github.com/sugyan/shogi"
 	"github.com/sugyan/shogi/format/csa"
 )
 
@@ -28,13 +30,13 @@ $TIME_LIMIT:00:25+00
 $OPENING:YAGURA
 '平手の局面
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
-P2 * -HI *  *  *  *  * -KA *
+P2 * -HI *  *  *  *  * -KA * 
 P3-FU-FU-FU-FU-FU-FU-FU-FU-FU
-P4 *  *  *  *  *  *  *  *  *
-P5 *  *  *  *  *  *  *  *  *
-P6 *  *  *  *  *  *  *  *  *
+P4 *  *  *  *  *  *  *  *  * 
+P5 *  *  *  *  *  *  *  *  * 
+P6 *  *  *  *  *  *  *  *  * 
 P7+FU+FU+FU+FU+FU+FU+FU+FU+FU
-P8 * +KA *  *  *  *  * +HI *
+P8 * +KA *  *  *  *  * +HI * 
 P9+KY+KE+GI+KI+OU+KI+GI+KE+KY
 '先手番
 +
@@ -46,11 +48,34 @@ T6
 %CHUDAN
 '---------------------------------------------------------`
 
+	expected := &shogi.Record{
+		Players: [2]*shogi.Player{
+			{Name: "NAKAHARA"},
+			{Name: "YONENAGA"},
+		},
+		State: &shogi.State{
+			Board: [9][9]shogi.Piece{
+				{shogi.WKY, shogi.WKE, shogi.WGI, shogi.WKI, shogi.WOU, shogi.WKI, shogi.WGI, shogi.WKE, shogi.WKY},
+				{shogi.BLANK, shogi.WHI, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.WKA, shogi.BLANK},
+				{shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU},
+				{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+				{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+				{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+				{shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU},
+				{shogi.BLANK, shogi.BKA, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BHI, shogi.BLANK},
+				{shogi.BKY, shogi.BKE, shogi.BGI, shogi.BKI, shogi.BOU, shogi.BKI, shogi.BGI, shogi.BKE, shogi.BKY},
+			},
+		},
+		Moves: []*shogi.Move{
+			{Src: shogi.Position{File: 2, Rank: 7}, Dst: shogi.Position{File: 2, Rank: 6}, Piece: shogi.BFU},
+			{Src: shogi.Position{File: 3, Rank: 3}, Dst: shogi.Position{File: 3, Rank: 4}, Piece: shogi.WFU},
+		},
+	}
 	record, err := csa.ParseString(data)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(record.Moves) != 2 {
-		t.Errorf("moves count got: %d, expected: 2", len(record.Moves))
+	if !reflect.DeepEqual(record, expected) {
+		t.Errorf("got: %v, expected: %v", record, expected)
 	}
 }

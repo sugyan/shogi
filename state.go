@@ -21,11 +21,11 @@ type captured struct {
 
 // State struct
 type State struct {
-	board    [9][9]Piece
-	captured [2]captured
+	Board    [9][9]Piece
+	Captured [2]captured
 }
 
 // SetPiece method
 func (s *State) SetPiece(file, rank uint8, piece Piece) {
-	s.board[rank-1][9-file] = piece
+	s.Board[rank-1][9-file] = piece
 }
