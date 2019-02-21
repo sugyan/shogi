@@ -9,7 +9,12 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	data := `'----------棋譜ファイルの例"example.csa"-----------------
+	tests := []struct {
+		data     string
+		expected *shogi.Record
+	}{
+		{
+			`'----------棋譜ファイルの例"example.csa"-----------------
 'バージョン
 V2.2
 '対局者名
@@ -46,36 +51,58 @@ T12
 -3334FU
 T6
 %CHUDAN
-'---------------------------------------------------------`
-
-	expected := &shogi.Record{
-		Players: [2]*shogi.Player{
-			{Name: "NAKAHARA"},
-			{Name: "YONENAGA"},
-		},
-		State: &shogi.State{
-			Board: [9][9]shogi.Piece{
-				{shogi.WKY, shogi.WKE, shogi.WGI, shogi.WKI, shogi.WOU, shogi.WKI, shogi.WGI, shogi.WKE, shogi.WKY},
-				{shogi.BLANK, shogi.WHI, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.WKA, shogi.BLANK},
-				{shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU},
-				{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
-				{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
-				{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
-				{shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU},
-				{shogi.BLANK, shogi.BKA, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BHI, shogi.BLANK},
-				{shogi.BKY, shogi.BKE, shogi.BGI, shogi.BKI, shogi.BOU, shogi.BKI, shogi.BGI, shogi.BKE, shogi.BKY},
+'---------------------------------------------------------`,
+			&shogi.Record{
+				Players: [2]*shogi.Player{
+					{Name: "NAKAHARA"},
+					{Name: "YONENAGA"},
+				},
+				State: &shogi.State{
+					Board: [9][9]shogi.Piece{
+						{shogi.WKY, shogi.WKE, shogi.WGI, shogi.WKI, shogi.WOU, shogi.WKI, shogi.WGI, shogi.WKE, shogi.WKY},
+						{shogi.BLANK, shogi.WHI, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.WKA, shogi.BLANK},
+						{shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU},
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+						{shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU},
+						{shogi.BLANK, shogi.BKA, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BHI, shogi.BLANK},
+						{shogi.BKY, shogi.BKE, shogi.BGI, shogi.BKI, shogi.BOU, shogi.BKI, shogi.BGI, shogi.BKE, shogi.BKY},
+					},
+				},
+				Moves: []*shogi.Move{
+					{Src: shogi.Position{File: 2, Rank: 7}, Dst: shogi.Position{File: 2, Rank: 6}, Piece: shogi.BFU},
+					{Src: shogi.Position{File: 3, Rank: 3}, Dst: shogi.Position{File: 3, Rank: 4}, Piece: shogi.WFU},
+				},
 			},
 		},
-		Moves: []*shogi.Move{
-			{Src: shogi.Position{File: 2, Rank: 7}, Dst: shogi.Position{File: 2, Rank: 6}, Piece: shogi.BFU},
-			{Src: shogi.Position{File: 3, Rank: 3}, Dst: shogi.Position{File: 3, Rank: 4}, Piece: shogi.WFU},
+		{
+			`PI82HI22KA`,
+			&shogi.Record{
+				State: &shogi.State{
+					Board: [9][9]shogi.Piece{
+						{shogi.WKY, shogi.WKE, shogi.WGI, shogi.WKI, shogi.WOU, shogi.WKI, shogi.WGI, shogi.WKE, shogi.WKY},
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+						{shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU},
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+						{shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU},
+						{shogi.BLANK, shogi.BKA, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BHI, shogi.BLANK},
+						{shogi.BKY, shogi.BKE, shogi.BGI, shogi.BKI, shogi.BOU, shogi.BKI, shogi.BGI, shogi.BKE, shogi.BKY},
+					},
+				},
+				Moves: []*shogi.Move{},
+			},
 		},
 	}
-	record, err := csa.ParseString(data)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !reflect.DeepEqual(record, expected) {
-		t.Errorf("got: %v, expected: %v", record, expected)
+	for _, tc := range tests {
+		record, err := csa.ParseString(tc.data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(record, tc.expected) {
+			t.Errorf("got: %v, expected: %v", record, tc.expected)
+		}
 	}
 }

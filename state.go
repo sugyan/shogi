@@ -26,6 +26,6 @@ type State struct {
 }
 
 // SetPiece method
-func (s *State) SetPiece(file, rank uint8, piece Piece) {
+func (s *State) SetPiece(file, rank int, piece Piece) {
 	s.Board[rank-1][9-file] = piece
 }
