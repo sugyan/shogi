@@ -9,7 +9,8 @@ const (
 	TurnWhite Turn = false
 )
 
-type captured struct {
+// Captured struct
+type Captured struct {
 	FU uint8
 	KY uint8
 	KE uint8
@@ -22,7 +23,7 @@ type captured struct {
 // State struct
 type State struct {
 	Board    [9][9]Piece
-	Captured [2]captured
+	Captured [2]Captured
 }
 
 // SetPiece method

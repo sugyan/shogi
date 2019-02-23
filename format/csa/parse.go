@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"log"
 
 	"github.com/sugyan/shogi"
 )
@@ -76,7 +75,7 @@ func (p *parser) parse() (*shogi.Record, error) {
 			phase = phase2
 			continue
 		case 'N': // player names
-			if phase != phase2 {
+			if phase > phase2 {
 				continue
 			}
 			switch line[1] {
@@ -139,7 +138,71 @@ func (p *parser) parse() (*shogi.Record, error) {
 					record.State.Board[line[1]-'1'][i] = pieceMap[line[i*3+2:i*3+5]]
 				}
 			case '+', '-':
-				// TODO
+				if phase == phase3_1 {
+					continue
+				}
+				phase = phase3_2
+				capturedIndex := 0
+				if line[1] == '-' {
+					capturedIndex = 1
+				}
+				for i := 0; i+2 < len(line); i += 4 {
+					if i+6 > len(line) {
+						return nil, ErrInvalidLine
+					}
+					file, rank := int(line[i+2]-'0'), int(line[i+3]-'0')
+					if file == 0 && rank == 0 {
+						switch line[i+4 : i+6] {
+						case "FU":
+							record.State.Captured[capturedIndex].FU++
+						case "KY":
+							record.State.Captured[capturedIndex].KY++
+						case "KE":
+							record.State.Captured[capturedIndex].KE++
+						case "GI":
+							record.State.Captured[capturedIndex].GI++
+						case "KI":
+							record.State.Captured[capturedIndex].KI++
+						case "KA":
+							record.State.Captured[capturedIndex].KA++
+						case "HI":
+							record.State.Captured[capturedIndex].HI++
+						case "AL":
+							record.State.Captured[capturedIndex] = shogi.Captured{
+								FU: 18 - record.State.Captured[1-capturedIndex].FU,
+								KY: 4 - record.State.Captured[1-capturedIndex].KY,
+								KE: 4 - record.State.Captured[1-capturedIndex].KE,
+								GI: 4 - record.State.Captured[1-capturedIndex].GI,
+								KI: 4 - record.State.Captured[1-capturedIndex].KI,
+								KA: 2 - record.State.Captured[1-capturedIndex].KA,
+								HI: 2 - record.State.Captured[1-capturedIndex].HI,
+							}
+							for i := 0; i < 9; i++ {
+								for j := 0; j < 9; j++ {
+									switch record.State.Board[i][j] {
+									case shogi.BFU, shogi.WFU, shogi.BTO, shogi.WTO:
+										record.State.Captured[capturedIndex].FU--
+									case shogi.BKY, shogi.WKY, shogi.BNY, shogi.WNY:
+										record.State.Captured[capturedIndex].KY--
+									case shogi.BKE, shogi.WKE, shogi.BNK, shogi.WNK:
+										record.State.Captured[capturedIndex].KE--
+									case shogi.BGI, shogi.WGI, shogi.BNG, shogi.WNG:
+										record.State.Captured[capturedIndex].GI--
+									case shogi.BKI, shogi.WKI:
+										record.State.Captured[capturedIndex].KI--
+									case shogi.BKA, shogi.WKA, shogi.BUM, shogi.WUM:
+										record.State.Captured[capturedIndex].KA--
+									case shogi.BHI, shogi.WHI, shogi.BRY, shogi.WRY:
+										record.State.Captured[capturedIndex].HI--
+									}
+								}
+							}
+						}
+					} else {
+						piece := pieceMap[string(line[1])+line[i+4:i+6]]
+						record.State.SetPiece(file, rank, piece)
+					}
+				}
 			}
 		case '+', '-': // moves
 			if len(line) == 1 {
@@ -161,7 +224,7 @@ func (p *parser) parse() (*shogi.Record, error) {
 		case 'T': // consumed times
 		case '%': // special case
 		default:
-			log.Printf("%v", scanner.Text())
+			return nil, ErrInvalidLine
 		}
 	}
 	return record, nil

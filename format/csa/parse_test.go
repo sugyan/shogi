@@ -95,6 +95,33 @@ T6
 				Moves: []*shogi.Move{},
 			},
 		},
+		{
+			`'
+P-22KA
+P+99KY89KE
+P+00KI00FU
+P-00AL`,
+			&shogi.Record{
+				State: &shogi.State{
+					Board: [9][9]shogi.Piece{
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.WKA, shogi.BLANK},
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+						{shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+						{shogi.BKY, shogi.BKE, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK, shogi.BLANK},
+					},
+					Captured: [2]shogi.Captured{
+						{FU: 1, KY: 0, KE: 0, GI: 0, KI: 1, KA: 0, HI: 0},
+						{FU: 17, KY: 3, KE: 3, GI: 4, KI: 3, KA: 1, HI: 2},
+					},
+				},
+				Moves: []*shogi.Move{},
+			},
+		},
 	}
 	for _, tc := range tests {
 		record, err := csa.ParseString(tc.data)
@@ -102,7 +129,7 @@ T6
 			t.Fatal(err)
 		}
 		if !reflect.DeepEqual(record, tc.expected) {
-			t.Errorf("got: %v, expected: %v", record, tc.expected)
+			t.Errorf("got: %#v, expected: %#v", record, tc.expected)
 		}
 	}
 }
