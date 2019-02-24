@@ -11,7 +11,7 @@ func TestPieceString(t *testing.T) {
 		piece    shogi.Piece
 		expected string
 	}{
-		{shogi.BLANK, " * "},
+		{shogi.EMP, " * "},
 		{shogi.BFU, "+FU"},
 		{shogi.BKY, "+KY"},
 		{shogi.BKE, "+KE"},
@@ -53,7 +53,7 @@ func TestPiecePromoted(t *testing.T) {
 		piece    shogi.Piece
 		expected bool
 	}{
-		{shogi.BLANK, false},
+		{shogi.EMP, false},
 		{shogi.BFU, false},
 		{shogi.BKY, false},
 		{shogi.BKE, false},
@@ -83,10 +83,9 @@ func TestPiecePromoted(t *testing.T) {
 		{shogi.WUM, true},
 		{shogi.WRY, true},
 	}
-
-	for _, testCace := range testCases {
-		if testCace.piece.IsPromoted() != testCace.expected {
-			t.Errorf("1")
+	for _, testCase := range testCases {
+		if testCase.piece.IsPromoted() != testCase.expected {
+			t.Errorf("piece promoted of %v, expected: %v", testCase.piece, testCase.expected)
 		}
 	}
 }

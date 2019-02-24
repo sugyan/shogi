@@ -23,6 +23,7 @@ const (
 )
 
 var pieceMap = map[string]shogi.Piece{
+	" * ": shogi.EMP,
 	"+FU": shogi.BFU, "-FU": shogi.WFU,
 	"+KY": shogi.BKY, "-KY": shogi.WKY,
 	"+KE": shogi.BKE, "-KE": shogi.WKE,
@@ -37,7 +38,6 @@ var pieceMap = map[string]shogi.Piece{
 	"+NG": shogi.BKY, "-NG": shogi.WKY,
 	"+UM": shogi.BKY, "-UM": shogi.WKY,
 	"+RY": shogi.BKY, "-RY": shogi.WKY,
-	" * ": shogi.BLANK,
 }
 
 type parser struct {
@@ -124,7 +124,7 @@ func (p *parser) parse() (*shogi.Record, error) {
 				for i := 0; i+2 < len(line); i += 4 {
 					file, rank := int(line[i+2]-'0'), int(line[i+3]-'0')
 					// TODO: check piece?
-					record.State.SetPiece(file, rank, shogi.BLANK)
+					record.State.SetPiece(file, rank, shogi.EMP)
 				}
 			case '1', '2', '3', '4', '5', '6', '7', '8', '9':
 				if phase == phase3_1 {
