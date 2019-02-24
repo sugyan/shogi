@@ -83,9 +83,9 @@ func TestPiecePromoted(t *testing.T) {
 		{shogi.WUM, true},
 		{shogi.WRY, true},
 	}
-	for _, testCase := range testCases {
+	for i, testCase := range testCases {
 		if testCase.piece.IsPromoted() != testCase.expected {
-			t.Errorf("piece promoted of %v, expected: %v", testCase.piece, testCase.expected)
+			t.Errorf("#%d: piece promoted of %v, expected: %v", i, testCase.piece, testCase.expected)
 		}
 	}
 }

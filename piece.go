@@ -3,26 +3,29 @@ package shogi
 // Piece type
 type Piece uint8
 
-const w = 0x01 << 4
-const p = 0x01 << 5
+const (
+	white   = 0x01 << 4
+	promote = 0x01 << 5
+	mask    = 0x0F
+)
 
 // Piece constants
 const (
-	EMP Piece    = 0
-	fu  Piece    = iota // 歩
-	ky                  // 香
-	ke                  // 桂
-	gi                  // 銀
-	ki                  // 金
-	ka                  // 角
-	hi                  // 飛
-	ou                  // 玉
-	to  = fu | p        // と
-	ny  = ky | p        // 成香
-	nk  = ke | p        // 成桂
-	ng  = gi | p        // 成銀
-	um  = ka | p        // 馬
-	ry  = hi | p        // 竜
+	EMP Piece          = 0
+	fu  Piece          = iota // 歩
+	ky                        // 香
+	ke                        // 桂
+	gi                        // 銀
+	ki                        // 金
+	ka                        // 角
+	hi                        // 飛
+	ou                        // 玉
+	to  = fu | promote        // と
+	ny  = ky | promote        // 成香
+	nk  = ke | promote        // 成桂
+	ng  = gi | promote        // 成銀
+	um  = ka | promote        // 馬
+	ry  = hi | promote        // 竜
 	BFU = fu
 	BKY = ky
 	BKE = ke
@@ -37,20 +40,20 @@ const (
 	BNG = ng
 	BUM = um
 	BRY = ry
-	WFU = BFU | w
-	WKY = BKY | w
-	WKE = BKE | w
-	WGI = BGI | w
-	WKI = BKI | w
-	WKA = BKA | w
-	WHI = BHI | w
-	WOU = BOU | w
-	WTO = BTO | w
-	WNY = BNY | w
-	WNK = BNK | w
-	WNG = BNG | w
-	WUM = BUM | w
-	WRY = BRY | w
+	WFU = BFU | white
+	WKY = BKY | white
+	WKE = BKE | white
+	WGI = BGI | white
+	WKI = BKI | white
+	WKA = BKA | white
+	WHI = BHI | white
+	WOU = BOU | white
+	WTO = BTO | white
+	WNY = BNY | white
+	WNK = BNK | white
+	WNG = BNG | white
+	WUM = BUM | white
+	WRY = BRY | white
 )
 
 var pieceStringMap = map[Piece]string{
@@ -86,14 +89,24 @@ var pieceStringMap = map[Piece]string{
 }
 
 // String method
-func (piece Piece) String() string {
-	if s, exist := pieceStringMap[piece]; exist {
+func (p Piece) String() string {
+	if s, exist := pieceStringMap[p]; exist {
 		return s
 	}
 	return ""
 }
 
 // IsPromoted method
-func (piece Piece) IsPromoted() bool {
-	return piece&p != 0
+func (p Piece) IsPromoted() bool {
+	return p&promote != 0
+}
+
+// Promote method
+func (p Piece) Promote() Piece {
+	return p | promote
+}
+
+// Turn method
+func (p Piece) Turn() Turn {
+	return p&white == 0
 }
