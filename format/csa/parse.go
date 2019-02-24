@@ -33,11 +33,11 @@ var pieceMap = map[string]shogi.Piece{
 	"+HI": shogi.BHI, "-HI": shogi.WHI,
 	"+OU": shogi.BOU, "-OU": shogi.WOU,
 	"+TO": shogi.BTO, "-TO": shogi.WTO,
-	"+NY": shogi.BKY, "-NY": shogi.WKY,
-	"+NK": shogi.BKY, "-NK": shogi.WKY,
-	"+NG": shogi.BKY, "-NG": shogi.WKY,
-	"+UM": shogi.BKY, "-UM": shogi.WKY,
-	"+RY": shogi.BKY, "-RY": shogi.WKY,
+	"+NY": shogi.BNY, "-NY": shogi.WNY,
+	"+NK": shogi.BNK, "-NK": shogi.WNK,
+	"+NG": shogi.BNG, "-NG": shogi.WNG,
+	"+UM": shogi.BUM, "-UM": shogi.WUM,
+	"+RY": shogi.BRY, "-RY": shogi.WRY,
 }
 
 type parser struct {
