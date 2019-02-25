@@ -2,6 +2,8 @@ package shogi
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 )
 
 // Turn type
@@ -15,13 +17,18 @@ const (
 
 // Captured struct
 type Captured struct {
-	FU uint8
-	KY uint8
-	KE uint8
-	GI uint8
-	KI uint8
-	KA uint8
-	HI uint8
+	FU int
+	KY int
+	KE int
+	GI int
+	KI int
+	KA int
+	HI int
+}
+
+// Total method
+func (c *Captured) Total() int {
+	return c.FU + c.KY + c.KE + c.GI + c.KI + c.KA + c.HI
 }
 
 // State struct
@@ -32,11 +39,6 @@ type State struct {
 
 // ErrInvalidMove error
 var ErrInvalidMove = errors.New("invalid move")
-
-// SetPiece method
-func (s *State) SetPiece(file, rank int, piece Piece) {
-	s.Board[rank-1][9-file] = piece
-}
 
 // Move method
 func (s *State) Move(moves ...*Move) error {
@@ -77,19 +79,19 @@ func (s *State) Move(moves ...*Move) error {
 				}
 				switch dst & mask {
 				case fu:
-					s.Captured[1-capturedIndex].FU++
+					s.Captured[capturedIndex].FU++
 				case ky:
-					s.Captured[1-capturedIndex].KY++
+					s.Captured[capturedIndex].KY++
 				case ke:
-					s.Captured[1-capturedIndex].KE++
+					s.Captured[capturedIndex].KE++
 				case gi:
-					s.Captured[1-capturedIndex].GI++
+					s.Captured[capturedIndex].GI++
 				case ki:
-					s.Captured[1-capturedIndex].KI++
+					s.Captured[capturedIndex].KI++
 				case ka:
-					s.Captured[1-capturedIndex].KA++
+					s.Captured[capturedIndex].KA++
 				case hi:
-					s.Captured[1-capturedIndex].HI++
+					s.Captured[capturedIndex].HI++
 				}
 			}
 			s.Board[move.Src.Rank-1][9-move.Src.File] = EMP
@@ -97,4 +99,50 @@ func (s *State) Move(moves ...*Move) error {
 		s.Board[move.Dst.Rank-1][9-move.Dst.File] = move.Piece
 	}
 	return nil
+}
+
+func (s *State) String() string {
+	b := &strings.Builder{}
+	for i := 0; i < 9; i++ {
+		b.WriteString(fmt.Sprintf("P%d", i+1))
+		for j := 0; j < 9; j++ {
+			b.WriteString(s.Board[i][j].String())
+		}
+		if i < 8 {
+			b.WriteRune('\n')
+		}
+	}
+	for i := 0; i < 2; i++ {
+		if s.Captured[i].Total() > 0 {
+			b.WriteRune('\n')
+			switch i {
+			case 0:
+				b.WriteString("P+")
+			case 1:
+				b.WriteString("P-")
+			}
+			for j := 0; j < s.Captured[i].HI; j++ {
+				b.WriteString("00HI")
+			}
+			for j := 0; j < s.Captured[i].KA; j++ {
+				b.WriteString("00KA")
+			}
+			for j := 0; j < s.Captured[i].KI; j++ {
+				b.WriteString("00KI")
+			}
+			for j := 0; j < s.Captured[i].GI; j++ {
+				b.WriteString("00GI")
+			}
+			for j := 0; j < s.Captured[i].KE; j++ {
+				b.WriteString("00KE")
+			}
+			for j := 0; j < s.Captured[i].KY; j++ {
+				b.WriteString("00KY")
+			}
+			for j := 0; j < s.Captured[i].FU; j++ {
+				b.WriteString("00FU")
+			}
+		}
+	}
+	return b.String()
 }
