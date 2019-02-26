@@ -14,7 +14,8 @@ func TestParse(t *testing.T) {
 		expected *shogi.Record
 	}{
 		{
-			`'----------棋譜ファイルの例"example.csa"-----------------
+			`
+'----------棋譜ファイルの例"example.csa"-----------------
 'バージョン
 V2.2
 '対局者名
@@ -51,7 +52,7 @@ T12
 -3334FU
 T6
 %CHUDAN
-'---------------------------------------------------------`,
+'---------------------------------------------------------`[1:],
 			&shogi.Record{
 				Players: [2]*shogi.Player{
 					{Name: "NAKAHARA"},
@@ -77,7 +78,8 @@ T6
 			},
 		},
 		{
-			`PI82HI22KA`,
+			`
+PI82HI22KA`[1:],
 			&shogi.Record{
 				State: &shogi.State{
 					Board: [9][9]shogi.Piece{
@@ -96,11 +98,11 @@ T6
 			},
 		},
 		{
-			`'
+			`
 P-22KA
 P+99KY89KE
 P+00KI00FU
-P-00AL`,
+P-00AL`[1:],
 			&shogi.Record{
 				State: &shogi.State{
 					Board: [9][9]shogi.Piece{
