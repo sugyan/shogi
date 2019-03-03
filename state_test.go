@@ -6,20 +6,6 @@ import (
 	"github.com/sugyan/shogi"
 )
 
-var initialState = &shogi.State{
-	Board: [9][9]shogi.Piece{
-		{shogi.WKY, shogi.WKE, shogi.WGI, shogi.WKI, shogi.WOU, shogi.WKI, shogi.WGI, shogi.WKE, shogi.WKY},
-		{shogi.EMP, shogi.WHI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKA, shogi.EMP},
-		{shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU},
-		{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
-		{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
-		{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
-		{shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU},
-		{shogi.EMP, shogi.BKA, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BHI, shogi.EMP},
-		{shogi.BKY, shogi.BKE, shogi.BGI, shogi.BKI, shogi.BOU, shogi.BKI, shogi.BGI, shogi.BKE, shogi.BKY},
-	},
-}
-
 func TestMove(t *testing.T) {
 	type result struct {
 		err   error
@@ -69,7 +55,7 @@ func TestMove(t *testing.T) {
 		},
 	}
 	for i, testCase := range testCases {
-		s := *initialState
+		s := *shogi.InitialState
 		err := s.Move(testCase.moves...)
 		if err != testCase.expected.err {
 			t.Errorf("#%d, err got: %v, expected: %v", i, err, testCase.expected.err)
@@ -86,11 +72,11 @@ func TestMove(t *testing.T) {
 
 func TestString(t *testing.T) {
 	testCases := []struct {
-		state    *shogi.State
+		state    shogi.State
 		expected string
 	}{
 		{
-			state: &shogi.State{},
+			state: shogi.State{},
 			expected: `
 P1 *  *  *  *  *  *  *  *  * 
 P2 *  *  *  *  *  *  *  *  * 
@@ -103,7 +89,7 @@ P8 *  *  *  *  *  *  *  *  *
 P9 *  *  *  *  *  *  *  *  * `[1:],
 		},
 		{
-			state: initialState,
+			state: *shogi.InitialState,
 			expected: `
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
 P2 * -HI *  *  *  *  * -KA * 

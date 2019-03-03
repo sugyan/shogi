@@ -198,8 +198,8 @@ func (p *parser) parse() (*shogi.Record, error) {
 			if phase != phase4 {
 				continue
 			}
-			src := shogi.Position{File: line[1] - '0', Rank: line[2] - '0'}
-			dst := shogi.Position{File: line[3] - '0', Rank: line[4] - '0'}
+			src := shogi.Position{File: int(line[1] - '0'), Rank: int(line[2] - '0')}
+			dst := shogi.Position{File: int(line[3] - '0'), Rank: int(line[4] - '0')}
 			piece := pieceMap[string(line[0])+line[5:7]]
 			record.Moves = append(record.Moves, &shogi.Move{
 				Src:   src,

@@ -108,5 +108,5 @@ func (p Piece) Promote() Piece {
 
 // Turn method
 func (p Piece) Turn() Turn {
-	return p&white == 0
+	return p&white != 0
 }

@@ -11,8 +11,8 @@ type Turn bool
 
 // MoveOrder constants
 const (
-	TurnBlack Turn = true
-	TurnWhite Turn = false
+	TurnBlack Turn = false
+	TurnWhite Turn = true
 )
 
 // Captured struct
@@ -35,6 +35,22 @@ func (c *Captured) Total() int {
 type State struct {
 	Board    [9][9]Piece
 	Captured [2]Captured
+	Turn     Turn
+}
+
+// InitialState variable
+var InitialState = &State{
+	Board: [9][9]Piece{
+		{WKY, WKE, WGI, WKI, WOU, WKI, WGI, WKE, WKY},
+		{EMP, WHI, EMP, EMP, EMP, EMP, EMP, WKA, EMP},
+		{WFU, WFU, WFU, WFU, WFU, WFU, WFU, WFU, WFU},
+		{EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP},
+		{EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP},
+		{EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP},
+		{BFU, BFU, BFU, BFU, BFU, BFU, BFU, BFU, BFU},
+		{EMP, BKA, EMP, EMP, EMP, EMP, EMP, BHI, EMP},
+		{BKY, BKE, BGI, BKI, BOU, BKI, BGI, BKE, BKY},
+	},
 }
 
 // ErrInvalidMove error
