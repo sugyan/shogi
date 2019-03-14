@@ -15,6 +15,14 @@ const (
 	TurnWhite Turn = true
 )
 
+// CapturedIndex method
+func (t Turn) CapturedIndex() int {
+	if t == TurnBlack {
+		return 0
+	}
+	return 1
+}
+
 // Captured struct
 type Captured struct {
 	FU int
@@ -65,7 +73,7 @@ func (s *State) Move(moves ...*Move) error {
 		}
 		if move.Src.File == 0 && move.Src.Rank == 0 {
 			// use captured piece
-			switch move.Piece & mask {
+			switch move.Piece.raw() {
 			case fu:
 				s.Captured[capturedIndex].FU--
 			case ky:
@@ -93,7 +101,7 @@ func (s *State) Move(moves ...*Move) error {
 				if dst.Turn() == src.Turn() {
 					return ErrInvalidMove
 				}
-				switch dst & mask {
+				switch dst.raw() {
 				case fu:
 					s.Captured[capturedIndex].FU++
 				case ky:
@@ -113,6 +121,7 @@ func (s *State) Move(moves ...*Move) error {
 			s.Board[move.Src.Rank-1][9-move.Src.File] = EMP
 		}
 		s.Board[move.Dst.Rank-1][9-move.Dst.File] = move.Piece
+		s.Turn = !s.Turn
 	}
 	return nil
 }

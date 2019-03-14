@@ -74,5 +74,72 @@ func (s *State) LegalMoves() []*Move {
 			}
 		}
 	}
+	// promote
+	promoteMoves := []*Move{}
+	for _, m := range moves {
+		if !m.Piece.IsPromoted() {
+			switch m.Piece.Turn() {
+			case TurnBlack:
+				if m.Src.Rank <= 3 || m.Dst.Rank <= 3 {
+					promoteMoves = append(promoteMoves, &Move{m.Src, m.Dst, m.Piece.Promote()})
+				}
+			case TurnWhite:
+				if m.Src.Rank >= 7 || m.Dst.Rank >= 7 {
+					promoteMoves = append(promoteMoves, &Move{m.Src, m.Dst, m.Piece.Promote()})
+				}
+			}
+		}
+	}
+	moves = append(moves, promoteMoves...)
+	// use captured pieces
+	capturedMoves := []*Move{}
+	captured := s.Captured[s.Turn.CapturedIndex()]
+	if captured.Total() > 0 {
+		positions := []*Position{}
+		for i := 0; i < 9; i++ {
+			for j := 0; j < 9; j++ {
+				if s.Board[i][j] == EMP {
+					positions = append(positions, &Position{9 - j, i + 1})
+				}
+			}
+		}
+		if captured.FU > 0 {
+			for _, position := range positions {
+				capturedMoves = append(capturedMoves, &Move{Position{0, 0}, *position, makePiece(fu, s.Turn)})
+			}
+		}
+		if captured.KY > 0 {
+			for _, position := range positions {
+				capturedMoves = append(capturedMoves, &Move{Position{0, 0}, *position, makePiece(ky, s.Turn)})
+			}
+		}
+		if captured.KE > 0 {
+			for _, position := range positions {
+				capturedMoves = append(capturedMoves, &Move{Position{0, 0}, *position, makePiece(ke, s.Turn)})
+			}
+		}
+		if captured.GI > 0 {
+			for _, position := range positions {
+				capturedMoves = append(capturedMoves, &Move{Position{0, 0}, *position, makePiece(gi, s.Turn)})
+			}
+		}
+		if captured.KI > 0 {
+			for _, position := range positions {
+				capturedMoves = append(capturedMoves, &Move{Position{0, 0}, *position, makePiece(ki, s.Turn)})
+			}
+		}
+		if captured.KA > 0 {
+			for _, position := range positions {
+				capturedMoves = append(capturedMoves, &Move{Position{0, 0}, *position, makePiece(ka, s.Turn)})
+			}
+		}
+		if captured.HI > 0 {
+			for _, position := range positions {
+				capturedMoves = append(capturedMoves, &Move{Position{0, 0}, *position, makePiece(hi, s.Turn)})
+			}
+		}
+	}
+	moves = append(moves, capturedMoves...)
+
 	return moves
 }
