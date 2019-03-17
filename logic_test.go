@@ -7,7 +7,7 @@ import (
 	"github.com/sugyan/shogi"
 )
 
-func TestLegalMoves0(t *testing.T) {
+func TestLegalMovesFromInitialState(t *testing.T) {
 	s := *shogi.InitialState
 	results := s.LegalMoves()
 	if len(results) != 30 {
@@ -15,7 +15,7 @@ func TestLegalMoves0(t *testing.T) {
 	}
 }
 
-func TestLegalMoves1(t *testing.T) {
+func TestLegalMovesInRecord(t *testing.T) {
 	record, err := csa.ParseString(`
 PI
 +
@@ -146,5 +146,96 @@ PI
 			t.Errorf("#%d: move %v is not in legal moves", i, move)
 		}
 		s.Move(move)
+	}
+}
+
+func TestLegalMovesImpossibleMoves(t *testing.T) {
+	// TurnBlack
+	{
+		s := &shogi.State{
+			Board: [9][9]shogi.Piece{
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.BFU, shogi.BKY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.BKE, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.BKE, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+			},
+			Captured: [2]shogi.Captured{
+				{FU: 1, KY: 1, KE: 1, GI: 1, KI: 1, KA: 1, HI: 1},
+				{FU: 0, KY: 0, KE: 0, GI: 0, KI: 0, KA: 0, HI: 0},
+			},
+			Turn: shogi.TurnBlack,
+		}
+		impossibleMoves := []*shogi.Move{
+			{Src: shogi.Position{File: 9, Rank: 2}, Dst: shogi.Position{File: 9, Rank: 1}, Piece: shogi.BFU},
+			{Src: shogi.Position{File: 8, Rank: 2}, Dst: shogi.Position{File: 8, Rank: 1}, Piece: shogi.BKY},
+			{Src: shogi.Position{File: 6, Rank: 3}, Dst: shogi.Position{File: 7, Rank: 1}, Piece: shogi.BKE},
+			{Src: shogi.Position{File: 6, Rank: 3}, Dst: shogi.Position{File: 5, Rank: 1}, Piece: shogi.BKE},
+			{Src: shogi.Position{File: 6, Rank: 4}, Dst: shogi.Position{File: 7, Rank: 2}, Piece: shogi.BKE},
+			{Src: shogi.Position{File: 6, Rank: 4}, Dst: shogi.Position{File: 5, Rank: 2}, Piece: shogi.BKE},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 9, Rank: 1}, Piece: shogi.BFU},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 8, Rank: 1}, Piece: shogi.BFU},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 7, Rank: 1}, Piece: shogi.BKY},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 6, Rank: 1}, Piece: shogi.BKY},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 5, Rank: 1}, Piece: shogi.BKE},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 4, Rank: 1}, Piece: shogi.BKE},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 3, Rank: 2}, Piece: shogi.BKE},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 2, Rank: 2}, Piece: shogi.BKE},
+		}
+		for _, move := range s.LegalMoves() {
+			for _, m := range impossibleMoves {
+				if *m == *move {
+					t.Errorf("move %v should be impossible", move)
+				}
+			}
+		}
+	}
+	// TurnWhite
+	{
+		s := &shogi.State{
+			Board: [9][9]shogi.Piece{
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKE, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKE, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKY, shogi.WFU},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+			},
+			Captured: [2]shogi.Captured{
+				{FU: 0, KY: 0, KE: 0, GI: 0, KI: 0, KA: 0, HI: 0},
+				{FU: 1, KY: 1, KE: 1, GI: 1, KI: 1, KA: 1, HI: 1},
+			},
+			Turn: shogi.TurnWhite,
+		}
+		impossibleMoves := []*shogi.Move{
+			{Src: shogi.Position{File: 1, Rank: 8}, Dst: shogi.Position{File: 1, Rank: 9}, Piece: shogi.WFU},
+			{Src: shogi.Position{File: 2, Rank: 8}, Dst: shogi.Position{File: 2, Rank: 9}, Piece: shogi.WKY},
+			{Src: shogi.Position{File: 4, Rank: 7}, Dst: shogi.Position{File: 3, Rank: 9}, Piece: shogi.WKE},
+			{Src: shogi.Position{File: 4, Rank: 7}, Dst: shogi.Position{File: 5, Rank: 9}, Piece: shogi.WKE},
+			{Src: shogi.Position{File: 4, Rank: 6}, Dst: shogi.Position{File: 3, Rank: 8}, Piece: shogi.WKE},
+			{Src: shogi.Position{File: 4, Rank: 6}, Dst: shogi.Position{File: 5, Rank: 8}, Piece: shogi.WKE},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 1, Rank: 9}, Piece: shogi.WFU},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 2, Rank: 9}, Piece: shogi.WFU},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 3, Rank: 9}, Piece: shogi.WKY},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 4, Rank: 9}, Piece: shogi.WKY},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 5, Rank: 9}, Piece: shogi.WKE},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 6, Rank: 9}, Piece: shogi.WKE},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 7, Rank: 8}, Piece: shogi.WKE},
+			{Src: shogi.Position{File: 0, Rank: 0}, Dst: shogi.Position{File: 8, Rank: 8}, Piece: shogi.WKE},
+		}
+		for _, move := range s.LegalMoves() {
+			for _, m := range impossibleMoves {
+				if *m == *move {
+					t.Errorf("move %v should be impossible", move)
+				}
+			}
+		}
 	}
 }

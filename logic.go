@@ -75,6 +75,19 @@ func (s *State) LegalMoves() []*Move {
 		}
 	}
 	// promote
+	for _, move := range moves {
+		raw := move.Piece.raw()
+		switch raw {
+		case fu, ky:
+			if (s.Turn == TurnBlack && move.Dst.Rank < 2) || (s.Turn == TurnWhite && move.Dst.Rank > 8) {
+				move.Piece = makePiece(raw, s.Turn).Promote()
+			}
+		case ke:
+			if (s.Turn == TurnBlack && move.Dst.Rank < 3) || (s.Turn == TurnWhite && move.Dst.Rank > 7) {
+				move.Piece = makePiece(raw, s.Turn).Promote()
+			}
+		}
+	}
 	promoteMoves := []*Move{}
 	for _, m := range moves {
 		if !m.Piece.IsPromoted() {
@@ -105,17 +118,23 @@ func (s *State) LegalMoves() []*Move {
 		}
 		if captured.FU > 0 {
 			for _, position := range positions {
-				capturedMoves = append(capturedMoves, &Move{Position{0, 0}, *position, makePiece(fu, s.Turn)})
+				if (s.Turn == TurnBlack && position.Rank > 1) || (s.Turn == TurnWhite && position.Rank < 9) {
+					capturedMoves = append(capturedMoves, &Move{Position{0, 0}, *position, makePiece(fu, s.Turn)})
+				}
 			}
 		}
 		if captured.KY > 0 {
 			for _, position := range positions {
-				capturedMoves = append(capturedMoves, &Move{Position{0, 0}, *position, makePiece(ky, s.Turn)})
+				if (s.Turn == TurnBlack && position.Rank > 1) || (s.Turn == TurnWhite && position.Rank < 9) {
+					capturedMoves = append(capturedMoves, &Move{Position{0, 0}, *position, makePiece(ky, s.Turn)})
+				}
 			}
 		}
 		if captured.KE > 0 {
 			for _, position := range positions {
-				capturedMoves = append(capturedMoves, &Move{Position{0, 0}, *position, makePiece(ke, s.Turn)})
+				if (s.Turn == TurnBlack && position.Rank > 2) || (s.Turn == TurnWhite && position.Rank < 8) {
+					capturedMoves = append(capturedMoves, &Move{Position{0, 0}, *position, makePiece(ke, s.Turn)})
+				}
 			}
 		}
 		if captured.GI > 0 {
