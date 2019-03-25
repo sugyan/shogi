@@ -1,10 +1,12 @@
 package shogi_test
 
 import (
-	"github.com/sugyan/shogi/format/csa"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/sugyan/shogi"
+	"github.com/sugyan/shogi/format/csa"
 )
 
 func TestLegalMovesFromInitialState(t *testing.T) {
@@ -16,136 +18,37 @@ func TestLegalMovesFromInitialState(t *testing.T) {
 }
 
 func TestLegalMovesInRecord(t *testing.T) {
-	record, err := csa.ParseString(`
-PI
-+
-+5756FU
--3334FU
-+2858HI
--8232HI
-+7776FU
--5162OU
-+5948OU
--6272OU
-+4838OU
--7282OU
-+3828OU
--7172GI
-+3938GI
--9394FU
-+8822UM
--3122GI
-+7988GI
--4152KI
-+8877GI
--2233GI
-+5655FU
--1314FU
-+1716FU
--3222HI
-+7766GI
--2324FU
-+6665GI
--2425FU
-+5554FU
--5354FU
-+6554GI
--2526FU
-+2726FU
--2226HI
-+0027FU
--2676HI
-+5453NG
--0057FU
-+5878HI
--7678RY
-+6978KI
--5253KI
-+0031HI
--0012GI
-+3132RY
--0026FU
-+8977KE
--2627TO
-+3827GI
--0069HI
-+4939KI
--5758TO
-+7765KE
--5352KI
-+0075KA
--0064KA
-+7566KA
--3435FU
-+0054FU
--0026FU
-+2726GI
--3536FU
-+5453TO
--5251KI
-+5363TO
--3637TO
-+2937KE
--0036FU
-+6364TO
--3637TO
-+2637GI
--0035KE
-+6473TO
--8173KE
-+6573NK
--8273OU
-+3243RY
--0063FU
-+0046KA
--0064KE
-+4635KA
--0027FU
-+2838OU
--3342GI
-+0085KE
--7374OU
-+4342RY
--5142KI
-+0075GI
--7485OU
-+8786FU
--8576OU
-+7877KI
--7665OU
-+6611UM
--6939RY
-+3827OU
--0025HI
-+2736OU
--2535HI
-+3635OU
--3937RY
-+0036FU
--0043KE
-+3525OU
--3727RY
-+0026FU
--0024GI
-+2524OU
--2726RY
-+0025FU
--0023KI`[1:])
+	dir, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := record.State
-	for i, move := range record.Moves {
-		ok := false
-		for _, legal := range s.LegalMoves() {
-			if *move == *legal {
-				ok = true
+	matches, err := filepath.Glob(filepath.Join(dir, "testdata", "*.csa"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, match := range matches {
+		file, err := os.Open(match)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer file.Close()
+		record, err := csa.Parse(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		s := record.State
+		for j, move := range record.Moves {
+			ok := false
+			for _, legal := range s.LegalMoves() {
+				if *move == *legal {
+					ok = true
+				}
 			}
+			if !ok {
+				t.Errorf("#%d-%d: move %v is not in legal moves", i, j, move)
+			}
+			s.Move(move)
 		}
-		if !ok {
-			t.Errorf("#%d: move %v is not in legal moves", i, move)
-		}
-		s.Move(move)
 	}
 }
 
