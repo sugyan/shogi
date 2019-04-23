@@ -237,7 +237,7 @@ func reader(b []byte) (io.Reader, error) {
 	if ok := scanner.Scan(); !ok {
 		return nil, errors.New("failed to read header")
 	}
-	re, err := regexp.Compile(`^#KIF version=([\d\.]+) encoding=(\S+)$`)
+	re, err := regexp.Compile(`^.*?#KIF version=([\d\.]+) encoding=(\S+).*?$`)
 	if err != nil {
 		return nil, err
 	}
