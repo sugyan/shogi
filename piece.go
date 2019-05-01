@@ -12,20 +12,21 @@ const (
 )
 
 const (
-	fu rawPiece       = iota + 1 // 歩
-	ky                           // 香
-	ke                           // 桂
-	gi                           // 銀
-	ki                           // 金
-	ka                           // 角
-	hi                           // 飛
-	ou                           // 玉
-	to = fu | promote            // と
-	ny = ky | promote            // 成香
-	nk = ke | promote            // 成桂
-	ng = gi | promote            // 成銀
-	um = ka | promote            // 馬
-	ry = hi | promote            // 竜
+	fu rawPiece = iota + 1 // 歩
+	ky                     // 香
+	ke                     // 桂
+	gi                     // 銀
+	ki                     // 金
+	ka                     // 角
+	hi                     // 飛
+	ou                     // 玉
+
+	to = fu | promote // と
+	ny = ky | promote // 成香
+	nk = ke | promote // 成桂
+	ng = gi | promote // 成銀
+	um = ka | promote // 馬
+	ry = hi | promote // 竜
 )
 
 // Piece constants
