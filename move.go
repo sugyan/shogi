@@ -71,7 +71,7 @@ func moveString(state *State, move, prev *Move) (string, error) {
 		b.WriteRune(ranks[move.Dst.Rank-1])
 	}
 	// 打
-	if move.Src.File == 0 && move.Src.Rank == 0 {
+	if move.Src == (Position{0, 0}) {
 		b.WriteString(pieceMap[false][move.Piece.raw()])
 		for _, m := range state.LegalMoves() {
 			if m.Src != move.Src && m.Dst == move.Dst && m.Piece == move.Piece {
@@ -86,7 +86,66 @@ func moveString(state *State, move, prev *Move) (string, error) {
 	if orig.raw() != move.Piece.raw() {
 		return "", ErrInvalidMove
 	}
-	// TODO
+	dstMoves := []*Move{}
+	for _, m := range state.LegalMoves() {
+		if m.Src != (Position{0, 0}) && state.Board[m.Src.Rank-1][9-m.Src.File] == orig &&
+			m.Dst == move.Dst && m.Piece == move.Piece {
+			dstMoves = append(dstMoves, m)
+		}
+	}
+	if len(dstMoves) > 1 {
+		lr := false
+		ud := false
+		switch move.Piece.raw() {
+		case ka, hi:
+			// TODO
+		default:
+			sameFile := false
+			ud = true
+			for _, m := range dstMoves {
+				if m.Src != move.Src && m.Src.Rank == move.Src.Rank {
+					lr = true
+					ud = false
+				}
+				if m.Src != move.Src && m.Src.File == move.Src.File {
+					sameFile = true
+				}
+			}
+			if move.Src.File != move.Dst.File && sameFile {
+				ud = true
+			}
+		}
+		// 左・右・直
+		if lr {
+			fileDelta := move.Dst.File - move.Src.File
+			if move.Piece.Turn() == TurnWhite {
+				fileDelta *= -1
+			}
+			switch {
+			case fileDelta < 0:
+				b.WriteRune('左')
+			case fileDelta > 0:
+				b.WriteRune('右')
+			case fileDelta == 0:
+				b.WriteRune('直')
+			}
+		}
+		// 上・寄・引
+		if ud {
+			rankDelta := move.Dst.Rank - move.Src.Rank
+			if move.Piece.Turn() == TurnWhite {
+				rankDelta *= -1
+			}
+			switch {
+			case rankDelta < 0:
+				b.WriteRune('上')
+			case rankDelta == 0:
+				b.WriteRune('寄')
+			case rankDelta > 0:
+				b.WriteRune('引')
+			}
+		}
+	}
 	// 成・不成
 	if orig != move.Piece {
 		b.WriteRune('成')
