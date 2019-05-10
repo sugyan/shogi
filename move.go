@@ -98,7 +98,13 @@ func moveString(state *State, move, prev *Move) (string, error) {
 		ud := false
 		switch move.Piece.raw() {
 		case ka, hi:
-			// TODO
+			if (dstMoves[0].Src.Rank == move.Dst.Rank && dstMoves[1].Src.Rank == move.Dst.Rank) ||
+				(dstMoves[0].Src.Rank > move.Dst.Rank && dstMoves[1].Src.Rank > move.Dst.Rank) ||
+				(dstMoves[0].Src.Rank < move.Dst.Rank && dstMoves[1].Src.Rank < move.Dst.Rank) {
+				lr = true
+			} else {
+				ud = true
+			}
 		default:
 			sameFile := false
 			ud = true
@@ -127,7 +133,26 @@ func moveString(state *State, move, prev *Move) (string, error) {
 			case fileDelta > 0:
 				b.WriteRune('右')
 			case fileDelta == 0:
-				b.WriteRune('直')
+				if move.Piece.raw() == ka || move.Piece.raw() == hi {
+					left := true
+					if move.Src.File == move.Dst.File {
+						for _, m := range dstMoves {
+							if m.Src.File > move.Dst.File {
+								left = false
+							}
+						}
+					}
+					if move.Piece.Turn() == TurnWhite {
+						left = !left
+					}
+					if left {
+						b.WriteRune('左')
+					} else {
+						b.WriteRune('右')
+					}
+				} else {
+					b.WriteRune('直')
+				}
 			}
 		}
 		// 上・寄・引

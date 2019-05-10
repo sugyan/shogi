@@ -98,6 +98,7 @@ func TestMoveStrings(t *testing.T) {
 			expected := strings.Join(testCase.expected, " ")
 			if result != expected {
 				t.Errorf("#%d: move string got: %s, expected: %s", i, result, expected)
+				continue
 			}
 			t.Logf(result)
 		}
@@ -404,4 +405,175 @@ func TestMoveStrings(t *testing.T) {
 			test(&sw, testCases)
 		}
 	}
+	// 竜
+	{
+		{
+			state := &shogi.State{
+				Board: [9][9]shogi.Piece{
+					{shogi.BRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.BRY, shogi.EMP, shogi.EMP, shogi.BRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BRY, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BRY},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				},
+			}
+			sb := *state
+			sb.Turn = shogi.TurnBlack
+			testCases := []*testCase{
+				{[]*shogi.Move{move(9, 1, 8, 2, shogi.BRY)}, []string{"▲8二竜引"}},
+				{[]*shogi.Move{move(8, 4, 8, 2, shogi.BRY)}, []string{"▲8二竜上"}},
+				{[]*shogi.Move{move(2, 5, 4, 5, shogi.BRY)}, []string{"▲4五竜寄"}},
+				{[]*shogi.Move{move(5, 4, 4, 5, shogi.BRY)}, []string{"▲4五竜引"}},
+				{[]*shogi.Move{move(5, 7, 3, 7, shogi.BRY)}, []string{"▲3七竜左"}},
+				{[]*shogi.Move{move(1, 7, 3, 7, shogi.BRY)}, []string{"▲3七竜右"}},
+			}
+			test(&sb, testCases)
+		}
+		{
+			state := &shogi.State{
+				Board: [9][9]shogi.Piece{
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BRY, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BRY, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BRY, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BRY},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.BRY, shogi.BRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				},
+			}
+			sb := *state
+			sb.Turn = shogi.TurnBlack
+			testCases := []*testCase{
+				{[]*shogi.Move{move(9, 9, 8, 8, shogi.BRY)}, []string{"▲8八竜左"}},
+				{[]*shogi.Move{move(8, 9, 8, 8, shogi.BRY)}, []string{"▲8八竜右"}},
+				{[]*shogi.Move{move(2, 6, 1, 5, shogi.BRY)}, []string{"▲1五竜左"}},
+				{[]*shogi.Move{move(1, 7, 1, 5, shogi.BRY)}, []string{"▲1五竜右"}},
+				{[]*shogi.Move{move(3, 4, 3, 2, shogi.BRY)}, []string{"▲3二竜左"}},
+				{[]*shogi.Move{move(2, 3, 3, 2, shogi.BRY)}, []string{"▲3二竜右"}},
+			}
+			test(&sb, testCases)
+		}
+		{
+			state := &shogi.State{
+				Board: [9][9]shogi.Piece{
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.WRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.WRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WRY, shogi.EMP, shogi.EMP, shogi.WRY, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WRY},
+				},
+			}
+			sw := *state
+			sw.Turn = shogi.TurnWhite
+			testCases := []*testCase{
+				{[]*shogi.Move{move(1, 9, 2, 8, shogi.WRY)}, []string{"△2八竜引"}},
+				{[]*shogi.Move{move(2, 6, 2, 8, shogi.WRY)}, []string{"△2八竜上"}},
+				{[]*shogi.Move{move(8, 5, 6, 5, shogi.WRY)}, []string{"△6五竜寄"}},
+				{[]*shogi.Move{move(5, 6, 6, 5, shogi.WRY)}, []string{"△6五竜引"}},
+				{[]*shogi.Move{move(5, 3, 7, 3, shogi.WRY)}, []string{"△7三竜左"}},
+				{[]*shogi.Move{move(9, 3, 7, 3, shogi.WRY)}, []string{"△7三竜右"}},
+			}
+			test(&sw, testCases)
+		}
+		{
+			state := &shogi.State{
+				Board: [9][9]shogi.Piece{
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WRY, shogi.WRY},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.WRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.WRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.WRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.WRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				},
+			}
+			sw := *state
+			sw.Turn = shogi.TurnWhite
+			testCases := []*testCase{
+				{[]*shogi.Move{move(1, 1, 2, 2, shogi.WRY)}, []string{"△2二竜左"}},
+				{[]*shogi.Move{move(2, 1, 2, 2, shogi.WRY)}, []string{"△2二竜右"}},
+				{[]*shogi.Move{move(8, 4, 9, 5, shogi.WRY)}, []string{"△9五竜左"}},
+				{[]*shogi.Move{move(9, 3, 9, 5, shogi.WRY)}, []string{"△9五竜右"}},
+				{[]*shogi.Move{move(7, 6, 7, 8, shogi.WRY)}, []string{"△7八竜左"}},
+				{[]*shogi.Move{move(8, 7, 7, 8, shogi.WRY)}, []string{"△7八竜右"}},
+			}
+			test(&sw, testCases)
+		}
+	}
+	// 馬
+	{
+		{
+			state := &shogi.State{
+				Board: [9][9]shogi.Piece{
+					{shogi.BUM, shogi.BUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BUM},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.BUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BUM, shogi.EMP, shogi.EMP},
+					{shogi.BUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BUM, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BUM},
+					{shogi.BUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				},
+			}
+			sb := *state
+			sb.Turn = shogi.TurnBlack
+			testCases := []*testCase{
+				{[]*shogi.Move{move(9, 1, 8, 2, shogi.BUM)}, []string{"▲8二馬左"}},
+				{[]*shogi.Move{move(8, 1, 8, 2, shogi.BUM)}, []string{"▲8二馬右"}},
+				{[]*shogi.Move{move(9, 5, 8, 5, shogi.BUM)}, []string{"▲8五馬寄"}},
+				{[]*shogi.Move{move(6, 3, 8, 5, shogi.BUM)}, []string{"▲8五馬引"}},
+				{[]*shogi.Move{move(1, 1, 1, 2, shogi.BUM)}, []string{"▲1二馬引"}},
+				{[]*shogi.Move{move(3, 4, 1, 2, shogi.BUM)}, []string{"▲1二馬上"}},
+				{[]*shogi.Move{move(9, 9, 7, 7, shogi.BUM)}, []string{"▲7七馬左"}},
+				{[]*shogi.Move{move(5, 9, 7, 7, shogi.BUM)}, []string{"▲7七馬右"}},
+				{[]*shogi.Move{move(4, 7, 2, 9, shogi.BUM)}, []string{"▲2九馬左"}},
+				{[]*shogi.Move{move(1, 8, 2, 9, shogi.BUM)}, []string{"▲2九馬右"}},
+			}
+			test(&sb, testCases)
+		}
+		{
+			state := &shogi.State{
+				Board: [9][9]shogi.Piece{
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WUM},
+					{shogi.WUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.WUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WUM},
+					{shogi.EMP, shogi.EMP, shogi.WUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WUM, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+					{shogi.WUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WUM, shogi.WUM},
+				},
+			}
+			sw := *state
+			sw.Turn = shogi.TurnWhite
+			testCases := []*testCase{
+				{[]*shogi.Move{move(1, 9, 2, 8, shogi.WUM)}, []string{"△2八馬左"}},
+				{[]*shogi.Move{move(2, 9, 2, 8, shogi.WUM)}, []string{"△2八馬右"}},
+				{[]*shogi.Move{move(1, 5, 2, 5, shogi.WUM)}, []string{"△2五馬寄"}},
+				{[]*shogi.Move{move(4, 7, 2, 5, shogi.WUM)}, []string{"△2五馬引"}},
+				{[]*shogi.Move{move(9, 9, 9, 8, shogi.WUM)}, []string{"△9八馬引"}},
+				{[]*shogi.Move{move(7, 6, 9, 8, shogi.WUM)}, []string{"△9八馬上"}},
+				{[]*shogi.Move{move(1, 1, 3, 3, shogi.WUM)}, []string{"△3三馬左"}},
+				{[]*shogi.Move{move(5, 1, 3, 3, shogi.WUM)}, []string{"△3三馬右"}},
+				{[]*shogi.Move{move(6, 3, 8, 1, shogi.WUM)}, []string{"△8一馬左"}},
+				{[]*shogi.Move{move(9, 2, 8, 1, shogi.WUM)}, []string{"△8一馬右"}},
+			}
+			test(&sw, testCases)
+		}
+	}
+	// TODO
 }
