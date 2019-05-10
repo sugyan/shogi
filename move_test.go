@@ -575,5 +575,148 @@ func TestMoveStrings(t *testing.T) {
 			test(&sw, testCases)
 		}
 	}
-	// TODO
+	// 上成・引成・左成・右成
+	{
+		state := &shogi.State{
+			Board: [9][9]shogi.Piece{
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BHI, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BHI, shogi.EMP},
+				{shogi.EMP, shogi.WKE, shogi.EMP, shogi.WKE, shogi.EMP, shogi.BKE, shogi.EMP, shogi.BKE, shogi.EMP},
+				{shogi.EMP, shogi.WHI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.WHI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+			},
+		}
+		sb := *state
+		sb.Turn = shogi.TurnBlack
+		sw := *state
+		sw.Turn = shogi.TurnWhite
+		{
+			testCases := []*testCase{
+				{[]*shogi.Move{move(2, 2, 2, 3, shogi.BRY)}, []string{"▲2三飛引成"}},
+				{[]*shogi.Move{move(2, 4, 2, 3, shogi.BRY)}, []string{"▲2三飛上成"}},
+				{[]*shogi.Move{move(4, 5, 3, 3, shogi.BNK)}, []string{"▲3三桂左成"}},
+				{[]*shogi.Move{move(2, 5, 3, 3, shogi.BNK)}, []string{"▲3三桂右成"}},
+			}
+			test(&sb, testCases)
+		}
+		{
+			testCases := []*testCase{
+				{[]*shogi.Move{move(8, 8, 8, 7, shogi.WRY)}, []string{"△8七飛引成"}},
+				{[]*shogi.Move{move(8, 6, 8, 7, shogi.WRY)}, []string{"△8七飛上成"}},
+				{[]*shogi.Move{move(6, 5, 7, 7, shogi.WNK)}, []string{"△7七桂左成"}},
+				{[]*shogi.Move{move(8, 5, 7, 7, shogi.WNK)}, []string{"△7七桂右成"}},
+			}
+			test(&sw, testCases)
+		}
+	}
+	// 玉
+	{
+		state := &shogi.State{
+			Board: [9][9]shogi.Piece{
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BOU, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BOU},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.WOU, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.WOU, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+			},
+		}
+		sb := *state
+		sb.Turn = shogi.TurnBlack
+		sw := *state
+		sw.Turn = shogi.TurnWhite
+		{
+			testCases := []*testCase{
+				{[]*shogi.Move{move(1, 4, 1, 3, shogi.BOU)}, []string{"▲1三玉"}},
+				{[]*shogi.Move{move(3, 3, 2, 2, shogi.BOU)}, []string{"▲2二玉"}},
+				{[]*shogi.Move{move(3, 3, 4, 4, shogi.BOU)}, []string{"▲4四玉"}},
+			}
+			test(&sb, testCases)
+		}
+		{
+			testCases := []*testCase{
+				{[]*shogi.Move{move(9, 6, 9, 7, shogi.WOU)}, []string{"△9七玉"}},
+				{[]*shogi.Move{move(7, 7, 8, 8, shogi.WOU)}, []string{"△8八玉"}},
+				{[]*shogi.Move{move(7, 7, 6, 6, shogi.WOU)}, []string{"△6六玉"}},
+			}
+			test(&sw, testCases)
+		}
+	}
+	// 同
+	{
+		state := &shogi.State{
+			Board: [9][9]shogi.Piece{
+				{shogi.WKY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKY},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BGI, shogi.WFU},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.WFU, shogi.WGI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BGI, shogi.BFU},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.BFU, shogi.WGI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
+				{shogi.BKY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BKY},
+			},
+		}
+		sb := *state
+		sb.Turn = shogi.TurnBlack
+		sw := *state
+		sw.Turn = shogi.TurnWhite
+		{
+			testCases := []*testCase{
+				{[]*shogi.Move{
+					move(1, 5, 1, 4, shogi.BFU),
+					move(1, 3, 1, 4, shogi.WFU),
+					move(1, 9, 1, 4, shogi.BKY),
+				}, []string{"▲1四歩", "△同歩", "▲同香"}},
+				{[]*shogi.Move{
+					move(1, 5, 1, 4, shogi.BFU),
+					move(1, 3, 1, 4, shogi.WFU),
+					move(2, 5, 1, 4, shogi.BGI),
+				}, []string{"▲1四歩", "△同歩", "▲同銀上"}},
+				{[]*shogi.Move{
+					move(1, 5, 1, 4, shogi.BFU),
+					move(1, 3, 1, 4, shogi.WFU),
+					move(2, 3, 1, 4, shogi.BGI),
+				}, []string{"▲1四歩", "△同歩", "▲同銀引不成"}},
+				{[]*shogi.Move{
+					move(1, 5, 1, 4, shogi.BFU),
+					move(1, 3, 1, 4, shogi.WFU),
+					move(2, 3, 1, 4, shogi.BNG),
+				}, []string{"▲1四歩", "△同歩", "▲同銀引成"}},
+			}
+			test(&sb, testCases)
+		}
+		{
+			testCases := []*testCase{
+				{[]*shogi.Move{
+					move(9, 5, 9, 6, shogi.WFU),
+					move(9, 7, 9, 6, shogi.BFU),
+					move(9, 1, 9, 6, shogi.WKY),
+				}, []string{"△9六歩", "▲同歩", "△同香"}},
+				{[]*shogi.Move{
+					move(9, 5, 9, 6, shogi.WFU),
+					move(9, 7, 9, 6, shogi.BFU),
+					move(8, 5, 9, 6, shogi.WGI),
+				}, []string{"△9六歩", "▲同歩", "△同銀上"}},
+				{[]*shogi.Move{
+					move(9, 5, 9, 6, shogi.WFU),
+					move(9, 7, 9, 6, shogi.BFU),
+					move(8, 7, 9, 6, shogi.WGI),
+				}, []string{"△9六歩", "▲同歩", "△同銀引不成"}},
+				{[]*shogi.Move{
+					move(9, 5, 9, 6, shogi.WFU),
+					move(9, 7, 9, 6, shogi.BFU),
+					move(8, 7, 9, 6, shogi.WNG),
+				}, []string{"△9六歩", "▲同歩", "△同銀引成"}},
+			}
+			test(&sw, testCases)
+		}
+	}
 }

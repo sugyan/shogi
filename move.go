@@ -66,6 +66,7 @@ func moveString(state *State, move, prev *Move) (string, error) {
 	}
 	if prev != nil && move.Dst == prev.Dst {
 		// 同
+		b.WriteRune('同')
 	} else {
 		b.WriteRune(files[move.Dst.File-1])
 		b.WriteRune(ranks[move.Dst.Rank-1])
@@ -89,7 +90,7 @@ func moveString(state *State, move, prev *Move) (string, error) {
 	dstMoves := []*Move{}
 	for _, m := range state.LegalMoves() {
 		if m.Src != (Position{0, 0}) && state.Board[m.Src.Rank-1][9-m.Src.File] == orig &&
-			m.Dst == move.Dst && m.Piece == move.Piece {
+			m.Dst == move.Dst && m.Piece == orig {
 			dstMoves = append(dstMoves, m)
 		}
 	}
