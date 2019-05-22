@@ -65,6 +65,9 @@ func (p *parser) parse() (*shogi.Record, error) {
 	scanner := bufio.NewScanner(p.r)
 	for scanner.Scan() {
 		line := scanner.Text()
+		if len(line) == 0 {
+			continue
+		}
 		switch line[0] {
 		case '\'': // comment
 			continue
