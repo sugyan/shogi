@@ -10,7 +10,7 @@ import (
 func TestMove(t *testing.T) {
 	type result struct {
 		err   error
-		state shogi.State
+		state *shogi.State
 	}
 	testCases := []struct {
 		moves    []*shogi.Move
@@ -27,8 +27,8 @@ func TestMove(t *testing.T) {
 			},
 			result{
 				err: nil,
-				state: shogi.State{
-					Board: [9][9]shogi.Piece{
+				state: shogi.NewState(
+					[9][9]shogi.Piece{
 						{shogi.WKY, shogi.WKE, shogi.WGI, shogi.WKI, shogi.WOU, shogi.WKI, shogi.WGI, shogi.WKE, shogi.WKY},
 						{shogi.EMP, shogi.WHI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 						{shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.EMP, shogi.WFU, shogi.WFU},
@@ -39,11 +39,12 @@ func TestMove(t *testing.T) {
 						{shogi.EMP, shogi.BGI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BHI, shogi.EMP},
 						{shogi.BKY, shogi.BKE, shogi.EMP, shogi.BKI, shogi.BOU, shogi.BKI, shogi.BGI, shogi.BKE, shogi.BKY},
 					},
-					Captured: [2]shogi.Captured{
+					[2]shogi.Captured{
 						{FU: 0, KY: 0, KE: 0, GI: 0, KI: 0, KA: 1, HI: 0},
 						{FU: 0, KY: 0, KE: 0, GI: 0, KI: 0, KA: 0, HI: 0},
 					},
-				},
+					shogi.TurnBlack,
+				),
 			},
 		},
 		{
@@ -65,8 +66,8 @@ func TestMove(t *testing.T) {
 		if err != nil {
 			continue
 		}
-		if s != testCase.expected.state {
-			t.Errorf("#%d: state got: %v, expected: %v", i, s, testCase.expected.state)
+		if s != *testCase.expected.state {
+			t.Errorf("#%d: state got: %v, expected: %v", i, s, *testCase.expected.state)
 		}
 	}
 }
@@ -105,8 +106,8 @@ func TestMoveStrings(t *testing.T) {
 	}
 	// 打
 	{
-		state := &shogi.State{
-			Board: [9][9]shogi.Piece{
+		state := shogi.NewState(
+			[9][9]shogi.Piece{
 				{shogi.WKY, shogi.WKE, shogi.WGI, shogi.WKI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.WHI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKA, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -117,11 +118,12 @@ func TestMoveStrings(t *testing.T) {
 				{shogi.EMP, shogi.BKA, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BHI, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BKI, shogi.BGI, shogi.BKE, shogi.BKY},
 			},
-			Captured: [2]shogi.Captured{
+			[2]shogi.Captured{
 				{FU: 1, KY: 1, KE: 1, GI: 1, KI: 1, KA: 1, HI: 1},
 				{FU: 1, KY: 1, KE: 1, GI: 1, KI: 1, KA: 1, HI: 1},
 			},
-		}
+			shogi.TurnBlack,
+		)
 		sb := *state
 		sb.Turn = shogi.TurnBlack
 		sw := *state
@@ -175,8 +177,8 @@ func TestMoveStrings(t *testing.T) {
 	}
 	// 成・不成
 	{
-		state := &shogi.State{
-			Board: [9][9]shogi.Piece{
+		state := shogi.NewState(
+			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.BRY, shogi.BUM, shogi.BNG, shogi.BNK, shogi.BNY, shogi.BTO},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.BHI, shogi.BKA, shogi.BGI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -187,7 +189,9 @@ func TestMoveStrings(t *testing.T) {
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.WTO, shogi.WNY, shogi.WNK, shogi.WNG, shogi.WUM, shogi.WRY, shogi.EMP, shogi.EMP, shogi.EMP},
 			},
-		}
+			[2]shogi.Captured{},
+			shogi.TurnBlack,
+		)
 		sb := *state
 		sb.Turn = shogi.TurnBlack
 		sw := *state
@@ -253,8 +257,8 @@ func TestMoveStrings(t *testing.T) {
 	}
 	// 上・寄・引
 	{
-		state := &shogi.State{
-			Board: [9][9]shogi.Piece{
+		state := shogi.NewState(
+			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.WGI, shogi.EMP, shogi.EMP, shogi.BKI, shogi.WGI, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.BKI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.BKI, shogi.WGI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BKI, shogi.WGI, shogi.EMP, shogi.EMP},
@@ -265,7 +269,9 @@ func TestMoveStrings(t *testing.T) {
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKI, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.BGI, shogi.WKI, shogi.EMP, shogi.EMP, shogi.BGI, shogi.EMP, shogi.EMP, shogi.EMP},
 			},
-		}
+			[2]shogi.Captured{},
+			shogi.TurnBlack,
+		)
 		sb := *state
 		sb.Turn = shogi.TurnBlack
 		sw := *state
@@ -303,8 +309,8 @@ func TestMoveStrings(t *testing.T) {
 	}
 	// 左・右・直 (2枚)
 	{
-		state := &shogi.State{
-			Board: [9][9]shogi.Piece{
+		state := shogi.NewState(
+			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.WGI, shogi.WGI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKI, shogi.WKI, shogi.EMP},
 				{shogi.BKI, shogi.EMP, shogi.BKI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BKI, shogi.EMP, shogi.BKI},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -315,7 +321,9 @@ func TestMoveStrings(t *testing.T) {
 				{shogi.WKI, shogi.EMP, shogi.WKI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKI, shogi.EMP, shogi.WKI},
 				{shogi.EMP, shogi.BKI, shogi.BKI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BGI, shogi.BGI, shogi.EMP},
 			},
-		}
+			[2]shogi.Captured{},
+			shogi.TurnBlack,
+		)
 		sb := *state
 		sb.Turn = shogi.TurnBlack
 		sw := *state
@@ -353,8 +361,8 @@ func TestMoveStrings(t *testing.T) {
 	}
 	// 左・右・直 (3枚以上)
 	{
-		state := &shogi.State{
-			Board: [9][9]shogi.Piece{
+		state := shogi.NewState(
+			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.WGI, shogi.WGI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WTO, shogi.WTO, shogi.WTO},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WTO},
 				{shogi.WGI, shogi.EMP, shogi.WGI, shogi.BKI, shogi.BKI, shogi.BKI, shogi.EMP, shogi.WTO, shogi.EMP},
@@ -365,7 +373,9 @@ func TestMoveStrings(t *testing.T) {
 				{shogi.BTO, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.BTO, shogi.BTO, shogi.BTO, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BGI, shogi.BGI, shogi.EMP},
 			},
-		}
+			[2]shogi.Captured{},
+			shogi.TurnBlack,
+		)
 		sb := *state
 		sb.Turn = shogi.TurnBlack
 		sw := *state
@@ -408,8 +418,8 @@ func TestMoveStrings(t *testing.T) {
 	// 竜
 	{
 		{
-			state := &shogi.State{
-				Board: [9][9]shogi.Piece{
+			sb := shogi.NewState(
+				[9][9]shogi.Piece{
 					{shogi.BRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -420,9 +430,9 @@ func TestMoveStrings(t *testing.T) {
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				},
-			}
-			sb := *state
-			sb.Turn = shogi.TurnBlack
+				[2]shogi.Captured{},
+				shogi.TurnBlack,
+			)
 			testCases := []*testCase{
 				{[]*shogi.Move{move(9, 1, 8, 2, shogi.BRY)}, []string{"▲8二竜引"}},
 				{[]*shogi.Move{move(8, 4, 8, 2, shogi.BRY)}, []string{"▲8二竜上"}},
@@ -431,11 +441,11 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(5, 7, 3, 7, shogi.BRY)}, []string{"▲3七竜左"}},
 				{[]*shogi.Move{move(1, 7, 3, 7, shogi.BRY)}, []string{"▲3七竜右"}},
 			}
-			test(&sb, testCases)
+			test(sb, testCases)
 		}
 		{
-			state := &shogi.State{
-				Board: [9][9]shogi.Piece{
+			sb := shogi.NewState(
+				[9][9]shogi.Piece{
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BRY, shogi.EMP},
@@ -446,9 +456,9 @@ func TestMoveStrings(t *testing.T) {
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.BRY, shogi.BRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				},
-			}
-			sb := *state
-			sb.Turn = shogi.TurnBlack
+				[2]shogi.Captured{},
+				shogi.TurnBlack,
+			)
 			testCases := []*testCase{
 				{[]*shogi.Move{move(9, 9, 8, 8, shogi.BRY)}, []string{"▲8八竜左"}},
 				{[]*shogi.Move{move(8, 9, 8, 8, shogi.BRY)}, []string{"▲8八竜右"}},
@@ -457,11 +467,11 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(3, 4, 3, 2, shogi.BRY)}, []string{"▲3二竜左"}},
 				{[]*shogi.Move{move(2, 3, 3, 2, shogi.BRY)}, []string{"▲3二竜右"}},
 			}
-			test(&sb, testCases)
+			test(sb, testCases)
 		}
 		{
-			state := &shogi.State{
-				Board: [9][9]shogi.Piece{
+			sw := shogi.NewState(
+				[9][9]shogi.Piece{
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.WRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -472,9 +482,9 @@ func TestMoveStrings(t *testing.T) {
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WRY},
 				},
-			}
-			sw := *state
-			sw.Turn = shogi.TurnWhite
+				[2]shogi.Captured{},
+				shogi.TurnWhite,
+			)
 			testCases := []*testCase{
 				{[]*shogi.Move{move(1, 9, 2, 8, shogi.WRY)}, []string{"△2八竜引"}},
 				{[]*shogi.Move{move(2, 6, 2, 8, shogi.WRY)}, []string{"△2八竜上"}},
@@ -483,11 +493,11 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(5, 3, 7, 3, shogi.WRY)}, []string{"△7三竜左"}},
 				{[]*shogi.Move{move(9, 3, 7, 3, shogi.WRY)}, []string{"△7三竜右"}},
 			}
-			test(&sw, testCases)
+			test(sw, testCases)
 		}
 		{
-			state := &shogi.State{
-				Board: [9][9]shogi.Piece{
+			sw := shogi.NewState(
+				[9][9]shogi.Piece{
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WRY, shogi.WRY},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.WRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -498,9 +508,9 @@ func TestMoveStrings(t *testing.T) {
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				},
-			}
-			sw := *state
-			sw.Turn = shogi.TurnWhite
+				[2]shogi.Captured{},
+				shogi.TurnWhite,
+			)
 			testCases := []*testCase{
 				{[]*shogi.Move{move(1, 1, 2, 2, shogi.WRY)}, []string{"△2二竜左"}},
 				{[]*shogi.Move{move(2, 1, 2, 2, shogi.WRY)}, []string{"△2二竜右"}},
@@ -509,14 +519,14 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(7, 6, 7, 8, shogi.WRY)}, []string{"△7八竜左"}},
 				{[]*shogi.Move{move(8, 7, 7, 8, shogi.WRY)}, []string{"△7八竜右"}},
 			}
-			test(&sw, testCases)
+			test(sw, testCases)
 		}
 	}
 	// 馬
 	{
 		{
-			state := &shogi.State{
-				Board: [9][9]shogi.Piece{
+			sb := shogi.NewState(
+				[9][9]shogi.Piece{
 					{shogi.BUM, shogi.BUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BUM},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.BUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -527,9 +537,9 @@ func TestMoveStrings(t *testing.T) {
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BUM},
 					{shogi.BUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				},
-			}
-			sb := *state
-			sb.Turn = shogi.TurnBlack
+				[2]shogi.Captured{},
+				shogi.TurnBlack,
+			)
 			testCases := []*testCase{
 				{[]*shogi.Move{move(9, 1, 8, 2, shogi.BUM)}, []string{"▲8二馬左"}},
 				{[]*shogi.Move{move(8, 1, 8, 2, shogi.BUM)}, []string{"▲8二馬右"}},
@@ -542,11 +552,11 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(4, 7, 2, 9, shogi.BUM)}, []string{"▲2九馬左"}},
 				{[]*shogi.Move{move(1, 8, 2, 9, shogi.BUM)}, []string{"▲2九馬右"}},
 			}
-			test(&sb, testCases)
+			test(sb, testCases)
 		}
 		{
-			state := &shogi.State{
-				Board: [9][9]shogi.Piece{
+			sw := shogi.NewState(
+				[9][9]shogi.Piece{
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WUM},
 					{shogi.WUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.WUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -557,9 +567,9 @@ func TestMoveStrings(t *testing.T) {
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.WUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WUM, shogi.WUM},
 				},
-			}
-			sw := *state
-			sw.Turn = shogi.TurnWhite
+				[2]shogi.Captured{},
+				shogi.TurnWhite,
+			)
 			testCases := []*testCase{
 				{[]*shogi.Move{move(1, 9, 2, 8, shogi.WUM)}, []string{"△2八馬左"}},
 				{[]*shogi.Move{move(2, 9, 2, 8, shogi.WUM)}, []string{"△2八馬右"}},
@@ -572,13 +582,13 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(6, 3, 8, 1, shogi.WUM)}, []string{"△8一馬左"}},
 				{[]*shogi.Move{move(9, 2, 8, 1, shogi.WUM)}, []string{"△8一馬右"}},
 			}
-			test(&sw, testCases)
+			test(sw, testCases)
 		}
 	}
 	// 上成・引成・左成・右成
 	{
-		state := &shogi.State{
-			Board: [9][9]shogi.Piece{
+		state := shogi.NewState(
+			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BHI, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -589,7 +599,9 @@ func TestMoveStrings(t *testing.T) {
 				{shogi.EMP, shogi.WHI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 			},
-		}
+			[2]shogi.Captured{},
+			shogi.TurnBlack,
+		)
 		sb := *state
 		sb.Turn = shogi.TurnBlack
 		sw := *state
@@ -615,8 +627,8 @@ func TestMoveStrings(t *testing.T) {
 	}
 	// 玉
 	{
-		state := &shogi.State{
-			Board: [9][9]shogi.Piece{
+		state := shogi.NewState(
+			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BOU, shogi.EMP, shogi.EMP},
@@ -627,7 +639,9 @@ func TestMoveStrings(t *testing.T) {
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 			},
-		}
+			[2]shogi.Captured{},
+			shogi.TurnBlack,
+		)
 		sb := *state
 		sb.Turn = shogi.TurnBlack
 		sw := *state
@@ -651,8 +665,8 @@ func TestMoveStrings(t *testing.T) {
 	}
 	// 同
 	{
-		state := &shogi.State{
-			Board: [9][9]shogi.Piece{
+		state := shogi.NewState(
+			[9][9]shogi.Piece{
 				{shogi.WKY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKY},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BGI, shogi.WFU},
@@ -663,7 +677,9 @@ func TestMoveStrings(t *testing.T) {
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.BKY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BKY},
 			},
-		}
+			[2]shogi.Captured{},
+			shogi.TurnBlack,
+		)
 		sb := *state
 		sb.Turn = shogi.TurnBlack
 		sw := *state

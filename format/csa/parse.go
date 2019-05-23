@@ -98,21 +98,11 @@ func (p *parser) parse() (*shogi.Record, error) {
 					continue
 				}
 				phase = phase3_1
-				record.State.Board = [9][9]shogi.Piece{
-					{shogi.WKY, shogi.WKE, shogi.WGI, shogi.WKI, shogi.WOU, shogi.WKI, shogi.WGI, shogi.WKE, shogi.WKY},
-					{shogi.EMP, shogi.WHI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKA, shogi.EMP},
-					{shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU},
-					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
-					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
-					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
-					{shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU, shogi.BFU},
-					{shogi.EMP, shogi.BKA, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BHI, shogi.EMP},
-					{shogi.BKY, shogi.BKE, shogi.BGI, shogi.BKI, shogi.BOU, shogi.BKI, shogi.BGI, shogi.BKE, shogi.BKY},
-				}
+				*record.State = *shogi.InitialState
 				for i := 0; i+2 < len(line); i += 4 {
 					file, rank := int(line[i+2]-'0'), int(line[i+3]-'0')
 					// TODO: check piece?
-					record.State.Board[rank-1][9-file] = shogi.EMP
+					record.State.SetPiece(file, rank, shogi.EMP)
 				}
 			case '1', '2', '3', '4', '5', '6', '7', '8', '9':
 				if phase == phase3_1 {
@@ -123,7 +113,10 @@ func (p *parser) parse() (*shogi.Record, error) {
 					if i*3+5 > len(line) {
 						return nil, ErrInvalidLine
 					}
-					record.State.Board[line[1]-'1'][i] = pieceMap[line[i*3+2:i*3+5]]
+					err := record.State.SetPiece(9-i, int(line[1]-'1')+1, pieceMap[line[i*3+2:i*3+5]])
+					if err != nil {
+						return nil, err
+					}
 				}
 			case '+', '-':
 				if phase == phase3_1 {
@@ -167,7 +160,12 @@ func (p *parser) parse() (*shogi.Record, error) {
 							}
 							for i := 0; i < 9; i++ {
 								for j := 0; j < 9; j++ {
-									switch record.State.Board[i][j] {
+									file, rank = 9-j, i+1
+									piece, err := record.State.GetPiece(file, rank)
+									if err != nil {
+										return nil, err
+									}
+									switch piece {
 									case shogi.BFU, shogi.WFU, shogi.BTO, shogi.WTO:
 										record.State.Captured[capturedIndex].FU--
 									case shogi.BKY, shogi.WKY, shogi.BNY, shogi.WNY:
@@ -188,7 +186,7 @@ func (p *parser) parse() (*shogi.Record, error) {
 						}
 					} else {
 						piece := pieceMap[string(line[1])+line[i+4:i+6]]
-						record.State.Board[rank-1][9-file] = piece
+						record.State.SetPiece(file, rank, piece)
 					}
 				}
 			}

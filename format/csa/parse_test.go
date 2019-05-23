@@ -58,8 +58,8 @@ T6
 					{Name: "NAKAHARA"},
 					{Name: "YONENAGA"},
 				},
-				State: &shogi.State{
-					Board: [9][9]shogi.Piece{
+				State: shogi.NewState(
+					[9][9]shogi.Piece{
 						{shogi.WKY, shogi.WKE, shogi.WGI, shogi.WKI, shogi.WOU, shogi.WKI, shogi.WGI, shogi.WKE, shogi.WKY},
 						{shogi.EMP, shogi.WHI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKA, shogi.EMP},
 						{shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU},
@@ -70,7 +70,9 @@ T6
 						{shogi.EMP, shogi.BKA, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BHI, shogi.EMP},
 						{shogi.BKY, shogi.BKE, shogi.BGI, shogi.BKI, shogi.BOU, shogi.BKI, shogi.BGI, shogi.BKE, shogi.BKY},
 					},
-				},
+					[2]shogi.Captured{},
+					shogi.TurnBlack,
+				),
 				Moves: []*shogi.Move{
 					{Src: shogi.Position{File: 2, Rank: 7}, Dst: shogi.Position{File: 2, Rank: 6}, Piece: shogi.BFU},
 					{Src: shogi.Position{File: 3, Rank: 3}, Dst: shogi.Position{File: 3, Rank: 4}, Piece: shogi.WFU},
@@ -81,8 +83,8 @@ T6
 			`
 PI82HI22KA`[1:],
 			&shogi.Record{
-				State: &shogi.State{
-					Board: [9][9]shogi.Piece{
+				State: shogi.NewState(
+					[9][9]shogi.Piece{
 						{shogi.WKY, shogi.WKE, shogi.WGI, shogi.WKI, shogi.WOU, shogi.WKI, shogi.WGI, shogi.WKE, shogi.WKY},
 						{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 						{shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU, shogi.WFU},
@@ -93,7 +95,9 @@ PI82HI22KA`[1:],
 						{shogi.EMP, shogi.BKA, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BHI, shogi.EMP},
 						{shogi.BKY, shogi.BKE, shogi.BGI, shogi.BKI, shogi.BOU, shogi.BKI, shogi.BGI, shogi.BKE, shogi.BKY},
 					},
-				},
+					[2]shogi.Captured{},
+					shogi.TurnBlack,
+				),
 				Moves: []*shogi.Move{},
 			},
 		},
@@ -104,8 +108,8 @@ P+99KY89KE
 P+00KI00FU
 P-00AL`[1:],
 			&shogi.Record{
-				State: &shogi.State{
-					Board: [9][9]shogi.Piece{
+				State: shogi.NewState(
+					[9][9]shogi.Piece{
 						{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 						{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKA, shogi.EMP},
 						{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -116,11 +120,12 @@ P-00AL`[1:],
 						{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 						{shogi.BKY, shogi.BKE, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					},
-					Captured: [2]shogi.Captured{
+					[2]shogi.Captured{
 						{FU: 1, KY: 0, KE: 0, GI: 0, KI: 1, KA: 0, HI: 0},
 						{FU: 17, KY: 3, KE: 3, GI: 4, KI: 3, KA: 1, HI: 2},
 					},
-				},
+					shogi.TurnBlack,
+				),
 				Moves: []*shogi.Move{},
 			},
 		},

@@ -46,13 +46,13 @@ func (s *State) LegalMoves() []*Move {
 	moves := []*Move{}
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
-			p := s.Board[i][j]
+			p := s.board[i][j]
 			if p != EMP && p.Turn() == s.Turn {
 				file, rank := 9-j, i+1
 				for _, d := range reachableMap[p] {
 					ii, jj := i+d.i, j+d.j
 					if ii >= 0 && ii < 9 && jj >= 0 && jj < 9 {
-						pp := s.Board[ii][jj]
+						pp := s.board[ii][jj]
 						if pp == EMP || pp.Turn() != s.Turn {
 							moves = append(moves, &Move{Position{file, rank}, Position{9 - jj, ii + 1}, p})
 						}
@@ -60,7 +60,7 @@ func (s *State) LegalMoves() []*Move {
 				}
 				for _, d := range stepMap[p] {
 					for ii, jj := i+d.i, j+d.j; ii >= 0 && ii < 9 && jj >= 0 && jj < 9; {
-						pp := s.Board[ii][jj]
+						pp := s.board[ii][jj]
 						if pp == EMP || pp.Turn() != s.Turn {
 							moves = append(moves, &Move{Position{file, rank}, Position{9 - jj, ii + 1}, p})
 						}
@@ -111,7 +111,7 @@ func (s *State) LegalMoves() []*Move {
 		positions := []*Position{}
 		for i := 0; i < 9; i++ {
 			for j := 0; j < 9; j++ {
-				if s.Board[i][j] == EMP {
+				if s.board[i][j] == EMP {
 					positions = append(positions, &Position{9 - j, i + 1})
 				}
 			}

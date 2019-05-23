@@ -82,14 +82,14 @@ func moveString(state *State, move, prev *Move) (string, error) {
 		return b.String(), nil
 	}
 
-	orig := state.Board[move.Src.Rank-1][9-move.Src.File]
+	orig := state.board[move.Src.Rank-1][9-move.Src.File]
 	b.WriteString(pieceMap[orig.IsPromoted()][move.Piece.raw()])
 	if orig.raw() != move.Piece.raw() {
 		return "", ErrInvalidMove
 	}
 	dstMoves := []*Move{}
 	for _, m := range state.LegalMoves() {
-		if m.Src != (Position{0, 0}) && state.Board[m.Src.Rank-1][9-m.Src.File] == orig &&
+		if m.Src != (Position{0, 0}) && state.board[m.Src.Rank-1][9-m.Src.File] == orig &&
 			m.Dst == move.Dst && m.Piece == orig {
 			dstMoves = append(dstMoves, m)
 		}

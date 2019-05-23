@@ -60,6 +60,8 @@ const (
 	WNG       = BNG | white
 	WUM       = BUM | white
 	WRY       = BRY | white
+
+	ERR = 0xFF
 )
 
 func makePiece(p rawPiece, turn Turn) Piece {

@@ -1,7 +1,6 @@
 package shogi
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -35,20 +34,21 @@ type Captured struct {
 }
 
 // Total method
-func (c *Captured) Total() int {
+func (c Captured) Total() int {
 	return c.FU + c.KY + c.KE + c.GI + c.KI + c.KA + c.HI
 }
 
 // State struct
 type State struct {
-	Board    [9][9]Piece
+	board    [9][9]Piece
 	Captured [2]Captured
 	Turn     Turn
+	Hash     uint64
 }
 
 // InitialState variable
 var InitialState = &State{
-	Board: [9][9]Piece{
+	board: [9][9]Piece{
 		{WKY, WKE, WGI, WKI, WOU, WKI, WGI, WKE, WKY},
 		{EMP, WHI, EMP, EMP, EMP, EMP, EMP, WKA, EMP},
 		{WFU, WFU, WFU, WFU, WFU, WFU, WFU, WFU, WFU},
@@ -61,8 +61,31 @@ var InitialState = &State{
 	},
 }
 
-// ErrInvalidMove error
-var ErrInvalidMove = errors.New("invalid move")
+// NewState function
+func NewState(board [9][9]Piece, captured [2]Captured, turn Turn) *State {
+	return &State{
+		board:    board,
+		Captured: captured,
+		Turn:     turn,
+	}
+}
+
+// GetPiece method
+func (s *State) GetPiece(file, rank int) (Piece, error) {
+	if file < 1 || file > 9 || rank < 1 || rank > 9 {
+		return ERR, ErrInvalidPosition
+	}
+	return s.board[rank-1][9-file], nil
+}
+
+// SetPiece method
+func (s *State) SetPiece(file, rank int, piece Piece) error {
+	if file < 1 || file > 9 || rank < 1 || rank > 9 {
+		return ErrInvalidPosition
+	}
+	s.board[rank-1][9-file] = piece
+	return nil
+}
 
 // Move method
 func (s *State) Move(moves ...*Move) error {
@@ -91,8 +114,8 @@ func (s *State) Move(moves ...*Move) error {
 			}
 		} else {
 			// move piece
-			src := s.Board[move.Src.Rank-1][9-move.Src.File]
-			dst := s.Board[move.Dst.Rank-1][9-move.Dst.File]
+			src := s.board[move.Src.Rank-1][9-move.Src.File]
+			dst := s.board[move.Dst.Rank-1][9-move.Dst.File]
 			// TODO: check invalid move
 			if src != move.Piece && src.Promote() != move.Piece {
 				return ErrInvalidMove
@@ -118,9 +141,9 @@ func (s *State) Move(moves ...*Move) error {
 					s.Captured[capturedIndex].HI++
 				}
 			}
-			s.Board[move.Src.Rank-1][9-move.Src.File] = EMP
+			s.board[move.Src.Rank-1][9-move.Src.File] = EMP
 		}
-		s.Board[move.Dst.Rank-1][9-move.Dst.File] = move.Piece
+		s.board[move.Dst.Rank-1][9-move.Dst.File] = move.Piece
 		s.Turn = !s.Turn
 	}
 	return nil
@@ -131,7 +154,7 @@ func (s *State) String() string {
 	for i := 0; i < 9; i++ {
 		b.WriteString(fmt.Sprintf("P%d", i+1))
 		for j := 0; j < 9; j++ {
-			b.WriteString(s.Board[i][j].String())
+			b.WriteString(s.board[i][j].String())
 		}
 		if i < 8 {
 			b.WriteRune('\n')

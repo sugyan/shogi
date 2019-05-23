@@ -55,8 +55,8 @@ func TestLegalMovesInRecord(t *testing.T) {
 func TestLegalMovesImpossibleMoves(t *testing.T) {
 	// TurnBlack
 	{
-		s := &shogi.State{
-			Board: [9][9]shogi.Piece{
+		s := shogi.NewState(
+			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.BFU, shogi.BKY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.BKE, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -67,12 +67,12 @@ func TestLegalMovesImpossibleMoves(t *testing.T) {
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 			},
-			Captured: [2]shogi.Captured{
+			[2]shogi.Captured{
 				{FU: 1, KY: 1, KE: 1, GI: 1, KI: 1, KA: 1, HI: 1},
 				{FU: 0, KY: 0, KE: 0, GI: 0, KI: 0, KA: 0, HI: 0},
 			},
-			Turn: shogi.TurnBlack,
-		}
+			shogi.TurnBlack,
+		)
 		impossibleMoves := []*shogi.Move{
 			{Src: shogi.Position{File: 9, Rank: 2}, Dst: shogi.Position{File: 9, Rank: 1}, Piece: shogi.BFU},
 			{Src: shogi.Position{File: 8, Rank: 2}, Dst: shogi.Position{File: 8, Rank: 1}, Piece: shogi.BKY},
@@ -99,8 +99,8 @@ func TestLegalMovesImpossibleMoves(t *testing.T) {
 	}
 	// TurnWhite
 	{
-		s := &shogi.State{
-			Board: [9][9]shogi.Piece{
+		s := shogi.NewState(
+			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -111,12 +111,12 @@ func TestLegalMovesImpossibleMoves(t *testing.T) {
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKY, shogi.WFU},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 			},
-			Captured: [2]shogi.Captured{
+			[2]shogi.Captured{
 				{FU: 0, KY: 0, KE: 0, GI: 0, KI: 0, KA: 0, HI: 0},
 				{FU: 1, KY: 1, KE: 1, GI: 1, KI: 1, KA: 1, HI: 1},
 			},
-			Turn: shogi.TurnWhite,
-		}
+			shogi.TurnWhite,
+		)
 		impossibleMoves := []*shogi.Move{
 			{Src: shogi.Position{File: 1, Rank: 8}, Dst: shogi.Position{File: 1, Rank: 9}, Piece: shogi.WFU},
 			{Src: shogi.Position{File: 2, Rank: 8}, Dst: shogi.Position{File: 2, Rank: 9}, Piece: shogi.WKY},
