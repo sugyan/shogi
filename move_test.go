@@ -57,7 +57,7 @@ func TestMove(t *testing.T) {
 		},
 	}
 	for i, testCase := range testCases {
-		s := *shogi.InitialState
+		s := shogi.NewInitialState()
 		err := s.Move(testCase.moves...)
 		if err != testCase.expected.err {
 			t.Errorf("#%d, err got: %v, expected: %v", i, err, testCase.expected.err)
@@ -66,8 +66,8 @@ func TestMove(t *testing.T) {
 		if err != nil {
 			continue
 		}
-		if s != *testCase.expected.state {
-			t.Errorf("#%d: state got: %v, expected: %v", i, s, *testCase.expected.state)
+		if !s.Equals(testCase.expected.state) {
+			t.Errorf("#%d: state got: %v, expected: %v", i, *s, *testCase.expected.state)
 		}
 	}
 }

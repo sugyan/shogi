@@ -1,7 +1,6 @@
 package csa_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/sugyan/shogi"
@@ -9,6 +8,27 @@ import (
 )
 
 func TestParse(t *testing.T) {
+	equals := func(a, b *shogi.Record) bool {
+		for i := 0; i < 2; i++ {
+			if (a.Players[i] != nil && b.Players[i] != nil && *a.Players[i] != *b.Players[i]) ||
+				(a.Players[i] == nil && b.Players[i] != nil) ||
+				(a.Players[i] != nil && b.Players[i] == nil) {
+				return false
+			}
+		}
+		if !a.State.Equals(b.State) {
+			return false
+		}
+		if len(a.Moves) != len(b.Moves) {
+			return false
+		}
+		for i := 0; i < len(a.Moves); i++ {
+			if *a.Moves[i] != *b.Moves[i] {
+				return false
+			}
+		}
+		return true
+	}
 	tests := []struct {
 		data     string
 		expected *shogi.Record
@@ -52,7 +72,7 @@ T12
 -3334FU
 T6
 %CHUDAN
-'---------------------------------------------------------`[1:],
+'---------------------------------------------------------`,
 			&shogi.Record{
 				Players: [2]*shogi.Player{
 					{Name: "NAKAHARA"},
@@ -81,7 +101,7 @@ T6
 		},
 		{
 			`
-PI82HI22KA`[1:],
+PI82HI22KA`,
 			&shogi.Record{
 				State: shogi.NewState(
 					[9][9]shogi.Piece{
@@ -106,7 +126,7 @@ PI82HI22KA`[1:],
 P-22KA
 P+99KY89KE
 P+00KI00FU
-P-00AL`[1:],
+P-00AL`,
 			&shogi.Record{
 				State: shogi.NewState(
 					[9][9]shogi.Piece{
@@ -130,13 +150,13 @@ P-00AL`[1:],
 			},
 		},
 	}
-	for _, tc := range tests {
+	for i, tc := range tests {
 		record, err := csa.ParseString(tc.data)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !reflect.DeepEqual(record, tc.expected) {
-			t.Errorf("got: %#v, expected: %#v", record, tc.expected)
+		if !equals(record, tc.expected) {
+			t.Errorf("#%d: got: %v, expected: %v", i, record, tc.expected)
 		}
 	}
 }

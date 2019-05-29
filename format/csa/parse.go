@@ -58,7 +58,7 @@ func ParseString(s string) (*shogi.Record, error) {
 func (p *parser) parse() (*shogi.Record, error) {
 	record := &shogi.Record{
 		Players: [2]*shogi.Player{},
-		State:   &shogi.State{},
+		State:   shogi.NewState([9][9]shogi.Piece{}, [2]shogi.Captured{}, shogi.TurnBlack),
 		Moves:   []*shogi.Move{},
 	}
 	phase := phase1
@@ -98,7 +98,7 @@ func (p *parser) parse() (*shogi.Record, error) {
 					continue
 				}
 				phase = phase3_1
-				*record.State = *shogi.InitialState
+				record.State = shogi.NewInitialState()
 				for i := 0; i+2 < len(line); i += 4 {
 					file, rank := int(line[i+2]-'0'), int(line[i+3]-'0')
 					// TODO: check piece?
@@ -123,9 +123,9 @@ func (p *parser) parse() (*shogi.Record, error) {
 					continue
 				}
 				phase = phase3_2
-				capturedIndex := 0
+				turn := shogi.TurnBlack
 				if line[1] == '-' {
-					capturedIndex = 1
+					turn = shogi.TurnWhite
 				}
 				for i := 0; i+2 < len(line); i += 4 {
 					if i+6 > len(line) {
@@ -135,29 +135,23 @@ func (p *parser) parse() (*shogi.Record, error) {
 					if file == 0 && rank == 0 {
 						switch line[i+4 : i+6] {
 						case "FU":
-							record.State.Captured[capturedIndex].FU++
+							record.State.UpdateCaptured(turn, 1, 0, 0, 0, 0, 0, 0)
 						case "KY":
-							record.State.Captured[capturedIndex].KY++
+							record.State.UpdateCaptured(turn, 0, 1, 0, 0, 0, 0, 0)
 						case "KE":
-							record.State.Captured[capturedIndex].KE++
+							record.State.UpdateCaptured(turn, 0, 0, 1, 0, 0, 0, 0)
 						case "GI":
-							record.State.Captured[capturedIndex].GI++
+							record.State.UpdateCaptured(turn, 0, 0, 0, 1, 0, 0, 0)
 						case "KI":
-							record.State.Captured[capturedIndex].KI++
+							record.State.UpdateCaptured(turn, 0, 0, 0, 0, 1, 0, 0)
 						case "KA":
-							record.State.Captured[capturedIndex].KA++
+							record.State.UpdateCaptured(turn, 0, 0, 0, 0, 0, 1, 0)
 						case "HI":
-							record.State.Captured[capturedIndex].HI++
+							record.State.UpdateCaptured(turn, 0, 0, 0, 0, 0, 0, 1)
 						case "AL":
-							record.State.Captured[capturedIndex] = shogi.Captured{
-								FU: 18 - record.State.Captured[1-capturedIndex].FU,
-								KY: 4 - record.State.Captured[1-capturedIndex].KY,
-								KE: 4 - record.State.Captured[1-capturedIndex].KE,
-								GI: 4 - record.State.Captured[1-capturedIndex].GI,
-								KI: 4 - record.State.Captured[1-capturedIndex].KI,
-								KA: 2 - record.State.Captured[1-capturedIndex].KA,
-								HI: 2 - record.State.Captured[1-capturedIndex].HI,
-							}
+							cap := record.State.GetCaptured(!turn)
+							record.State.UpdateCaptured(turn,
+								18-cap.FU, 4-cap.KY, 4-cap.KE, 4-cap.GI, 4-cap.KI, 2-cap.KA, 2-cap.HI)
 							for i := 0; i < 9; i++ {
 								for j := 0; j < 9; j++ {
 									file, rank = 9-j, i+1
@@ -167,19 +161,19 @@ func (p *parser) parse() (*shogi.Record, error) {
 									}
 									switch piece {
 									case shogi.BFU, shogi.WFU, shogi.BTO, shogi.WTO:
-										record.State.Captured[capturedIndex].FU--
+										record.State.UpdateCaptured(turn, -1, 0, 0, 0, 0, 0, 0)
 									case shogi.BKY, shogi.WKY, shogi.BNY, shogi.WNY:
-										record.State.Captured[capturedIndex].KY--
+										record.State.UpdateCaptured(turn, 0, -1, 0, 0, 0, 0, 0)
 									case shogi.BKE, shogi.WKE, shogi.BNK, shogi.WNK:
-										record.State.Captured[capturedIndex].KE--
+										record.State.UpdateCaptured(turn, 0, 0, -1, 0, 0, 0, 0)
 									case shogi.BGI, shogi.WGI, shogi.BNG, shogi.WNG:
-										record.State.Captured[capturedIndex].GI--
+										record.State.UpdateCaptured(turn, 0, 0, 0, -1, 0, 0, 0)
 									case shogi.BKI, shogi.WKI:
-										record.State.Captured[capturedIndex].KI--
+										record.State.UpdateCaptured(turn, 0, 0, 0, 0, -1, 0, 0)
 									case shogi.BKA, shogi.WKA, shogi.BUM, shogi.WUM:
-										record.State.Captured[capturedIndex].KA--
+										record.State.UpdateCaptured(turn, 0, 0, 0, 0, 0, -1, 0)
 									case shogi.BHI, shogi.WHI, shogi.BRY, shogi.WRY:
-										record.State.Captured[capturedIndex].HI--
+										record.State.UpdateCaptured(turn, 0, 0, 0, 0, 0, 0, -1)
 									}
 								}
 							}

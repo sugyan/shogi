@@ -10,7 +10,7 @@ import (
 )
 
 func TestLegalMovesFromInitialState(t *testing.T) {
-	s := *shogi.InitialState
+	s := shogi.NewInitialState()
 	results := s.LegalMoves()
 	if len(results) != 30 {
 		t.Errorf("error!")

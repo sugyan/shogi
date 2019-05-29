@@ -106,7 +106,7 @@ func (s *State) LegalMoves() []*Move {
 	moves = append(moves, promoteMoves...)
 	// use captured pieces
 	capturedMoves := []*Move{}
-	captured := s.Captured[s.Turn.CapturedIndex()]
+	captured := s.captured[s.Turn.CapturedIndex()]
 	if captured.Total() > 0 {
 		positions := []*Position{}
 		for i := 0; i < 9; i++ {

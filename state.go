@@ -41,33 +41,99 @@ func (c Captured) Total() int {
 // State struct
 type State struct {
 	board    [9][9]Piece
-	Captured [2]Captured
+	captured [2]Captured
 	Turn     Turn
 	Hash     uint64
 }
 
-// InitialState variable
-var InitialState = &State{
-	board: [9][9]Piece{
-		{WKY, WKE, WGI, WKI, WOU, WKI, WGI, WKE, WKY},
-		{EMP, WHI, EMP, EMP, EMP, EMP, EMP, WKA, EMP},
-		{WFU, WFU, WFU, WFU, WFU, WFU, WFU, WFU, WFU},
-		{EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP},
-		{EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP},
-		{EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP},
-		{BFU, BFU, BFU, BFU, BFU, BFU, BFU, BFU, BFU},
-		{EMP, BKA, EMP, EMP, EMP, EMP, EMP, BHI, EMP},
-		{BKY, BKE, BGI, BKI, BOU, BKI, BGI, BKE, BKY},
-	},
+// NewInitialState function
+func NewInitialState() *State {
+	return NewState(
+		[9][9]Piece{
+			{WKY, WKE, WGI, WKI, WOU, WKI, WGI, WKE, WKY},
+			{EMP, WHI, EMP, EMP, EMP, EMP, EMP, WKA, EMP},
+			{WFU, WFU, WFU, WFU, WFU, WFU, WFU, WFU, WFU},
+			{EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP},
+			{EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP},
+			{EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP, EMP},
+			{BFU, BFU, BFU, BFU, BFU, BFU, BFU, BFU, BFU},
+			{EMP, BKA, EMP, EMP, EMP, EMP, EMP, BHI, EMP},
+			{BKY, BKE, BGI, BKI, BOU, BKI, BGI, BKE, BKY},
+		},
+		[2]Captured{},
+		TurnBlack,
+	)
 }
 
 // NewState function
 func NewState(board [9][9]Piece, captured [2]Captured, turn Turn) *State {
+	hash := hasher.turn[TurnBlack]
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			piece := board[i][j]
+			if piece != EMP {
+				hash += hasher.board[piece][i][j]
+			}
+		}
+	}
+	for _, turn := range []Turn{TurnBlack, TurnWhite} {
+		c := captured[turn.CapturedIndex()]
+		for i := 0; i < c.FU; i++ {
+			hash += hasher.captured[fu][turn]
+		}
+		for i := 0; i < c.KY; i++ {
+			hash += hasher.captured[ky][turn]
+		}
+		for i := 0; i < c.KE; i++ {
+			hash += hasher.captured[ke][turn]
+		}
+		for i := 0; i < c.GI; i++ {
+			hash += hasher.captured[gi][turn]
+		}
+		for i := 0; i < c.KI; i++ {
+			hash += hasher.captured[ki][turn]
+		}
+		for i := 0; i < c.KA; i++ {
+			hash += hasher.captured[ka][turn]
+		}
+		for i := 0; i < c.HI; i++ {
+			hash += hasher.captured[hi][turn]
+		}
+	}
 	return &State{
 		board:    board,
-		Captured: captured,
+		captured: captured,
 		Turn:     turn,
+		Hash:     hash,
 	}
+}
+
+// Equals method
+func (s *State) Equals(target *State) bool {
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			if s.board[i][j] != target.board[i][j] {
+				return false
+			}
+		}
+	}
+	for i := 0; i < 2; i++ {
+		if false ||
+			s.captured[i].FU != target.captured[i].FU ||
+			s.captured[i].KY != target.captured[i].KY ||
+			s.captured[i].KE != target.captured[i].KE ||
+			s.captured[i].GI != target.captured[i].GI ||
+			s.captured[i].KI != target.captured[i].KI ||
+			s.captured[i].KA != target.captured[i].KA ||
+			s.captured[i].HI != target.captured[i].HI {
+			return false
+		}
+	}
+	if s.Turn != target.Turn {
+		return false
+	}
+	return true
+
 }
 
 // GetPiece method
@@ -83,8 +149,32 @@ func (s *State) SetPiece(file, rank int, piece Piece) error {
 	if file < 1 || file > 9 || rank < 1 || rank > 9 {
 		return ErrInvalidPosition
 	}
+	prev := s.board[rank-1][9-file]
 	s.board[rank-1][9-file] = piece
+	// update hash
+	if prev != EMP {
+		s.Hash -= hasher.board[prev][rank-1][9-file]
+	}
+	s.Hash += hasher.board[piece][rank-1][9-file]
 	return nil
+}
+
+// GetCaptured method
+func (s *State) GetCaptured(turn Turn) Captured {
+	idx := turn.CapturedIndex()
+	return s.captured[idx]
+}
+
+// UpdateCaptured method
+func (s *State) UpdateCaptured(turn Turn, fu, ky, ke, gi, ki, ka, hi int) {
+	idx := turn.CapturedIndex()
+	s.captured[idx].FU += fu
+	s.captured[idx].KY += ky
+	s.captured[idx].KE += ke
+	s.captured[idx].GI += gi
+	s.captured[idx].KI += ki
+	s.captured[idx].KA += ka
+	s.captured[idx].HI += hi
 }
 
 // Move method
@@ -98,19 +188,19 @@ func (s *State) Move(moves ...*Move) error {
 			// use captured piece
 			switch move.Piece.raw() {
 			case fu:
-				s.Captured[capturedIndex].FU--
+				s.captured[capturedIndex].FU--
 			case ky:
-				s.Captured[capturedIndex].KY--
+				s.captured[capturedIndex].KY--
 			case ke:
-				s.Captured[capturedIndex].KE--
+				s.captured[capturedIndex].KE--
 			case gi:
-				s.Captured[capturedIndex].GI--
+				s.captured[capturedIndex].GI--
 			case ki:
-				s.Captured[capturedIndex].KI--
+				s.captured[capturedIndex].KI--
 			case ka:
-				s.Captured[capturedIndex].KA--
+				s.captured[capturedIndex].KA--
 			case hi:
-				s.Captured[capturedIndex].HI--
+				s.captured[capturedIndex].HI--
 			}
 		} else {
 			// move piece
@@ -126,19 +216,19 @@ func (s *State) Move(moves ...*Move) error {
 				}
 				switch dst.raw() {
 				case fu:
-					s.Captured[capturedIndex].FU++
+					s.captured[capturedIndex].FU++
 				case ky:
-					s.Captured[capturedIndex].KY++
+					s.captured[capturedIndex].KY++
 				case ke:
-					s.Captured[capturedIndex].KE++
+					s.captured[capturedIndex].KE++
 				case gi:
-					s.Captured[capturedIndex].GI++
+					s.captured[capturedIndex].GI++
 				case ki:
-					s.Captured[capturedIndex].KI++
+					s.captured[capturedIndex].KI++
 				case ka:
-					s.Captured[capturedIndex].KA++
+					s.captured[capturedIndex].KA++
 				case hi:
-					s.Captured[capturedIndex].HI++
+					s.captured[capturedIndex].HI++
 				}
 			}
 			s.board[move.Src.Rank-1][9-move.Src.File] = EMP
@@ -161,7 +251,7 @@ func (s *State) String() string {
 		}
 	}
 	for i := 0; i < 2; i++ {
-		if s.Captured[i].Total() > 0 {
+		if s.captured[i].Total() > 0 {
 			b.WriteRune('\n')
 			switch i {
 			case 0:
@@ -169,25 +259,25 @@ func (s *State) String() string {
 			case 1:
 				b.WriteString("P-")
 			}
-			for j := 0; j < s.Captured[i].HI; j++ {
+			for j := 0; j < s.captured[i].HI; j++ {
 				b.WriteString("00HI")
 			}
-			for j := 0; j < s.Captured[i].KA; j++ {
+			for j := 0; j < s.captured[i].KA; j++ {
 				b.WriteString("00KA")
 			}
-			for j := 0; j < s.Captured[i].KI; j++ {
+			for j := 0; j < s.captured[i].KI; j++ {
 				b.WriteString("00KI")
 			}
-			for j := 0; j < s.Captured[i].GI; j++ {
+			for j := 0; j < s.captured[i].GI; j++ {
 				b.WriteString("00GI")
 			}
-			for j := 0; j < s.Captured[i].KE; j++ {
+			for j := 0; j < s.captured[i].KE; j++ {
 				b.WriteString("00KE")
 			}
-			for j := 0; j < s.Captured[i].KY; j++ {
+			for j := 0; j < s.captured[i].KY; j++ {
 				b.WriteString("00KY")
 			}
-			for j := 0; j < s.Captured[i].FU; j++ {
+			for j := 0; j < s.captured[i].FU; j++ {
 				b.WriteString("00FU")
 			}
 		}
