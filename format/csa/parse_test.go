@@ -5,6 +5,7 @@ import (
 
 	"github.com/sugyan/shogi"
 	"github.com/sugyan/shogi/format/csa"
+	"github.com/sugyan/shogi/logic"
 )
 
 func TestParse(t *testing.T) {
@@ -78,7 +79,7 @@ T6
 					{Name: "NAKAHARA"},
 					{Name: "YONENAGA"},
 				},
-				State: shogi.NewState(
+				State: logic.NewState(
 					[9][9]shogi.Piece{
 						{shogi.WKY, shogi.WKE, shogi.WGI, shogi.WKI, shogi.WOU, shogi.WKI, shogi.WGI, shogi.WKE, shogi.WKY},
 						{shogi.EMP, shogi.WHI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKA, shogi.EMP},
@@ -103,7 +104,7 @@ T6
 			`
 PI82HI22KA`,
 			&shogi.Record{
-				State: shogi.NewState(
+				State: logic.NewState(
 					[9][9]shogi.Piece{
 						{shogi.WKY, shogi.WKE, shogi.WGI, shogi.WKI, shogi.WOU, shogi.WKI, shogi.WGI, shogi.WKE, shogi.WKY},
 						{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -128,7 +129,7 @@ P+99KY89KE
 P+00KI00FU
 P-00AL`,
 			&shogi.Record{
-				State: shogi.NewState(
+				State: logic.NewState(
 					[9][9]shogi.Piece{
 						{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 						{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKA, shogi.EMP},

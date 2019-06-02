@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/sugyan/shogi"
+	"github.com/sugyan/shogi/logic"
 )
 
 // ErrInvalidLine is error
@@ -58,7 +59,7 @@ func ParseString(s string) (*shogi.Record, error) {
 func (p *parser) parse() (*shogi.Record, error) {
 	record := &shogi.Record{
 		Players: [2]*shogi.Player{},
-		State:   shogi.NewState([9][9]shogi.Piece{}, [2]shogi.Captured{}, shogi.TurnBlack),
+		State:   logic.NewState([9][9]shogi.Piece{}, [2]shogi.Captured{}, shogi.TurnBlack),
 		Moves:   []*shogi.Move{},
 	}
 	phase := phase1
@@ -98,7 +99,7 @@ func (p *parser) parse() (*shogi.Record, error) {
 					continue
 				}
 				phase = phase3_1
-				record.State = shogi.NewInitialState()
+				record.State = logic.NewInitialState()
 				for i := 0; i+2 < len(line); i += 4 {
 					file, rank := int(line[i+2]-'0'), int(line[i+3]-'0')
 					// TODO: check piece?

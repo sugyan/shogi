@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/sugyan/shogi"
+	"github.com/sugyan/shogi/logic"
 )
 
 func TestMove(t *testing.T) {
 	type result struct {
 		err   error
-		state *shogi.State
+		state shogi.State
 	}
 	testCases := []struct {
 		moves    []*shogi.Move
@@ -27,7 +28,7 @@ func TestMove(t *testing.T) {
 			},
 			result{
 				err: nil,
-				state: shogi.NewState(
+				state: logic.NewState(
 					[9][9]shogi.Piece{
 						{shogi.WKY, shogi.WKE, shogi.WGI, shogi.WKI, shogi.WOU, shogi.WKI, shogi.WGI, shogi.WKE, shogi.WKY},
 						{shogi.EMP, shogi.WHI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -57,7 +58,7 @@ func TestMove(t *testing.T) {
 		},
 	}
 	for i, testCase := range testCases {
-		s := shogi.NewInitialState()
+		s := logic.NewInitialState()
 		err := s.Move(testCase.moves...)
 		if err != testCase.expected.err {
 			t.Errorf("#%d, err got: %v, expected: %v", i, err, testCase.expected.err)
@@ -67,7 +68,7 @@ func TestMove(t *testing.T) {
 			continue
 		}
 		if !s.Equals(testCase.expected.state) {
-			t.Errorf("#%d: state got: %v, expected: %v", i, *s, *testCase.expected.state)
+			t.Errorf("#%d: state got: %v, expected: %v", i, s, testCase.expected.state)
 		}
 	}
 }
@@ -84,7 +85,7 @@ func TestMoveStrings(t *testing.T) {
 		moves    []*shogi.Move
 		expected []string
 	}
-	test := func(s *shogi.State, testCases []*testCase) {
+	test := func(s shogi.State, testCases []*testCase) {
 		for i, testCase := range testCases {
 			results, err := shogi.MoveStrings(s, testCase.moves...)
 			if err != nil {
@@ -106,7 +107,7 @@ func TestMoveStrings(t *testing.T) {
 	}
 	// 打
 	{
-		state := shogi.NewState(
+		state := logic.NewState(
 			[9][9]shogi.Piece{
 				{shogi.WKY, shogi.WKE, shogi.WGI, shogi.WKI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.WHI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKA, shogi.EMP},
@@ -124,10 +125,10 @@ func TestMoveStrings(t *testing.T) {
 			},
 			shogi.TurnBlack,
 		)
-		sb := *state
-		sb.Turn = shogi.TurnBlack
-		sw := *state
-		sw.Turn = shogi.TurnWhite
+		sb := state.Clone()
+		sb.SetTurn(shogi.TurnBlack)
+		sw := state.Clone()
+		sw.SetTurn(shogi.TurnWhite)
 		{
 			testCases := []*testCase{
 				{[]*shogi.Move{move(1, 9, 1, 8, shogi.BKY)}, []string{"▲1八香"}},
@@ -149,7 +150,7 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(0, 0, 2, 7, shogi.BHI)}, []string{"▲2七飛打"}},
 				{[]*shogi.Move{move(0, 0, 3, 7, shogi.BHI)}, []string{"▲3七飛"}},
 			}
-			test(&sb, testCases)
+			test(sb, testCases)
 		}
 		{
 			testCases := []*testCase{
@@ -172,12 +173,12 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(0, 0, 8, 3, shogi.WHI)}, []string{"△8三飛打"}},
 				{[]*shogi.Move{move(0, 0, 7, 3, shogi.WHI)}, []string{"△7三飛"}},
 			}
-			test(&sw, testCases)
+			test(sw, testCases)
 		}
 	}
 	// 成・不成
 	{
-		state := shogi.NewState(
+		state := logic.NewState(
 			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.BRY, shogi.BUM, shogi.BNG, shogi.BNK, shogi.BNY, shogi.BTO},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -192,10 +193,10 @@ func TestMoveStrings(t *testing.T) {
 			[2]shogi.Captured{},
 			shogi.TurnBlack,
 		)
-		sb := *state
-		sb.Turn = shogi.TurnBlack
-		sw := *state
-		sw.Turn = shogi.TurnWhite
+		sb := state.Clone()
+		sb.SetTurn(shogi.TurnBlack)
+		sw := state.Clone()
+		sw.SetTurn(shogi.TurnWhite)
 		{
 			testCases := []*testCase{
 				{[]*shogi.Move{move(1, 4, 1, 3, shogi.BFU)}, []string{"▲1三歩不成"}},
@@ -223,7 +224,7 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(9, 3, 9, 5, shogi.BHI)}, []string{"▲9五飛不成"}},
 				{[]*shogi.Move{move(9, 3, 9, 5, shogi.BRY)}, []string{"▲9五飛成"}},
 			}
-			test(&sb, testCases)
+			test(sb, testCases)
 		}
 		{
 			testCases := []*testCase{
@@ -252,12 +253,12 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(1, 7, 1, 5, shogi.WHI)}, []string{"△1五飛不成"}},
 				{[]*shogi.Move{move(1, 7, 1, 5, shogi.WRY)}, []string{"△1五飛成"}},
 			}
-			test(&sw, testCases)
+			test(sw, testCases)
 		}
 	}
 	// 上・寄・引
 	{
-		state := shogi.NewState(
+		state := logic.NewState(
 			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.WGI, shogi.EMP, shogi.EMP, shogi.BKI, shogi.WGI, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.BKI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -272,10 +273,10 @@ func TestMoveStrings(t *testing.T) {
 			[2]shogi.Captured{},
 			shogi.TurnBlack,
 		)
-		sb := *state
-		sb.Turn = shogi.TurnBlack
-		sw := *state
-		sw.Turn = shogi.TurnWhite
+		sb := state.Clone()
+		sb.SetTurn(shogi.TurnBlack)
+		sw := state.Clone()
+		sw.SetTurn(shogi.TurnWhite)
 		{
 			testCases := []*testCase{
 				{[]*shogi.Move{move(9, 3, 8, 2, shogi.BKI)}, []string{"▲8二金上"}},
@@ -289,7 +290,7 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(4, 9, 3, 8, shogi.BGI)}, []string{"▲3八銀上"}},
 				{[]*shogi.Move{move(2, 7, 3, 8, shogi.BGI)}, []string{"▲3八銀引"}},
 			}
-			test(&sb, testCases)
+			test(sb, testCases)
 		}
 		{
 			testCases := []*testCase{
@@ -304,12 +305,12 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(6, 1, 7, 2, shogi.WGI)}, []string{"△7二銀上"}},
 				{[]*shogi.Move{move(8, 3, 7, 2, shogi.WGI)}, []string{"△7二銀引"}},
 			}
-			test(&sw, testCases)
+			test(sw, testCases)
 		}
 	}
 	// 左・右・直 (2枚)
 	{
-		state := shogi.NewState(
+		state := logic.NewState(
 			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.WGI, shogi.WGI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKI, shogi.WKI, shogi.EMP},
 				{shogi.BKI, shogi.EMP, shogi.BKI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BKI, shogi.EMP, shogi.BKI},
@@ -324,10 +325,10 @@ func TestMoveStrings(t *testing.T) {
 			[2]shogi.Captured{},
 			shogi.TurnBlack,
 		)
-		sb := *state
-		sb.Turn = shogi.TurnBlack
-		sw := *state
-		sw.Turn = shogi.TurnWhite
+		sb := state.Clone()
+		sb.SetTurn(shogi.TurnBlack)
+		sw := state.Clone()
+		sw.SetTurn(shogi.TurnWhite)
 		{
 			testCases := []*testCase{
 				{[]*shogi.Move{move(9, 2, 8, 1, shogi.BKI)}, []string{"▲8一金左"}},
@@ -341,7 +342,7 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(3, 9, 3, 8, shogi.BGI)}, []string{"▲3八銀直"}},
 				{[]*shogi.Move{move(2, 9, 3, 8, shogi.BGI)}, []string{"▲3八銀右"}},
 			}
-			test(&sb, testCases)
+			test(sb, testCases)
 		}
 		{
 			testCases := []*testCase{
@@ -356,12 +357,12 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(7, 1, 7, 2, shogi.WGI)}, []string{"△7二銀直"}},
 				{[]*shogi.Move{move(8, 1, 7, 2, shogi.WGI)}, []string{"△7二銀右"}},
 			}
-			test(&sw, testCases)
+			test(sw, testCases)
 		}
 	}
 	// 左・右・直 (3枚以上)
 	{
-		state := shogi.NewState(
+		state := logic.NewState(
 			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.WGI, shogi.WGI, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WTO, shogi.WTO, shogi.WTO},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WTO},
@@ -376,10 +377,10 @@ func TestMoveStrings(t *testing.T) {
 			[2]shogi.Captured{},
 			shogi.TurnBlack,
 		)
-		sb := *state
-		sb.Turn = shogi.TurnBlack
-		sw := *state
-		sw.Turn = shogi.TurnWhite
+		sb := state.Clone()
+		sb.SetTurn(shogi.TurnBlack)
+		sw := state.Clone()
+		sw.SetTurn(shogi.TurnWhite)
 		{
 			testCases := []*testCase{
 				{[]*shogi.Move{move(6, 3, 5, 2, shogi.BKI)}, []string{"▲5二金左"}},
@@ -395,7 +396,7 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(3, 9, 2, 8, shogi.BGI)}, []string{"▲2八銀左上"}},
 				{[]*shogi.Move{move(3, 7, 2, 8, shogi.BGI)}, []string{"▲2八銀左引"}},
 			}
-			test(&sb, testCases)
+			test(sb, testCases)
 		}
 		{
 			testCases := []*testCase{
@@ -412,13 +413,13 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(7, 1, 8, 2, shogi.WGI)}, []string{"△8二銀左上"}},
 				{[]*shogi.Move{move(7, 3, 8, 2, shogi.WGI)}, []string{"△8二銀左引"}},
 			}
-			test(&sw, testCases)
+			test(sw, testCases)
 		}
 	}
 	// 竜
 	{
 		{
-			sb := shogi.NewState(
+			sb := logic.NewState(
 				[9][9]shogi.Piece{
 					{shogi.BRY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -444,7 +445,7 @@ func TestMoveStrings(t *testing.T) {
 			test(sb, testCases)
 		}
 		{
-			sb := shogi.NewState(
+			sb := logic.NewState(
 				[9][9]shogi.Piece{
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -470,7 +471,7 @@ func TestMoveStrings(t *testing.T) {
 			test(sb, testCases)
 		}
 		{
-			sw := shogi.NewState(
+			sw := logic.NewState(
 				[9][9]shogi.Piece{
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -496,7 +497,7 @@ func TestMoveStrings(t *testing.T) {
 			test(sw, testCases)
 		}
 		{
-			sw := shogi.NewState(
+			sw := logic.NewState(
 				[9][9]shogi.Piece{
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WRY, shogi.WRY},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -525,7 +526,7 @@ func TestMoveStrings(t *testing.T) {
 	// 馬
 	{
 		{
-			sb := shogi.NewState(
+			sb := logic.NewState(
 				[9][9]shogi.Piece{
 					{shogi.BUM, shogi.BUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BUM},
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -555,7 +556,7 @@ func TestMoveStrings(t *testing.T) {
 			test(sb, testCases)
 		}
 		{
-			sw := shogi.NewState(
+			sw := logic.NewState(
 				[9][9]shogi.Piece{
 					{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WUM},
 					{shogi.WUM, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -587,7 +588,7 @@ func TestMoveStrings(t *testing.T) {
 	}
 	// 上成・引成・左成・右成
 	{
-		state := shogi.NewState(
+		state := logic.NewState(
 			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.BHI, shogi.EMP},
@@ -602,10 +603,10 @@ func TestMoveStrings(t *testing.T) {
 			[2]shogi.Captured{},
 			shogi.TurnBlack,
 		)
-		sb := *state
-		sb.Turn = shogi.TurnBlack
-		sw := *state
-		sw.Turn = shogi.TurnWhite
+		sb := state.Clone()
+		sb.SetTurn(shogi.TurnBlack)
+		sw := state.Clone()
+		sw.SetTurn(shogi.TurnWhite)
 		{
 			testCases := []*testCase{
 				{[]*shogi.Move{move(2, 2, 2, 3, shogi.BRY)}, []string{"▲2三飛引成"}},
@@ -613,7 +614,7 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(4, 5, 3, 3, shogi.BNK)}, []string{"▲3三桂左成"}},
 				{[]*shogi.Move{move(2, 5, 3, 3, shogi.BNK)}, []string{"▲3三桂右成"}},
 			}
-			test(&sb, testCases)
+			test(sb, testCases)
 		}
 		{
 			testCases := []*testCase{
@@ -622,12 +623,12 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(6, 5, 7, 7, shogi.WNK)}, []string{"△7七桂左成"}},
 				{[]*shogi.Move{move(8, 5, 7, 7, shogi.WNK)}, []string{"△7七桂右成"}},
 			}
-			test(&sw, testCases)
+			test(sw, testCases)
 		}
 	}
 	// 玉
 	{
-		state := shogi.NewState(
+		state := logic.NewState(
 			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -642,17 +643,17 @@ func TestMoveStrings(t *testing.T) {
 			[2]shogi.Captured{},
 			shogi.TurnBlack,
 		)
-		sb := *state
-		sb.Turn = shogi.TurnBlack
-		sw := *state
-		sw.Turn = shogi.TurnWhite
+		sb := state.Clone()
+		sb.SetTurn(shogi.TurnBlack)
+		sw := state.Clone()
+		sw.SetTurn(shogi.TurnWhite)
 		{
 			testCases := []*testCase{
 				{[]*shogi.Move{move(1, 4, 1, 3, shogi.BOU)}, []string{"▲1三玉"}},
 				{[]*shogi.Move{move(3, 3, 2, 2, shogi.BOU)}, []string{"▲2二玉"}},
 				{[]*shogi.Move{move(3, 3, 4, 4, shogi.BOU)}, []string{"▲4四玉"}},
 			}
-			test(&sb, testCases)
+			test(sb, testCases)
 		}
 		{
 			testCases := []*testCase{
@@ -660,12 +661,12 @@ func TestMoveStrings(t *testing.T) {
 				{[]*shogi.Move{move(7, 7, 8, 8, shogi.WOU)}, []string{"△8八玉"}},
 				{[]*shogi.Move{move(7, 7, 6, 6, shogi.WOU)}, []string{"△6六玉"}},
 			}
-			test(&sw, testCases)
+			test(sw, testCases)
 		}
 	}
 	// 同
 	{
-		state := shogi.NewState(
+		state := logic.NewState(
 			[9][9]shogi.Piece{
 				{shogi.WKY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.WKY},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -680,10 +681,10 @@ func TestMoveStrings(t *testing.T) {
 			[2]shogi.Captured{},
 			shogi.TurnBlack,
 		)
-		sb := *state
-		sb.Turn = shogi.TurnBlack
-		sw := *state
-		sw.Turn = shogi.TurnWhite
+		sb := state.Clone()
+		sb.SetTurn(shogi.TurnBlack)
+		sw := state.Clone()
+		sw.SetTurn(shogi.TurnWhite)
 		{
 			testCases := []*testCase{
 				{[]*shogi.Move{
@@ -707,7 +708,7 @@ func TestMoveStrings(t *testing.T) {
 					move(2, 3, 1, 4, shogi.BNG),
 				}, []string{"▲1四歩", "△同歩", "▲同銀引成"}},
 			}
-			test(&sb, testCases)
+			test(sb, testCases)
 		}
 		{
 			testCases := []*testCase{
@@ -732,7 +733,7 @@ func TestMoveStrings(t *testing.T) {
 					move(8, 7, 9, 6, shogi.WNG),
 				}, []string{"△9六歩", "▲同歩", "△同銀引成"}},
 			}
-			test(&sw, testCases)
+			test(sw, testCases)
 		}
 	}
 }

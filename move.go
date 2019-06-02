@@ -17,12 +17,12 @@ type Move struct {
 }
 
 // MoveStrings function
-func MoveStrings(state *State, moves ...*Move) ([]string, error) {
+func MoveStrings(state State, moves ...*Move) ([]string, error) {
 	result := make([]string, 0, len(moves))
-	s := *state
+	s := state.Clone()
 	var prev *Move
 	for _, m := range moves {
-		str, err := moveString(&s, m, prev)
+		str, err := moveString(s, m, prev)
 		if err != nil {
 			return nil, err
 		}
@@ -33,25 +33,25 @@ func MoveStrings(state *State, moves ...*Move) ([]string, error) {
 	return result, nil
 }
 
-func moveString(state *State, move, prev *Move) (string, error) {
-	pieceMap := map[bool]map[rawPiece]string{
+func moveString(state State, move, prev *Move) (string, error) {
+	pieceMap := map[bool]map[RawPiece]string{
 		false: {
-			fu: "歩",
-			ky: "香",
-			ke: "桂",
-			gi: "銀",
-			ki: "金",
-			ka: "角",
-			hi: "飛",
-			ou: "玉",
+			FU: "歩",
+			KY: "香",
+			KE: "桂",
+			GI: "銀",
+			KI: "金",
+			KA: "角",
+			HI: "飛",
+			OU: "玉",
 		},
 		true: {
-			fu: "と",
-			ky: "成香",
-			ke: "成桂",
-			gi: "成銀",
-			ka: "馬",
-			hi: "竜",
+			FU: "と",
+			KY: "成香",
+			KE: "成桂",
+			GI: "成銀",
+			KA: "馬",
+			HI: "竜",
 		},
 	}
 	files := []rune("123456789")
@@ -73,7 +73,7 @@ func moveString(state *State, move, prev *Move) (string, error) {
 	}
 	// 打
 	if move.Src == (Position{0, 0}) {
-		b.WriteString(pieceMap[false][move.Piece.raw()])
+		b.WriteString(pieceMap[false][move.Piece.Raw()])
 		for _, m := range state.LegalMoves() {
 			if m.Src != move.Src && m.Dst == move.Dst && m.Piece == move.Piece {
 				b.WriteRune('打')
@@ -82,14 +82,18 @@ func moveString(state *State, move, prev *Move) (string, error) {
 		return b.String(), nil
 	}
 
-	orig := state.board[move.Src.Rank-1][9-move.Src.File]
-	b.WriteString(pieceMap[orig.IsPromoted()][move.Piece.raw()])
-	if orig.raw() != move.Piece.raw() {
+	orig, err := state.GetPiece(move.Src.File, move.Src.Rank)
+	if err != nil {
+		return "", err
+	}
+	b.WriteString(pieceMap[orig.IsPromoted()][move.Piece.Raw()])
+	if orig.Raw() != move.Piece.Raw() {
 		return "", ErrInvalidMove
 	}
 	dstMoves := []*Move{}
 	for _, m := range state.LegalMoves() {
-		if m.Src != (Position{0, 0}) && state.board[m.Src.Rank-1][9-m.Src.File] == orig &&
+		srcp, _ := state.GetPiece(m.Src.File, m.Src.Rank)
+		if m.Src != (Position{0, 0}) && srcp == orig &&
 			m.Dst == move.Dst && m.Piece == orig {
 			dstMoves = append(dstMoves, m)
 		}
@@ -97,8 +101,8 @@ func moveString(state *State, move, prev *Move) (string, error) {
 	if len(dstMoves) > 1 {
 		lr := false
 		ud := false
-		switch move.Piece.raw() {
-		case ka, hi:
+		switch move.Piece.Raw() {
+		case KA, HI:
 			if (dstMoves[0].Src.Rank == move.Dst.Rank && dstMoves[1].Src.Rank == move.Dst.Rank) ||
 				(dstMoves[0].Src.Rank > move.Dst.Rank && dstMoves[1].Src.Rank > move.Dst.Rank) ||
 				(dstMoves[0].Src.Rank < move.Dst.Rank && dstMoves[1].Src.Rank < move.Dst.Rank) {
@@ -134,7 +138,7 @@ func moveString(state *State, move, prev *Move) (string, error) {
 			case fileDelta > 0:
 				b.WriteRune('右')
 			case fileDelta == 0:
-				if move.Piece.raw() == ka || move.Piece.raw() == hi {
+				if move.Piece.Raw() == KA || move.Piece.Raw() == HI {
 					left := true
 					if move.Src.File == move.Dst.File {
 						for _, m := range dstMoves {
@@ -176,8 +180,8 @@ func moveString(state *State, move, prev *Move) (string, error) {
 	if orig != move.Piece {
 		b.WriteRune('成')
 	} else if !move.Piece.IsPromoted() {
-		switch move.Piece.raw() {
-		case fu, ky, ke, gi, ka, hi:
+		switch move.Piece.Raw() {
+		case FU, KY, KE, GI, KA, HI:
 			if (move.Piece.Turn() == TurnBlack && (move.Src.Rank <= 3 || move.Dst.Rank <= 3)) ||
 				(move.Piece.Turn() == TurnWhite && (move.Src.Rank >= 7 || move.Dst.Rank >= 7)) {
 				b.WriteString("不成")

@@ -1,18 +1,19 @@
-package shogi_test
+package logic_test
 
 import (
 	"testing"
 
 	"github.com/sugyan/shogi"
+	"github.com/sugyan/shogi/logic"
 )
 
 func TestString(t *testing.T) {
 	testCases := []struct {
-		state    *shogi.State
+		state    shogi.State
 		expected string
 	}{
 		{
-			state: shogi.NewState([9][9]shogi.Piece{}, [2]shogi.Captured{}, shogi.TurnBlack),
+			state: logic.NewState([9][9]shogi.Piece{}, [2]shogi.Captured{}, shogi.TurnBlack),
 			expected: `
 P1 *  *  *  *  *  *  *  *  * 
 P2 *  *  *  *  *  *  *  *  * 
@@ -25,7 +26,7 @@ P8 *  *  *  *  *  *  *  *  *
 P9 *  *  *  *  *  *  *  *  * `[1:],
 		},
 		{
-			state: shogi.NewInitialState(),
+			state: logic.NewInitialState(),
 			expected: `
 P1-KY-KE-GI-KI-OU-KI-GI-KE-KY
 P2 * -HI *  *  *  *  * -KA * 

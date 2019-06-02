@@ -8,6 +8,6 @@ type Player struct {
 // Record type
 type Record struct {
 	Players [2]*Player
-	State   *State
+	State   State
 	Moves   []*Move
 }

@@ -1,9 +1,11 @@
 package shogi
 
-type rawPiece uint8
-
-// Piece type
-type Piece uint8
+type (
+	// RawPiece type
+	RawPiece uint8
+	// Piece types
+	Piece uint8
+)
 
 const (
 	white   = 0x01 << 4
@@ -11,41 +13,42 @@ const (
 	mask    = 0x0F
 )
 
+// constant variables
 const (
-	fu rawPiece = iota + 1 // 歩
-	ky                     // 香
-	ke                     // 桂
-	gi                     // 銀
-	ki                     // 金
-	ka                     // 角
-	hi                     // 飛
-	ou                     // 玉
+	FU RawPiece = iota + 1 // 歩
+	KY                     // 香
+	KE                     // 桂
+	GI                     // 銀
+	KI                     // 金
+	KA                     // 角
+	HI                     // 飛
+	OU                     // 玉
 
-	to = fu | promote // と
-	ny = ky | promote // 成香
-	nk = ke | promote // 成桂
-	ng = gi | promote // 成銀
-	um = ka | promote // 馬
-	ry = hi | promote // 竜
+	TO = FU | promote // と
+	NY = KY | promote // 成香
+	NK = KE | promote // 成桂
+	NG = GI | promote // 成銀
+	UM = KA | promote // 馬
+	RY = HI | promote // 竜
 )
 
 // Piece constants
 const (
 	EMP Piece = 0
-	BFU       = Piece(fu)
-	BKY       = Piece(ky)
-	BKE       = Piece(ke)
-	BGI       = Piece(gi)
-	BKI       = Piece(ki)
-	BKA       = Piece(ka)
-	BHI       = Piece(hi)
-	BOU       = Piece(ou)
-	BTO       = Piece(to)
-	BNY       = Piece(ny)
-	BNK       = Piece(nk)
-	BNG       = Piece(ng)
-	BUM       = Piece(um)
-	BRY       = Piece(ry)
+	BFU       = Piece(FU)
+	BKY       = Piece(KY)
+	BKE       = Piece(KE)
+	BGI       = Piece(GI)
+	BKI       = Piece(KI)
+	BKA       = Piece(KA)
+	BHI       = Piece(HI)
+	BOU       = Piece(OU)
+	BTO       = Piece(TO)
+	BNY       = Piece(NY)
+	BNK       = Piece(NK)
+	BNG       = Piece(NG)
+	BUM       = Piece(UM)
+	BRY       = Piece(RY)
 	WFU       = BFU | white
 	WKY       = BKY | white
 	WKE       = BKE | white
@@ -64,7 +67,8 @@ const (
 	ERR = 0xFF
 )
 
-func makePiece(p rawPiece, turn Turn) Piece {
+// MakePiece function
+func MakePiece(p RawPiece, turn Turn) Piece {
 	piece := Piece(p)
 	if turn == TurnWhite {
 		piece |= white
@@ -72,7 +76,8 @@ func makePiece(p rawPiece, turn Turn) Piece {
 	return piece
 }
 
-var pieceStringMap = map[Piece]string{
+// PieceStringMap variable
+var PieceStringMap = map[Piece]string{
 	EMP: " * ",
 	BFU: "+FU",
 	BKY: "+KY",
@@ -104,13 +109,14 @@ var pieceStringMap = map[Piece]string{
 	WRY: "-RY",
 }
 
-func (p Piece) raw() rawPiece {
-	return rawPiece(p & mask)
+// Raw method
+func (p Piece) Raw() RawPiece {
+	return RawPiece(p & mask)
 }
 
 // String method
 func (p Piece) String() string {
-	if s, exist := pieceStringMap[p]; exist {
+	if s, exist := PieceStringMap[p]; exist {
 		return s
 	}
 	return ""

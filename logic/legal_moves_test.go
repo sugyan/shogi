@@ -1,4 +1,4 @@
-package shogi_test
+package logic_test
 
 import (
 	"os"
@@ -7,10 +7,11 @@ import (
 
 	"github.com/sugyan/shogi"
 	"github.com/sugyan/shogi/format/csa"
+	"github.com/sugyan/shogi/logic"
 )
 
 func TestLegalMovesFromInitialState(t *testing.T) {
-	s := shogi.NewInitialState()
+	s := logic.NewInitialState()
 	results := s.LegalMoves()
 	if len(results) != 30 {
 		t.Errorf("error!")
@@ -55,7 +56,7 @@ func TestLegalMovesInRecord(t *testing.T) {
 func TestLegalMovesImpossibleMoves(t *testing.T) {
 	// TurnBlack
 	{
-		s := shogi.NewState(
+		s := logic.NewState(
 			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.BFU, shogi.BKY, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
@@ -99,7 +100,7 @@ func TestLegalMovesImpossibleMoves(t *testing.T) {
 	}
 	// TurnWhite
 	{
-		s := shogi.NewState(
+		s := logic.NewState(
 			[9][9]shogi.Piece{
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
 				{shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP, shogi.EMP},
